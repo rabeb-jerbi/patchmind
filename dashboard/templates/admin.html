@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060910;--surface:#0c1118;--panel:#111822;
+  --border:#1a2535;--border2:#243040;--accent:#00ff88;
+  --accent2:#00c4ff;--warn:#ffaa00;--danger:#ff4757;
+  --muted:#3a5068;--text:#cdd9e5;--text-dim:#5c7a96;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+body.light{
+  --bg:#f0f4f8;--surface:#ffffff;--panel:#f8fafc;
+  --border:#e2e8f0;--border2:#cbd5e0;--accent:#00aa55;
+  --accent2:#0077cc;--warn:#d97706;--danger:#dc2626;
+  --muted:#94a3b8;--text:#1e293b;--text-dim:#64748b;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,136,0.012) 2px,rgba(0,255,136,0.012) 4px);
+  pointer-events:none;z-index:9999;
+}
+
+/* SIDEBAR */
+.sidebar{width:240px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;z-index:100;display:flex;flex-direction:column;}
+.logo{padding:28px 24px 24px;border-bottom:1px solid var(--border);}
+.logo-mark{font-family:var(--mono);font-size:11px;color:var(--warn);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;opacity:0.8;}
+.logo-name{font-family:var(--sans);font-size:22px;font-weight:800;color:#fff;}
+.logo-name span{color:var(--accent);}
+.nav-section{padding:20px 12px 8px;font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;margin:2px 8px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text-dim);transition:all 0.2s;border:1px solid transparent;text-decoration:none;}
+.nav-item:hover{background:var(--panel);color:var(--text);border-color:var(--border);}
+.nav-item.active{background:rgba(255,170,0,0.08);color:var(--warn);border-color:rgba(255,170,0,0.2);}
+.nav-item.back{color:var(--accent2);}
+.nav-item.back:hover{background:rgba(0,196,255,0.08);}
+.sidebar-footer{margin-top:auto;padding:20px;border-top:1px solid var(--border);}
+.admin-badge{font-family:var(--mono);font-size:11px;padding:4px 10px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.3);border-radius:4px;color:var(--warn);}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
+.topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:16px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:16px;font-weight:700;color:#fff;flex:1;}
+.topbar-tag{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(255,170,0,0.1);color:var(--warn);border:1px solid rgba(255,170,0,0.25);}
+.content{padding:32px;flex:1;}
+
+/* CARDS */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px;}
+.card-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--warn);border-radius:2px;}
+
+/* STAT BOXES */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-box{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;}
+.stat-val{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.stat-val.yellow{color:var(--warn);}
+.stat-val.blue{color:var(--accent2);}
+.stat-lbl{font-family:var(--mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+
+/* USERS TABLE */
+.users-table{width:100%;border-collapse:collapse;}
+.users-table th{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface);}
+.users-table td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.users-table tr:hover td{background:rgba(255,255,255,0.02);}
+.users-table tr:last-child td{border-bottom:none;}
+.role-badge{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:4px;}
+.role-admin{background:rgba(255,170,0,0.12);color:var(--warn);border:1px solid rgba(255,170,0,0.25);}
+.role-user{background:rgba(0,196,255,0.1);color:var(--accent2);border:1px solid rgba(0,196,255,0.2);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;text-decoration:none;}
+.btn-primary{background:var(--accent);color:#060910;}
+.btn-primary:hover{background:#00e077;box-shadow:0 0 16px rgba(0,255,136,0.3);}
+.btn-danger{background:rgba(255,71,87,0.15);color:var(--danger);border:1px solid rgba(255,71,87,0.3);}
+.btn-danger:hover{background:rgba(255,71,87,0.25);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-outline{background:transparent;color:var(--accent2);border:1px solid rgba(0,196,255,0.3);}
+.btn-outline:hover{background:rgba(0,196,255,0.08);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;display:none;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:12px;padding:32px;width:400px;box-shadow:0 0 40px rgba(0,0,0,0.5);}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:20px;color:#fff;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.field input,.field select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field select option{background:var(--surface);}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.err{font-family:var(--mono);font-size:12px;color:var(--danger);margin-top:10px;display:none;}
+.success-msg{font-family:var(--mono);font-size:12px;color:var(--accent);margin-top:10px;display:none;}
+
+/* RECENT TABLE */
+.recent-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+.recent-table th{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface);}
+.recent-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-dim);}
+.recent-table tr:last-child td{border-bottom:none;}
+.rate-pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;}
+.rate-good{background:rgba(0,255,136,0.12);color:var(--accent);}
+.rate-bad{background:rgba(255,71,87,0.12);color:var(--danger);}
+
+.page{display:none;}
+.page.active{display:block;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">⚙ Admin Panel</div>
+    <div class="logo-name">Patch<span>Mind</span></div>
+  </div>
+
+  <div class="nav-section">Administration</div>
+  <div class="nav-item active" onclick="showPage('dashboard')">
+    <span>📊</span> Vue globale
+  </div>
+  <div class="nav-item" onclick="showPage('users')">
+    <span>👥</span> Utilisateurs
+  </div>
+  <div class="nav-item" onclick="showPage('requests')">
+    <span>📬</span> Demandes d'accès <span id="requestsBadge" style="display:none;background:var(--danger);color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:4px;font-family:var(--mono);"></span>
+  </div>
+  <div class="nav-item" onclick="showPage('activity')">
+    <span>📋</span> Activité récente
+  </div>
+
+  <div class="nav-section">Navigation</div>
+  <a href="/dashboard" class="nav-item back"><span>⚡</span> Dashboard Analyse</a>
+  <a href="/logout" class="nav-item" style="color:var(--danger);"><span>→</span> Déconnexion</a>
+
+  <div class="sidebar-footer" style="display:flex;align-items:center;justify-content:space-between;">
+    <span class="admin-badge">⚙ ADMIN</span>
+    <button onclick="toggleTheme()" style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--text-dim);transition:all 0.2s;" title="Mode sombre/clair" id="themeBtn">🌙</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Vue globale</div>
+    <span class="topbar-tag">ADMIN PANEL</span>
+    <span id="adminName" style="font-family:var(--mono);font-size:12px;color:var(--text-dim);"></span>
+  </div>
+
+  <div class="content">
+
+    <!-- PAGE: DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row" id="globalStats">
+        <div class="stat-box"><div class="stat-val" id="gs-users">—</div><div class="stat-lbl">Utilisateurs</div></div>
+        <div class="stat-box"><div class="stat-val yellow" id="gs-sessions">—</div><div class="stat-lbl">Sessions totales</div></div>
+        <div class="stat-box"><div class="stat-val blue" id="gs-vulns">—</div><div class="stat-lbl">Vulns analysées</div></div>
+        <div class="stat-box"><div class="stat-val" id="gs-patches">—</div><div class="stat-lbl">Patches générés</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Activité récente — toutes sessions</div>
+        <div id="recentActivity"><div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: REQUESTS -->
+    <div class="page" id="page-requests">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="card-title" style="margin-bottom:0;">Demandes d'accès en attente</div>
+          <button class="btn btn-outline btn-sm" onclick="loadRequests()">↻ Actualiser</button>
+        </div>
+        <div id="requestsList"><div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: USERS -->
+    <div class="page" id="page-users">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="card-title" style="margin-bottom:0;">Gestion des utilisateurs</div>
+          <button class="btn btn-primary btn-sm" onclick="openCreateModal()">+ Nouvel utilisateur</button>
+        </div>
+        <div id="usersTable"><div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: ACTIVITY -->
+    <div class="page" id="page-activity">
+      <div class="card">
+        <div class="card-title">Toute l'activité de la plateforme</div>
+        <div id="allActivity"><div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL: Créer utilisateur -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <h3>👤 Créer un utilisateur</h3>
+    <div class="field"><label>Nom complet</label><input type="text" id="newFullname" placeholder="Jean Dupont"></div>
+    <div class="field"><label>Identifiant</label><input type="text" id="newUsername" placeholder="jean.dupont"></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="newPassword" placeholder="••••••••"></div>
+    <div class="field">
+      <label>Rôle</label>
+      <select id="newRole">
+        <option value="user">Utilisateur</option>
+        <option value="admin">Administrateur</option>
+      </select>
+    </div>
+    <div class="err" id="createErr"></div>
+    <div class="success-msg" id="createOk">✅ Utilisateur créé avec succès !</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="createUser()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── THEME ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = isLight ? '🌑' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = '🌑';
+  });
+}
+const titles = {dashboard:'Vue globale',users:'Utilisateurs',requests:'Demandes d\'accès',activity:'Activité récente'};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('topbarTitle').textContent = titles[name];
+  event.currentTarget.classList.add('active');
+  if (name==='users')    loadUsers();
+  if (name==='activity') loadAllActivity();
+  if (name==='requests') loadRequests();
+}
+
+// ── LOAD REQUESTS ──
+function loadRequests() {
+  document.getElementById('requestsList').innerHTML =
+    '<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div>';
+  fetch('/admin/requests').then(r=>r.json()).then(reqs=>{
+    if (!reqs.length) {
+      document.getElementById('requestsList').innerHTML =
+        '<div style="text-align:center;padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">✅ Aucune demande en attente</div>';
+      return;
+    }
+    document.getElementById('requestsList').innerHTML = reqs.map(r=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:12px;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span style="font-size:16px;">👤</span>
+              <span style="font-size:15px;font-weight:700;color:#fff;">${r.full_name}</span>
+              <span style="font-family:var(--mono);font-size:11px;padding:2px 8px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.25);border-radius:4px;color:var(--warn);">EN ATTENTE</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">📧 <span style="color:var(--accent2);">${r.email}</span></div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">🏢 ${r.company}</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">📅 ${(r.created_at||'').substring(0,16)}</div>
+            </div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);background:var(--panel);padding:10px 12px;border-radius:6px;border:1px solid var(--border);line-height:1.6;">
+              <strong style="color:var(--text);display:block;margin-bottom:4px;">Cas d'usage :</strong>
+              ${r.use_case}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+            <button class="btn btn-primary btn-sm" onclick="approveRequest('${r.id}', this)">✅ Approuver</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectRequest('${r.id}', this)">✕ Rejeter</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+function approveRequest(id, btn) {
+  btn.disabled = true; btn.textContent = '⏳…';
+  fetch(`/admin/requests/${id}/approve`, {method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) {
+        const emailStatus = d.email_sent
+          ? '📧 Les identifiants ont été envoyés automatiquement par email à l\'utilisateur.'
+          : '⚠️ Email non configuré.\n\nIdentifiant : ' + d.username + '\nMot de passe : ' + d.password + '\n\nTransmettez ces informations manuellement.';
+        alert('✅ Compte créé !\n\n' + emailStatus);
+        loadRequests(); loadStats();
+      } else { alert('Erreur : '+(d.error||'Inconnue')); btn.disabled=false; btn.textContent='✅ Approuver'; }
+    });
+}
+
+function rejectRequest(id, btn) {
+  if (!confirm('Rejeter cette demande ?')) return;
+  btn.disabled = true; btn.textContent = '⏳…';
+  fetch(`/admin/requests/${id}/reject`, {method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) loadRequests();
+      else { alert('Erreur'); btn.disabled=false; btn.textContent='✕ Rejeter'; }
+    });
+}
+
+// ── LOAD STATS ──
+function loadStats() {
+  fetch('/admin/stats').then(r=>r.json()).then(d=>{
+    document.getElementById('gs-users').textContent    = d.total_users;
+    document.getElementById('gs-sessions').textContent = d.total_sessions;
+    document.getElementById('gs-vulns').textContent    = d.total_vulns;
+    document.getElementById('gs-patches').textContent  = d.total_patches;
+    // Badge demandes en attente
+    fetch('/admin/requests').then(r=>r.json()).then(reqs=>{
+      const badge = document.getElementById('requestsBadge');
+      if (reqs.length>0){badge.textContent=reqs.length;badge.style.display='inline';}
+      else badge.style.display='none';
+    });
+    if (!d.recent.length) {
+      document.getElementById('recentActivity').innerHTML =
+        '<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Aucune activité</div>';
+      return;
+    }
+    document.getElementById('recentActivity').innerHTML = `
+      <table class="recent-table">
+        <thead><tr><th>Date</th><th>Utilisateur</th><th>Vulns</th><th>Validés</th><th>Success</th><th>MTTR</th></tr></thead>
+        <tbody>
+          ${d.recent.map(s=>`
+            <tr>
+              <td style="color:var(--text)">${(s.timestamp||'').substring(0,16)}</td>
+              <td><span style="color:var(--accent2)">@${s.username}</span></td>
+              <td>${s.total_vulns??'—'}</td>
+              <td style="color:var(--accent)">${s.patches_validated??'—'}</td>
+              <td><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></td>
+              <td>${s.mttr_seconds??'—'}s</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  });
+}
+
+// ── LOAD USERS ──
+function loadUsers() {
+  fetch('/admin/users').then(r=>r.json()).then(users=>{
+    if (!users.length) {
+      document.getElementById('usersTable').innerHTML =
+        '<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Aucun utilisateur</div>';
+      return;
+    }
+    document.getElementById('usersTable').innerHTML = `
+      <table class="users-table">
+        <thead><tr><th>Utilisateur</th><th>Nom</th><th>Rôle</th><th>Créé le</th><th>Sessions</th><th>Vulns</th><th>Patches</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${users.map(u=>`
+            <tr>
+              <td><span style="font-family:var(--mono);font-size:13px;color:var(--accent2);">@${u.username}</span></td>
+              <td style="font-size:13px;">${u.full_name||'—'}</td>
+              <td><span class="role-badge ${u.role==='admin'?'role-admin':'role-user'}">${u.role}</span></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">${(u.created_at||'').substring(0,10)}</td>
+              <td style="font-family:var(--mono);font-size:12px;">${u.sessions}</td>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent2);">${u.total_vulns}</td>
+              <td style="font-family:var(--mono);font-size:12px;color:var(--accent);">${u.total_patches}</td>
+              <td>
+                ${u.username!=='admin'?`<button class="btn btn-danger btn-sm" onclick="deleteUser('${u.username}')">✕ Supprimer</button>`:'<span style="color:var(--muted);font-family:var(--mono);font-size:11px;">—</span>'}
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  });
+}
+
+function deleteUser(username) {
+  if (!confirm(`Supprimer l'utilisateur @${username} ? Cette action est irréversible.`)) return;
+  fetch(`/admin/users/${username}`, {method:'DELETE'})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) loadUsers();
+      else alert('Erreur : '+d.error);
+    });
+}
+
+// ── ALL ACTIVITY ──
+function loadAllActivity() {
+  fetch('/admin/stats').then(r=>r.json()).then(d=>{
+    const all = d.recent;
+    if (!all.length) {
+      document.getElementById('allActivity').innerHTML =
+        '<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Aucune activité</div>';
+      return;
+    }
+    document.getElementById('allActivity').innerHTML = all.map(s=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;padding:14px 16px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:8px;align-items:center;">
+        <div style="font-family:var(--mono);font-size:11px;">
+          <div style="color:var(--accent2);">@${s.username}</div>
+          <div style="color:var(--text-dim);margin-top:2px;">${(s.timestamp||'').substring(0,16)}</div>
+        </div>
+        <div style="text-align:center;font-family:var(--mono);font-size:12px;color:var(--text-dim);">${s.total_vulns??'—'} vulns</div>
+        <div style="text-align:center;font-family:var(--mono);font-size:12px;color:var(--accent);">${s.patches_validated??'—'} ✓</div>
+        <div style="text-align:center;font-family:var(--mono);font-size:12px;color:var(--danger);">${s.patches_rejected??'—'} ✗</div>
+        <div style="text-align:center;"><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></div>
+        <div style="text-align:center;font-family:var(--mono);font-size:12px;color:var(--text-dim);">${s.mttr_seconds??'—'}s</div>
+      </div>
+    `).join('');
+  });
+}
+
+// ── CREATE USER ──
+function openCreateModal() {
+  document.getElementById('createModal').classList.add('open');
+  document.getElementById('createErr').style.display='none';
+  document.getElementById('createOk').style.display='none';
+}
+function closeModal() {
+  document.getElementById('createModal').classList.remove('open');
+}
+
+function createUser() {
+  const fn = document.getElementById('newFullname').value.trim();
+  const u  = document.getElementById('newUsername').value.trim();
+  const p  = document.getElementById('newPassword').value;
+  const r  = document.getElementById('newRole').value;
+  const err= document.getElementById('createErr');
+  const ok = document.getElementById('createOk');
+  if (!u||!p) { err.textContent='Identifiant et mot de passe requis'; err.style.display='block'; return; }
+
+  fetch('/admin/users', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:u,password:p,full_name:fn,role:r})
+  }).then(r=>r.json()).then(d=>{
+    if (d.ok) {
+      ok.style.display='block'; err.style.display='none';
+      setTimeout(()=>{ closeModal(); loadUsers(); }, 1200);
+    } else {
+      err.textContent=d.error||'Erreur'; err.style.display='block';
+    }
+  });
+}
+
+// ── INIT ──
+fetch('/me').then(r=>r.json()).then(d=>{
+  document.getElementById('adminName').textContent = '@'+d.username;
+});
+loadStats();
+</script>
+</body>
+</html>

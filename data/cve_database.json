@@ -1,0 +1,3216 @@
+{
+  "CWE-89": [
+    {
+      "id": "CVE-2008-3604",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in bannerclick.php in ZeeBuddy 2.1 allows remote attackers to execute arbitrary SQL commands via the adid parameter.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2008-08-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-2323",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in mod_mysql_vhost.c in lighttpd before 1.4.35 allows remote attackers to execute arbitrary SQL commands via the host name, related to request_check_hostname.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2014-03-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-6537",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the login page in Epiphany Cardio Server 3.3 allows remote attackers to execute arbitrary SQL commands via a crafted URL.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2015-12-27",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-8261",
+      "cwe": "CWE-89",
+      "description": "The DroneDeleteOldMeasurements implementation in Ipswitch WhatsUp Gold before 16.4 does not properly validate serialized XML objects, which allows remote attackers to conduct SQL injection attacks via a crafted SOAP request.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-01-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-6319",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the web-based management interface on Cisco RV220W devices allows remote attackers to execute arbitrary SQL commands via a crafted header in an HTTP request, aka Bug ID CSCuv29574.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-01-27",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-2386",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the UDDI server in SAP NetWeaver J2EE Engine 7.40 allows remote attackers to execute arbitrary SQL commands via unspecified vectors, aka SAP Security Note 2101079.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-02-16",
+      "github_refs": [
+        "https://github.com/vah13/SAP_exploit",
+        "https://github.com/vah13/SAP_exploit"
+      ]
+    },
+    {
+      "id": "CVE-2016-4351",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the authentication functionality in Trend Micro Email Encryption Gateway (TMEEG) 5.5 before build 1107 allows remote attackers to execute arbitrary SQL commands via unspecified vectors.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-2351",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in home/seos/courier/security_key2.api on the Accellion File Transfer Appliance (FTA) before FTA_9_12_40 allows remote attackers to execute arbitrary SQL commands via the client_id parameter.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-4350",
+      "cwe": "CWE-89",
+      "description": "Multiple SQL injection vulnerabilities in the Web Services web server in SolarWinds Storage Resource Monitor (SRM) Profiler (formerly Storage Manager (STM)) before 6.2.3 allow remote attackers to execute arbitrary SQL commands via the (1) ScriptSchedule parameter in the ScriptServlet servlet; the (2",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-7695",
+      "cwe": "CWE-89",
+      "description": "The PDO adapters in Zend Framework before 1.12.16 do not filer null bytes in SQL statements, which allows remote attackers to execute arbitrary SQL commands via a crafted query.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-06-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-0224",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in IBM Marketing Platform 8.5.x, 8.6.x, and 9.x before 9.1.2.2 allows remote attackers to execute arbitrary SQL commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-06-28",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5703",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in libraries/central_columns.lib.php in phpMyAdmin 4.4.x before 4.4.15.7 and 4.6.x before 4.6.3 allows remote attackers to execute arbitrary SQL commands via a crafted database name that is mishandled in a central column query.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-07-03",
+      "github_refs": [
+        "https://github.com/phpmyadmin/phpmyadmin/commit/ef6c66dca1b0cb0a1a482477938cfc859d2baee3",
+        "https://github.com/phpmyadmin/phpmyadmin/commit/ef6c66dca1b0cb0a1a482477938cfc859d2baee3"
+      ]
+    },
+    {
+      "id": "CVE-2016-4522",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in Rockwell Automation FactoryTalk EnergyMetrix before 2.20.00 allows remote attackers to execute arbitrary SQL commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-07-28",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-4837",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the Seed Coupon plugin before 1.6 for EC-CUBE allows remote attackers to execute arbitrary SQL commands via unspecified vectors.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-01",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-4999",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the getStringParameterSQL method in main/java/org/dashbuilder/dataprovider/sql/dialect/DefaultDialect.java in Dashbuilder before 0.6.0.Beta1 allows remote attackers to execute arbitrary SQL commands via a data set lookup filter in the (1) Data Set Authoring or (2) Disp",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-05",
+      "github_refs": [
+        "https://github.com/dashbuilder/dashbuilder/commit/8574899e3b6455547b534f570b2330ff772e524b",
+        "https://github.com/dashbuilder/dashbuilder/commit/8574899e3b6455547b534f570b2330ff772e524b"
+      ]
+    },
+    {
+      "id": "CVE-2016-5792",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in Moxa SoftCMS before 1.5 allows remote attackers to execute arbitrary SQL commands via unspecified fields.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5817",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in news pages in Cargotec Navis WebAccess before 2016-08-10 allows remote attackers to execute arbitrary SQL commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5048",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in chat/staff/default.aspx in ReadyDesk 9.1 allows remote attackers to execute arbitrary SQL commands via the user name field.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-26",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6195",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in forumrunner/includes/moderation.php in vBulletin before 4.2.2 Patch Level 5 and 4.2.3 before Patch Level 1 allows remote attackers to execute arbitrary SQL commands via the postids parameter to forumrunner/request.php, as exploited in the wild in July 2016.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-30",
+      "github_refs": [
+        "https://github.com/drewlong/vbully",
+        "https://github.com/drewlong/vbully"
+      ]
+    },
+    {
+      "id": "CVE-2016-1154",
+      "cwe": "CWE-89",
+      "description": "SQL injection vulnerability in the Help plug-in 1.3.5 and earlier in Cuore EC-CUBE allows remote attackers to execute arbitrary SQL commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-02-19",
+      "github_refs": []
+    }
+  ],
+  "CWE-79": [
+    {
+      "id": "CVE-2017-8898",
+      "cwe": "CWE-79",
+      "description": "Invision Power Services (IPS) Community Suite 4.1.19.2 and earlier has stored XSS in the Announcements, allowing privilege escalation from an Invision Power Board moderator to an admin. An attack uses the announce_content parameter in an index.php?/modcp/announcements/&action=create request. This is",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-10369",
+      "cwe": "CWE-79",
+      "description": "A Cross-site scripting (XSS) vulnerability was discovered on Intelbras Win 240 V1.1.0 devices. An attacker can change the Admin Password without a Login.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-08-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-9079",
+      "cwe": "CWE-79",
+      "description": "For some Iomega, Lenovo, LenovoEMC NAS devices versions 4.1.402.34662 and earlier, adversaries can craft URLs to modify the Document Object Model (DOM) of the page. In addition, adversaries can inject HTML script tags and HTML tags with JavaScript handlers to execute arbitrary JavaScript with the or",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-09-28",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-19222",
+      "cwe": "CWE-79",
+      "description": "An issue was discovered in LAOBANCMS 2.0. It allows a /install/mysql_hy.php?riqi=0&i=0 attack to reset the admin password, even if install.txt exists.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-11-12",
+      "github_refs": [
+        "https://github.com/AvaterXXX/laobanCMS/blob/master/1.md#reset-admin-password",
+        "https://github.com/AvaterXXX/laobanCMS/blob/master/1.md#reset-admin-password"
+      ]
+    },
+    {
+      "id": "CVE-2019-10913",
+      "cwe": "CWE-79",
+      "description": "In Symfony before 2.7.51, 2.8.x before 2.8.50, 3.x before 3.4.26, 4.x before 4.1.12, and 4.2.x before 4.2.7, HTTP Methods provided as verbs or using the override header may be treated as trusted input, but they are not validated, possibly causing SQL injection or XSS. This is related to symfony/http",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-05-16",
+      "github_refs": [
+        "https://github.com/symfony/symfony/commit/944e60f083c3bffbc6a0b5112db127a10a66a8ec",
+        "https://github.com/symfony/symfony/commit/944e60f083c3bffbc6a0b5112db127a10a66a8ec"
+      ]
+    },
+    {
+      "id": "CVE-2019-13478",
+      "cwe": "CWE-79",
+      "description": "The Yoast SEO plugin before 11.6-RC5 for WordPress does not properly restrict unfiltered HTML in term descriptions.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-07-09",
+      "github_refs": [
+        "https://github.com/Yoast/wordpress-seo/releases/tag/11.6-RC5",
+        "https://github.com/Yoast/wordpress-seo/releases/tag/11.6-RC5"
+      ]
+    },
+    {
+      "id": "CVE-2018-18864",
+      "cwe": "CWE-79",
+      "description": "Loadbalancer.org Enterprise VA MAX before 8.3.3 has XSS because Apache HTTP Server logs are displayed.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2018-11-20",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-15074",
+      "cwe": "CWE-79",
+      "description": "The Timeline feature in my_view_page.php in MantisBT through 2.21.1 has a stored cross-site scripting (XSS) vulnerability, allowing execution of arbitrary code (if CSP settings permit it) after uploading an attachment with a crafted filename. The code is executed for any user having visibility to th",
+      "cvss_version": "3.0",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2019-08-21",
+      "github_refs": [
+        "https://github.com/mantisbt/mantisbt/commit/9cee1971c498bbe0a72bca1c773fae50171d8c27",
+        "https://github.com/mantisbt/mantisbt/commit/9cee1971c498bbe0a72bca1c773fae50171d8c27"
+      ]
+    },
+    {
+      "id": "CVE-2019-13363",
+      "cwe": "CWE-79",
+      "description": "admin.php?page=notification_by_mail in Piwigo 2.9.5 has XSS via the nbm&#95;send&#95;html&#95;mail, nbm&#95;send&#95;mail&#95;as, nbm&#95;send&#95;detailed&#95;content, nbm&#95;complementary&#95;mail&#95;content, nbm&#95;send&#95;recent&#95;post&#95;dates, or param&#95;submit parameter. This is expl",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2019-09-13",
+      "github_refs": [
+        "https://github.com/Piwigo/Piwigo/issues",
+        "https://github.com/Piwigo/Piwigo/issues"
+      ]
+    },
+    {
+      "id": "CVE-2019-13364",
+      "cwe": "CWE-79",
+      "description": "admin.php?page=account_billing in Piwigo 2.9.5 has XSS via the vat&#95;number, billing&#95;name, company, or billing&#95;address parameter. This is exploitable via CSRF.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2019-09-13",
+      "github_refs": [
+        "https://github.com/Piwigo/Piwigo/issues",
+        "https://github.com/Piwigo/Piwigo/issues"
+      ]
+    },
+    {
+      "id": "CVE-2019-13923",
+      "cwe": "CWE-79",
+      "description": "A vulnerability has been identified in IE/WSN-PA Link WirelessHART Gateway (All versions). The integrated configuration web server of the affected device could allow Cross-Site Scripting (XSS) attacks if unsuspecting users are tricked into accessing a malicious link. User interaction is required for",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2019-09-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-5397",
+      "cwe": "CWE-79",
+      "description": "A remote bypass of security restrictions vulnerability was discovered in HPE 3PAR Service Processor version(s): prior to 5.0.5.1.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.4,
+      "severity": "CRITICAL",
+      "published": "2019-08-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-7551",
+      "cwe": "CWE-79",
+      "description": "Cantemo Portal before 3.2.13, 3.3.x before 3.3.8, and 3.4.x before 3.4.9 has XSS. Leveraging this vulnerability would enable performing actions as users, including administrative users. This could enable account creation and deletion as well as deletion of information contained within the app.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2019-04-10",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-7671",
+      "cwe": "CWE-79",
+      "description": "Prima Systems FlexAir, Versions 2.3.38 and prior. Parameters sent to scripts are not properly sanitized before being returned to the user, which may allow an attacker to execute arbitrary code in a user’s browser session in context of an affected site.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2019-06-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-17625",
+      "cwe": "CWE-79",
+      "description": "There is a stored XSS in Rambox 0.6.9 that can lead to code execution. The XSS is in the name field while adding/editing a service. The problem occurs due to incorrect sanitization of the name field when being processed and stored. This allows a user to craft a payload for Node.js and Electron, such",
+      "cvss_version": "3.1",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2019-10-16",
+      "github_refs": [
+        "https://github.com/ramboxapp/community-edition/issues/2418",
+        "https://github.com/ramboxapp/community-edition/issues/2418"
+      ]
+    },
+    {
+      "id": "CVE-2019-3708",
+      "cwe": "CWE-79",
+      "description": "IsilonSD Management Server 1.1.0 contains a cross-site scripting vulnerability while uploading an OVA file. A remote attacker can trick an admin user to potentially exploit this vulnerability to execute malicious HTML or JavaScript code in the context of the admin user.",
+      "cvss_version": "3.0",
+      "cvss_score": 8.3,
+      "severity": "HIGH",
+      "published": "2019-04-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-3709",
+      "cwe": "CWE-79",
+      "description": "IsilonSD Management Server 1.1.0 contains a cross-site scripting vulnerability while registering vCenter servers. A remote attacker can trick an admin user to potentially exploit this vulnerability to execute malicious HTML or JavaScript code in the context of the admin user.",
+      "cvss_version": "3.0",
+      "cvss_score": 8.3,
+      "severity": "HIGH",
+      "published": "2019-04-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-3638",
+      "cwe": "CWE-79",
+      "description": "Reflected Cross Site Scripting vulnerability in Administrators web console in McAfee Web Gateway (MWG) 7.8.x prior to 7.8.2.13 allows remote attackers to collect sensitive information or execute commands with the MWG administrator's credentials via tricking the administrator to click on a carefully ",
+      "cvss_version": "3.1",
+      "cvss_score": 8.1,
+      "severity": "HIGH",
+      "published": "2019-09-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-3873",
+      "cwe": "CWE-79",
+      "description": "It was found that Picketlink as shipped with Jboss Enterprise Application Platform 7.2 would accept an xinclude parameter in SAMLresponse XML. An attacker could use this flaw to send a URL to achieve cross-site scripting or possibly conduct further attacks.",
+      "cvss_version": "3.0",
+      "cvss_score": 6.4,
+      "severity": "MEDIUM",
+      "published": "2019-06-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-18413",
+      "cwe": "CWE-79",
+      "description": "In TypeStack class-validator 0.10.2, validate() input validation can be bypassed because certain internal attributes can be overwritten via a conflicting name. Even though there is an optional forbidUnknownValues parameter that can be used to reduce the risk of this bypass, this option is not docume",
+      "cvss_version": "3.1",
+      "cvss_score": 3.7,
+      "severity": "LOW",
+      "published": "2019-10-24",
+      "github_refs": [
+        "https://github.com/typestack/class-validator#passing-options",
+        "https://github.com/typestack/class-validator/issues/1422#issuecomment-1344635415",
+        "https://github.com/typestack/class-validator/issues/438"
+      ]
+    }
+  ],
+  "CWE-22": [
+    {
+      "id": "CVE-2004-0847",
+      "cwe": "CWE-22",
+      "description": "The Microsoft .NET forms authentication capability for ASP.NET allows remote attackers to bypass authentication for .aspx files in restricted directories via a request containing a (1) \"\\\" (backslash) or (2) \"%5C\" (encoded backslash), aka \"Path Validation Vulnerability.\"",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2004-11-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2006-7079",
+      "cwe": "CWE-22",
+      "description": "Variable extraction vulnerability in include/common.php in exV2 2.0.4.3 and earlier allows remote attackers to overwrite arbitrary program variables and conduct directory traversal attacks to execute arbitrary code by modifying the $xoopsOption['pagetype'] variable.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2007-03-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2009-1936",
+      "cwe": "CWE-22",
+      "description": "_functions.php in cpCommerce 1.2.x, possibly including 1.2.9, sends a redirect but does not exit when it is called directly, which allows remote attackers to bypass a protection mechanism to conduct remote file inclusion and directory traversal attacks, execute arbitrary PHP code, or read arbitrary ",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2009-06-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2009-4581",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in modules/admincp.php in RoseOnlineCMS 3 B1 and earlier, when magic_quotes_gpc is disabled, allows remote attackers to include and execute arbitrary local files via directory traversal sequences in the admin parameter.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2010-01-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2009-4013",
+      "cwe": "CWE-22",
+      "description": "Multiple directory traversal vulnerabilities in Lintian 1.23.x through 1.23.28, 1.24.x through 1.24.2.1, and 2.x before 2.3.2 allow remote attackers to overwrite arbitrary files or obtain sensitive information via vectors involving (1) control field names, (2) control field values, and (3) control f",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2010-02-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2010-2861",
+      "cwe": "CWE-22",
+      "description": "Multiple directory traversal vulnerabilities in the administrator console in Adobe ColdFusion 9.0.1 and earlier allow remote attackers to read arbitrary files via the locale parameter to (1) CFIDE/administrator/settings/mappings.cfm, (2) logging/settings.cfm, (3) datasources/index.cfm, (4) j2eepacka",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2010-08-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6138",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in SAP TREX 7.10 Revision 63 allows remote attackers to read arbitrary files via unspecified vectors, aka SAP Security Note 2203591.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-8204",
+      "cwe": "CWE-22",
+      "description": "A Directory Traversal vulnerability in FileReceiveServlet in the Brocade Network Advisor versions released prior to and including 14.0.2 could allow remote attackers to upload a malicious file in a section of the file system where it can be executed.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-8205",
+      "cwe": "CWE-22",
+      "description": "A Directory Traversal vulnerability in DashboardFileReceiveServlet in the Brocade Network Advisor versions released prior to and including 14.0.2 could allow remote attackers to upload a malicious file in a section of the file system where it can be executed.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6517",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in Liferay 5.1.0 allows remote attackers to have unspecified impact via a %2E%2E (encoded dot dot) in the minifierBundleDir parameter to barebone.jsp.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6600",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in the file upload functionality in ZOHO WebNMS Framework 5.2 and 5.2 SP1 allows remote attackers to upload and execute arbitrary JSP files via a .. (dot dot) in the fileName parameter to servlets/FileUploadServlet.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-23",
+      "github_refs": [
+        "https://github.com/pedrib/PoC/blob/master/advisories/webnms-5.2-sp1-pwn.txt",
+        "https://github.com/pedrib/PoC/blob/master/advisories/webnms-5.2-sp1-pwn.txt"
+      ]
+    },
+    {
+      "id": "CVE-2017-5219",
+      "cwe": "CWE-22",
+      "description": "An issue was discovered in SageCRM 7.x before 7.3 SP3. The Component Manager functionality, provided by SageCRM, permits additional components to be added to the application to enhance provided functionality. This functionality allows a zip file to be uploaded, containing a valid .ecf component file",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5946",
+      "cwe": "CWE-22",
+      "description": "The Zip::File component in the rubyzip gem before 1.2.1 for Ruby has a directory traversal vulnerability. If a site allows uploading of .zip files, an attacker can upload a malicious file that uses \"../\" pathname substrings to write arbitrary files to the filesystem.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-27",
+      "github_refs": [
+        "https://github.com/rubyzip/rubyzip/issues/315",
+        "https://github.com/rubyzip/rubyzip/releases",
+        "https://github.com/rubyzip/rubyzip/issues/315"
+      ]
+    },
+    {
+      "id": "CVE-2014-8704",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in index.php in Wonder CMS 2014 allows remote attackers to include and execute arbitrary local files via a crafted theme.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-7577",
+      "cwe": "CWE-22",
+      "description": "XiongMai uc-httpd has directory traversal allowing the reading of arbitrary files via a \"GET ../\" HTTP request.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-04-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-4068",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in Arcserve UDP before 5.0 Update 4 allows remote attackers to obtain sensitive information or cause a denial of service via a crafted file path to the (1) reportFileServlet or (2) exportServlet servlet.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2015-05-29",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-4532",
+      "cwe": "CWE-22",
+      "description": "Directory traversal vulnerability in the WAP interface in Trihedral VTScada (formerly VTS) 8.x through 11.x before 11.2.02 allows remote attackers to read arbitrary files via a crafted pathname.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-06-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1000112",
+      "cwe": "CWE-22",
+      "description": "Unauthenticated remote .jpg file upload in contus-video-comments v1.0 wordpress plugin",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-10-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5539",
+      "cwe": "CWE-22",
+      "description": "The patch for directory traversal (CVE-2017-5480) in b2evolution version 6.8.4-stable has a bypass vulnerability. An attacker can use ..\\/ to bypass the filter rule. Then, this attacker can exploit this vulnerability to delete or read any files on the server. It can also be used to determine whether",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-01-23",
+      "github_refs": [
+        "https://github.com/b2evolution/b2evolution/commit/e35f7c195d8c1103d2d981a48cda5ab45ecac48a",
+        "https://github.com/b2evolution/b2evolution/issues/36",
+        "https://github.com/b2evolution/b2evolution/commit/e35f7c195d8c1103d2d981a48cda5ab45ecac48a"
+      ]
+    },
+    {
+      "id": "CVE-2016-6269",
+      "cwe": "CWE-22",
+      "description": "Multiple directory traversal vulnerabilities in Trend Micro Smart Protection Server 2.5 before build 2200, 2.6 before build 2106, and 3.0 before build 1330 allow remote attackers to read and delete arbitrary files via the tmpfname parameter to (1) log_mgt_adhocquery_ajaxhandler.php, (2) log_mgt_ajax",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-01-30",
+      "github_refs": []
+    }
+  ],
+  "CWE-78": [
+    {
+      "id": "CVE-2015-7426",
+      "cwe": "CWE-78",
+      "description": "The Data Protection extension in the VMware GUI in IBM Tivoli Storage Manager for Virtual Environments: Data Protection for VMware (aka Spectrum Protect for Virtual Environments) 7.1 before 7.1.3.0 and Tivoli Storage FlashCopy Manager for VMware (aka Spectrum Protect Snapshot) 4.1 before 4.1.3.0 all",
+      "cvss_version": "3.0",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2016-01-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-10043",
+      "cwe": "CWE-78",
+      "description": "An issue was discovered in Radisys MRF Web Panel (SWMS) 9.0.1. The MSM_MACRO_NAME POST parameter in /swms/ms.cgi was discovered to be vulnerable to OS command injection attacks. It is possible to use the pipe character (|) to inject arbitrary OS commands and retrieve the output in the application's ",
+      "cvss_version": "3.0",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2017-01-31",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-6271",
+      "cwe": "CWE-78",
+      "description": "GNU Bash through 4.3 processes trailing strings after function definitions in the values of environment variables, which allows remote attackers to execute arbitrary code via a crafted environment, as demonstrated by vectors involving the ForceCommand feature in OpenSSH sshd, the mod_cgi and mod_cgi",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2014-09-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-7169",
+      "cwe": "CWE-78",
+      "description": "GNU Bash through 4.3 bash43-025 processes trailing strings after certain malformed function definitions in the values of environment variables, which allows remote attackers to write to files or possibly have unknown other impact via a crafted environment, as demonstrated by vectors involving the Fo",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2014-09-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-6435",
+      "cwe": "CWE-78",
+      "description": "An unspecified CGI script in Cisco FX-OS before 1.1.2 on Firepower 9000 devices and Cisco Unified Computing System (UCS) Manager before 2.2(4b), 2.2(5) before 2.2(5a), and 3.0 before 3.0(2e) allows remote attackers to execute arbitrary shell commands via a crafted HTTP request, aka Bug ID CSCur90888",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-01-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-3655",
+      "cwe": "CWE-78",
+      "description": "The management web interface in Palo Alto Networks PAN-OS before 5.0.18, 6.0.x before 6.0.13, 6.1.x before 6.1.10, and 7.0.x before 7.0.5 allows remote attackers to execute arbitrary OS commands via an unspecified API call.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1352",
+      "cwe": "CWE-78",
+      "description": "Cisco Unified Computing System (UCS) Central Software 1.3(1b) and earlier allows remote attackers to execute arbitrary OS commands via a crafted HTTP request, aka Bug ID CSCuv33856.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-4642",
+      "cwe": "CWE-78",
+      "description": "The escapeshellarg function in ext/standard/exec.c in PHP before 5.4.42, 5.5.x before 5.5.26, and 5.6.x before 5.6.10 on Windows allows remote attackers to execute arbitrary OS commands via a crafted string to an application that accepts command-line arguments for a call to the PHP system function.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-16",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6147",
+      "cwe": "CWE-78",
+      "description": "An unspecified interface in SAP TREX 7.10 Revision 63 allows remote attackers to execute arbitrary OS commands with SIDadm privileges via unspecified vectors, aka SAP Security Note 2234226.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-6077",
+      "cwe": "CWE-78",
+      "description": "ping.cgi on NETGEAR DGN2200 devices with firmware through 10.0.0.50 allows remote authenticated users to execute arbitrary OS commands via shell metacharacters in the ping_IPAddr field of an HTTP POST request.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-6359",
+      "cwe": "CWE-78",
+      "description": "QNAP QTS before 4.2.4 Build 20170313 allows attackers to gain administrator privileges and execute arbitrary commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-6360",
+      "cwe": "CWE-78",
+      "description": "QNAP QTS before 4.2.4 Build 20170313 allows attackers to gain administrator privileges and obtain sensitive information via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-6361",
+      "cwe": "CWE-78",
+      "description": "QNAP QTS before 4.2.4 Build 20170313 allows attackers to execute arbitrary commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-6182",
+      "cwe": "CWE-78",
+      "description": "In Sophos Web Appliance (SWA) before 4.3.1.2, a section of the machine's interface responsible for generating reports was vulnerable to remote command injection via functions, aka NSWA-1304.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-8051",
+      "cwe": "CWE-78",
+      "description": "Tenable Appliance 3.5 - 4.4.0, and possibly prior versions, contains a flaw in the simpleupload.py script in the Web UI. Through the manipulation of the tns_appliance_session_user parameter, a remote attacker can inject arbitrary commands.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-04-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1142",
+      "cwe": "CWE-78",
+      "description": "Seeds acmailer before 3.8.21 and 3.9.x before 3.9.15 Beta allows remote authenticated users to execute arbitrary OS commands via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-01-16",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-8151",
+      "cwe": "CWE-78",
+      "description": "Symantec Encryption Management Server (SEMS) 3.3.2 before MP12 allows remote authenticated users to execute arbitrary OS commands by leveraging console administrator access.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-02-18",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-3028",
+      "cwe": "CWE-78",
+      "description": "IBM Security Access Manager for Web 7.0 before IF2 and 8.0 before 8.0.1.4 IF3 and Security Access Manager 9.0 before 9.0.1.0 IF5 allow remote authenticated users to execute arbitrary commands by leveraging LMI admin access.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-11-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-8721",
+      "cwe": "CWE-78",
+      "description": "An exploitable OS Command Injection vulnerability exists in the web application 'ping' functionality of Moxa AWK-3131A Wireless Access Points running firmware 1.1. Specially crafted web form input can cause an OS Command Injection resulting in complete compromise of the vulnerable device. An attacke",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-04-20",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-8557",
+      "cwe": "CWE-78",
+      "description": "The FontManager._get_nix_font_path function in formatters/img.py in Pygments 1.2.2 through 2.0.2 allows remote attackers to execute arbitrary commands via shell metacharacters in a font name.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2016-01-08",
+      "github_refs": []
+    }
+  ],
+  "CWE-95": [
+    {
+      "id": "CVE-2026-28505",
+      "cwe": "CWE-95",
+      "description": "Tautulli is a Python based monitoring and tracking tool for Plex Media Server. Prior to version 2.17.0, the str_eval() function in notification_handler.py implements a sandboxed eval() for notification text templates. The sandbox attempts to restrict callable names by inspecting code.co_names of the",
+      "cvss_version": "3.1",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2026-03-30",
+      "github_refs": [
+        "https://github.com/Tautulli/Tautulli/releases/tag/v2.17.0",
+        "https://github.com/Tautulli/Tautulli/security/advisories/GHSA-m62j-gwm9-7p8m"
+      ]
+    },
+    {
+      "id": "CVE-2026-27702",
+      "cwe": "CWE-95",
+      "description": "Budibase is a low code platform for creating internal tools, workflows, and admin panels. Prior to version 3.30.4, an unsafe `eval()` vulnerability in Budibase's view filtering implementation allows any authenticated user (including free tier accounts) to execute arbitrary JavaScript code on the ser",
+      "cvss_version": "3.1",
+      "cvss_score": 9.9,
+      "severity": "CRITICAL",
+      "published": "2026-02-25",
+      "github_refs": [
+        "https://github.com/Budibase/budibase/commit/348659810cf930dda5f669e782706594c547115d",
+        "https://github.com/Budibase/budibase/pull/18087",
+        "https://github.com/Budibase/budibase/releases/tag/3.30.4"
+      ]
+    },
+    {
+      "id": "CVE-2026-4001",
+      "cwe": "CWE-95",
+      "description": "The Woocommerce Custom Product Addons Pro plugin for WordPress is vulnerable to Remote Code Execution in all versions up to, and including, 5.4.1 via the custom pricing formula eval() in the process_custom_formula() function within includes/process/price.php. This is due to insufficient sanitization",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2026-03-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2026-27493",
+      "cwe": "CWE-95",
+      "description": "n8n is an open source workflow automation platform. Prior to versions 2.10.1, 2.9.3, and 1.123.22, a second-order expression injection vulnerability existed in n8n's Form nodes that could allow an unauthenticated attacker to inject and evaluate arbitrary n8n expressions by submitting crafted form da",
+      "cvss_version": "3.1",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2026-02-25",
+      "github_refs": [
+        "https://github.com/n8n-io/n8n/commit/562d867483e871b0f1e31776252e23bd721df75b",
+        "https://github.com/n8n-io/n8n/issues/19",
+        "https://github.com/n8n-io/n8n/releases/tag/n8n@1.123.22"
+      ]
+    },
+    {
+      "id": "CVE-2020-37137",
+      "cwe": "CWE-95",
+      "description": "PHP-Fusion 9.03.50 contains a remote code execution vulnerability in the 'add_panel_form()' function that allows attackers to execute arbitrary code through an eval() function with unsanitized POST data. Attackers can exploit the vulnerability by sending crafted panel_content POST parameters to the ",
+      "cvss_version": "3.1",
+      "cvss_score": 6.1,
+      "severity": "MEDIUM",
+      "published": "2026-02-05",
+      "github_refs": []
+    }
+  ],
+  "CWE-327": [
+    {
+      "id": "CVE-2007-6013",
+      "cwe": "CWE-327",
+      "description": "Wordpress 1.5 through 2.3.1 uses cookie values based on the MD5 hash of a password MD5 hash, which allows attackers to bypass authentication by obtaining the MD5 hash from the user database, then generating the authentication cookie from that hash.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2007-11-19",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6602",
+      "cwe": "CWE-327",
+      "description": "ZOHO WebNMS Framework 5.2 and 5.2 SP1 use a weak obfuscation algorithm to store passwords, which allows context-dependent attackers to obtain cleartext passwords by leveraging access to WEB-INF/conf/securitydbData.xml.  NOTE: this issue can be combined with CVE-2016-6601 for a remote exploit.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-23",
+      "github_refs": [
+        "https://github.com/pedrib/PoC/blob/master/advisories/webnms-5.2-sp1-pwn.txt",
+        "https://github.com/pedrib/PoC/blob/master/advisories/webnms-5.2-sp1-pwn.txt"
+      ]
+    },
+    {
+      "id": "CVE-2017-4917",
+      "cwe": "CWE-327",
+      "description": "VMware vSphere Data Protection (VDP) 6.1.x, 6.0.x, 5.8.x, and 5.5.x locally stores vCenter Server credentials using reversible encryption. This issue may allow plaintext credentials to be obtained.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-8687",
+      "cwe": "CWE-327",
+      "description": "Seagate Business NAS devices with firmware before 2015.00322 allow remote attackers to execute arbitrary code with root privileges by leveraging use of a static encryption key to create session tokens.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-9466",
+      "cwe": "CWE-327",
+      "description": "The executable httpd on the TP-Link WR841N V8 router before TL-WR841N(UN)_V8_170210 contained a design flaw in the use of DES for block encryption. This resulted in incorrect access control, which allowed attackers to gain read-write access to system settings through the protected router configurati",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-26",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-9859",
+      "cwe": "CWE-327",
+      "description": "An issue was discovered in SMA Solar Technology products. The inverters make use of a weak hashing algorithm to encrypt the password for REGISTER requests. This hashing algorithm can be cracked relatively easily. An attacker will likely be able to crack the password using offline crackers. This crac",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-08-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-9969",
+      "cwe": "CWE-327",
+      "description": "In all Qualcomm products with Android releases from CAF using the Linux kernel, the GPS client may use an insecure cryptographic algorithm.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-08-18",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2012-4449",
+      "cwe": "CWE-327",
+      "description": "Apache Hadoop before 0.23.4, 1.x before 1.0.4, and 2.x before 2.0.2 generate token passwords using a 20-bit secret when Kerberos security features are enabled, which makes it easier for context-dependent attackers to crack secret keys via a brute-force attack.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-10-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-17717",
+      "cwe": "CWE-327",
+      "description": "Sonatype Nexus Repository Manager through 2.14.5 has weak password encryption with a hardcoded CMMDwoV value in the LDAP integration feature.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-12-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-17878",
+      "cwe": "CWE-327",
+      "description": "An issue was discovered in Valve Steam Link build 643. Root passwords longer than 8 characters are truncated because of the default use of DES (aka the CONFIG_FEATURE_DEFAULT_PASSWD_ALGO=\"des\" setting).",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-12-27",
+      "github_refs": [
+        "https://github.com/ValveSoftware/steamlink-sdk/issues/101",
+        "https://github.com/ValveSoftware/steamlink-sdk/issues/110",
+        "https://github.com/ValveSoftware/steamlink-sdk/issues/101"
+      ]
+    },
+    {
+      "id": "CVE-2015-9235",
+      "cwe": "CWE-327",
+      "description": "In jsonwebtoken node module before 4.2.2 it is possible for an attacker to bypass verification when a token digitally signed with an asymmetric key (RS/ES family) of algorithms but instead the attacker send a token digitally signed with a symmetric algorithm (HS* family).",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-05-29",
+      "github_refs": [
+        "https://github.com/auth0/node-jsonwebtoken/commit/1bb584bc382295eeb7ee8c4452a673a77a68b687",
+        "https://github.com/auth0/node-jsonwebtoken/commit/1bb584bc382295eeb7ee8c4452a673a77a68b687"
+      ]
+    },
+    {
+      "id": "CVE-2019-0187",
+      "cwe": "CWE-327",
+      "description": "Unauthenticated RCE is possible when JMeter is used in distributed mode (-r or -R command line options). Attacker can establish a RMI connection to a jmeter-server using RemoteJMeterEngine and proceed with an attack using untrusted data deserialization. This only affect tests running in Distributed ",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-03-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-5723",
+      "cwe": "CWE-327",
+      "description": "An issue was discovered in portier vision 4.4.4.2 and 4.4.4.6. Passwords are stored using reversible encryption rather than as a hash value, and the used Vigenere algorithm is badly outdated. Moreover, the encryption key is static and too short. Due to this, the passwords stored by the application c",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-03-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-16143",
+      "cwe": "CWE-327",
+      "description": "An issue was discovered in the blake2 crate before 0.8.1 for Rust. The BLAKE2b and BLAKE2s algorithms, when used with HMAC, produce incorrect results because the block sizes are half of the required sizes.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-09-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-8237",
+      "cwe": "CWE-327",
+      "description": "Adobe Acrobat and Reader versions 2019.012.20035 and earlier, 2019.012.20035 and earlier, 2017.011.30142 and earlier, 2017.011.30143 and earlier, 2015.006.30497 and earlier, and 2015.006.30498 and earlier have an insufficiently robust encryption vulnerability. Successful exploitation could lead to s",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-10-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-9095",
+      "cwe": "CWE-327",
+      "description": "An issue was discovered on Moxa MGate MB3170 and MB3270 devices before 4.1, MB3280 and MB3480 devices before 3.1, MB3660 devices before 2.3, and MB3180 devices before 2.1. An attacker may be able to intercept weakly encrypted passwords and gain administrative access.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-03-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-9483",
+      "cwe": "CWE-327",
+      "description": "Amazon Ring Doorbell before 3.4.7 mishandles encryption, which allows attackers to obtain audio and video data, or insert spoofed video that does not correspond to the actual person at the door.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2019-03-01",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-5919",
+      "cwe": "CWE-327",
+      "description": "An incomplete cryptography of the data store function by using hidden tag in Nablarch 5 (5, and 5u1 to 5u13) allows remote attackers to obtain information of the stored data, to register invalid value, or alter the value via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2019-03-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-5502",
+      "cwe": "CWE-327",
+      "description": "SMB in Data ONTAP operating in 7-Mode versions prior to 8.2.5P3 has weak cryptography which when exploited could lead to information disclosure or addition or modification of data.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2019-08-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-5035",
+      "cwe": "CWE-327",
+      "description": "An exploitable information disclosure vulnerability exists in the Weave PASE pairing functionality of the Nest Cam IQ Indoor, version 4620002. A set of specially crafted weave packets can brute force a pairing code, resulting in greater Weave access and potentially full device control. An attacker c",
+      "cvss_version": "3.1",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2019-08-20",
+      "github_refs": []
+    }
+  ],
+  "CWE-276": [
+    {
+      "id": "CVE-2019-19896",
+      "cwe": "CWE-276",
+      "description": "In IXP EasyInstall 6.2.13723, there is Remote Code Execution via weak permissions on the Engine Service share. The default file permissions of the IXP$ share on the server allows modification of directories and files (e.g., bat-scripts), which allows execution of code in the context of NT AUTHORITY\\",
+      "cvss_version": "3.1",
+      "cvss_score": 9.9,
+      "severity": "CRITICAL",
+      "published": "2020-01-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-1999-0426",
+      "cwe": "CWE-276",
+      "description": "The default permissions of /dev/kmem in Linux versions before 2.0.36 allows IP spoofing.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "1999-03-01",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2013-0632",
+      "cwe": "CWE-276",
+      "description": "administrator.cfc in Adobe ColdFusion 9.0, 9.0.1, 9.0.2, and 10 allows remote attackers to bypass authentication and possibly execute arbitrary code by logging in to the RDS component using the default empty password and leveraging this session to access the administrative web interface, as exploite",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2013-01-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5642",
+      "cwe": "CWE-276",
+      "description": "During installation of Ambari 2.4.0 through 2.4.2, Ambari Server artifacts are not created with proper ACLs.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-04-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-0847",
+      "cwe": "CWE-276",
+      "description": "An elevation of privilege vulnerability in the Android media framework (mediaanalytics). Product: Android. Versions: 8.0. Android ID: A-65540999.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-16",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-16127",
+      "cwe": "CWE-276",
+      "description": "The module pandora-doomsday infects other modules. It's since been unpublished from the registry.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-06-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-16128",
+      "cwe": "CWE-276",
+      "description": "The module npm-script-demo opened a connection to a command and control server. It has been removed from the npm registry.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-06-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-12450",
+      "cwe": "CWE-276",
+      "description": "file_copy_fallback in gio/gfile.c in GNOME GLib 2.15.0 through 2.61.1 does not properly restrict file permissions while a copy operation is in progress. Instead, default permissions are used.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-05-29",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-17124",
+      "cwe": "CWE-276",
+      "description": "Kramer VIAware 2.5.0719.1034 has Incorrect Access Control.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-10-09",
+      "github_refs": [
+        "https://github.com/hessandrew/CVE-2019-17124",
+        "https://github.com/hessandrew/CVE-2019-17124"
+      ]
+    },
+    {
+      "id": "CVE-2019-17383",
+      "cwe": "CWE-276",
+      "description": "The netaddr gem before 2.0.4 for Ruby has misconfigured file permissions, such that a gem install may result in 0777 permissions in the target filesystem.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-10-09",
+      "github_refs": [
+        "https://github.com/dspinhirne/netaddr-rb/commit/3aac46c00a36e71905eaa619cb94d45bff6e3b51",
+        "https://github.com/dspinhirne/netaddr-rb/commit/3aac46c00a36e71905eaa619cb94d45bff6e3b51"
+      ]
+    },
+    {
+      "id": "CVE-2019-19392",
+      "cwe": "CWE-276",
+      "description": "The forDNN.UsersExportImport module before 1.2.0 for DNN (formerly DotNetNuke) allows an unprivileged user to import (create) new users with Administrator privileges, as demonstrated by Roles=\"Administrators\" in XML or CSV data.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-01-21",
+      "github_refs": [
+        "https://github.com/fordnn/usersexportimport/commits/master",
+        "https://github.com/fordnn/usersexportimport/commits/master"
+      ]
+    },
+    {
+      "id": "CVE-2020-8114",
+      "cwe": "CWE-276",
+      "description": "GitLab EE 8.9 and later through 12.7.2 has Insecure Permission",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-02-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-9039",
+      "cwe": "CWE-276",
+      "description": "Couchbase Server 4.0.0, 4.1.0, 4.1.1, 4.5.0, 4.5.1, 4.6.0 through 4.6.5, 5.0.0, 5.1.1, 5.5.0 and 5.5.1 have Insecure Permissions for the projector and indexer REST endpoints (they allow unauthenticated access).The /settings REST endpoint exposed by the projector process is an endpoint that administr",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-02-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-20536",
+      "cwe": "CWE-276",
+      "description": "An issue was discovered on Samsung mobile devices with N(7.1), O(8.x), and P(9.0) (released in China) software. The Firewall application mishandles the PermissionWhiteLists protection mechanism. The Samsung ID is SVE-2019-14299 (November 2019).",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-03-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-12834",
+      "cwe": "CWE-276",
+      "description": "eQ-3 Homematic Central Control Unit (CCU)2 through 2.51.6 and CCU3 through 3.51.6 allow Remote Code Execution in the JSON API Method ReGa.runScript, by unauthenticated attackers with access to the web interface, due to the default auto-login feature being enabled during first-time setup (or factory ",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-05-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-9409",
+      "cwe": "CWE-276",
+      "description": "The administrative UI component of TIBCO Software Inc.'s TIBCO JasperReports Server, TIBCO JasperReports Server for AWS Marketplace, and TIBCO JasperReports Server for ActiveMatrix BPM contains a vulnerability that theoretically allows an unauthenticated attacker to obtain the permissions of a Jaspe",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-05-20",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-11716",
+      "cwe": "CWE-276",
+      "description": "Panasonic P110, Eluga Z1 Pro, Eluga X1, and Eluga X1 Pro devices through 2020-04-10 have Insecure Permissions. NOTE: the vendor states that all affected products are at \"End-of-software-support.\"",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-05-20",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-6469",
+      "cwe": "CWE-276",
+      "description": "Insufficient policy enforcement in developer tools in Google Chrome prior to 83.0.4103.61 allowed an attacker who convinced a user to install a malicious extension to potentially perform a sandbox escape via a crafted Chrome Extension.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2020-05-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-6471",
+      "cwe": "CWE-276",
+      "description": "Insufficient policy enforcement in developer tools in Google Chrome prior to 83.0.4103.61 allowed an attacker who convinced a user to install a malicious extension to potentially perform a sandbox escape via a crafted Chrome Extension.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2020-05-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-3689",
+      "cwe": "CWE-276",
+      "description": "The nfs-utils package in SUSE Linux Enterprise Server 12 before and including version 1.3.0-34.18.1 and in SUSE Linux Enterprise Server 15 before and including version 2.1.1-6.10.2 the directory /var/lib/nfs is owned by statd:nogroup. This directory contains files owned and managed by root. If statd",
+      "cvss_version": "3.1",
+      "cvss_score": 5.1,
+      "severity": "MEDIUM",
+      "published": "2019-09-19",
+      "github_refs": []
+    }
+  ],
+  "CWE-502": [
+    {
+      "id": "CVE-2003-0791",
+      "cwe": "CWE-502",
+      "description": "The Script.prototype.freeze/thaw functionality in Mozilla 1.4 and earlier allows attackers to execute native methods by modifying the string used as input to the script.thaw JavaScript function, which is then deserialized and executed.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2003-10-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2012-0911",
+      "cwe": "CWE-502",
+      "description": "TikiWiki CMS/Groupware before 6.7 LTS and before 8.4 allows remote attackers to execute arbitrary PHP code via a crafted serialized object in the (1) cookieName to lib/banners/bannerlib.php; (2) printpages or (3) printstructures parameter to (a) tiki-print_multi_pages.php or (b) tiki-print_pages.php",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2012-07-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2012-4406",
+      "cwe": "CWE-502",
+      "description": "OpenStack Object Storage (swift) before 1.7.0 uses the loads function in the pickle Python module unsafely when storing and loading metadata in memcached, which allows remote attackers to execute arbitrary code via a crafted pickle object.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2012-10-22",
+      "github_refs": [
+        "https://github.com/openstack/swift/commit/e1ff51c04554d51616d2845f92ab726cb0e5831a",
+        "https://github.com/openstack/swift/commit/e1ff51c04554d51616d2845f92ab726cb0e5831a"
+      ]
+    },
+    {
+      "id": "CVE-2013-1465",
+      "cwe": "CWE-502",
+      "description": "The Cubecart::_basket method in classes/cubecart.class.php in CubeCart 5.0.0 through 5.2.0 allows remote attackers to unserialize arbitrary PHP objects via a crafted shipping parameter, as demonstrated by modifying the application configuration using the Config object.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2013-02-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-4852",
+      "cwe": "CWE-502",
+      "description": "The WLS Security component in Oracle WebLogic Server 10.3.6.0, 12.1.2.0, 12.1.3.0, and 12.2.1.0 allows remote attackers to execute arbitrary commands via a crafted serialized Java object in T3 protocol traffic to TCP port 7001, related to oracle_common/modules/com.bea.core.apache.commons.collections",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2015-11-18",
+      "github_refs": [
+        "https://github.com/foxglovesec/JavaUnserializeExploits/blob/master/weblogic.py",
+        "https://github.com/foxglovesec/JavaUnserializeExploits/blob/master/weblogic.py"
+      ]
+    },
+    {
+      "id": "CVE-2015-8103",
+      "cwe": "CWE-502",
+      "description": "The Jenkins CLI subsystem in Jenkins before 1.638 and LTS before 1.625.2 allows remote attackers to execute arbitrary code via a crafted serialized Java object, related to a problematic webapps/ROOT/WEB-INF/lib/commons-collections-*.jar file and the \"Groovy variant in 'ysoserial'\".",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2015-11-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-6420",
+      "cwe": "CWE-502",
+      "description": "Serialized-object interfaces in certain Cisco Collaboration and Social Media; Endpoint Clients and Client Software; Network Application, Service, and Acceleration; Network and Content Security Devices; Network Management and Provisioning; Routing and Switching - Enterprise and Service Provider; Unif",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2015-12-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-7450",
+      "cwe": "CWE-502",
+      "description": "Serialized-object interfaces in certain IBM analytics, business solutions, cognitive, IT infrastructure, and mobile and social products allow remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the InvokerTransformer class in the Apache Commons Collections",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-01-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1114",
+      "cwe": "CWE-502",
+      "description": "Adobe ColdFusion 10 before Update 19, 11 before Update 8, and 2016 before Update 1 allows remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the Apache Commons Collections library.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-7124",
+      "cwe": "CWE-502",
+      "description": "ext/standard/var_unserializer.c in PHP before 5.6.25 and 7.x before 7.0.10 mishandles certain invalid objects, which allows remote attackers to cause a denial of service or possibly have unspecified other impact via crafted serialized data that leads to a (1) __destruct call or (2) magic method call",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-09-12",
+      "github_refs": [
+        "https://github.com/php/php-src/commit/20ce2fe8e3c211a42fee05a461a5881be9a8790e?w=1",
+        "https://github.com/php/php-src/commit/20ce2fe8e3c211a42fee05a461a5881be9a8790e?w=1"
+      ]
+    },
+    {
+      "id": "CVE-2016-6330",
+      "cwe": "CWE-502",
+      "description": "The server in Red Hat JBoss Operations Network (JON), when SSL authentication is not configured for JON server / agent communication, allows remote attackers to execute arbitrary code via a crafted HTTP request, related to message deserialization.  NOTE: this vulnerability exists because of an incom",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-09-27",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5019",
+      "cwe": "CWE-502",
+      "description": "CoreResponseStateManager in Apache MyFaces Trinidad 1.0.0 through 1.0.13, 1.2.x before 1.2.15, 2.0.x before 2.0.2, and 2.1.x before 2.1.2 might allow attackers to conduct deserialization attacks via a crafted serialized view state string.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-10-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6620",
+      "cwe": "CWE-502",
+      "description": "An issue was discovered in phpMyAdmin. Some data is passed to the PHP unserialize() function without verification that it's valid serialized data. The unserialization can result in code execution because of the interaction with object instantiation and autoloading. All 4.6.x versions (prior to 4.6.4",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-12-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-9865",
+      "cwe": "CWE-502",
+      "description": "An issue was discovered in phpMyAdmin. Due to a bug in serialized string parsing, it was possible to bypass the protection offered by PMA_safeUnserialize() function. All 4.6.x versions (prior to 4.6.5), 4.4.x versions (prior to 4.4.15.9), and 4.0.x versions (prior to 4.0.10.18) are affected.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-12-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6199",
+      "cwe": "CWE-502",
+      "description": "ObjectSocketWrapper.java in Gradle 2.12 allows remote attackers to execute arbitrary code via a crafted serialized object.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5941",
+      "cwe": "CWE-502",
+      "description": "An issue was discovered in the node-serialize package 0.0.4 for Node.js. Untrusted data passed into the unserialize() function can be exploited to achieve arbitrary code execution by passing a JavaScript Object with an Immediately Invoked Function Expression (IIFE).",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5954",
+      "cwe": "CWE-502",
+      "description": "An issue was discovered in the serialize-to-js package 0.5.0 for Node.js. Untrusted data passed into the deserialize() function can be exploited to achieve arbitrary code execution by passing a JavaScript Object with an Immediately Invoked Function Expression (IIFE).",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-10",
+      "github_refs": [
+        "https://github.com/commenthol/serialize-to-js/issues/1",
+        "https://github.com/commenthol/serialize-to-js/issues/1"
+      ]
+    },
+    {
+      "id": "CVE-2016-0360",
+      "cwe": "CWE-502",
+      "description": "IBM Websphere MQ JMS 7.0.1, 7.1, 7.5, 8.0, and 9.0 client provides classes that deserialize objects from untrusted sources which could allow a malicious user to execute arbitrary Java code by adding vulnerable classes to the classpath. IBM Reference #: 1983457.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5830",
+      "cwe": "CWE-502",
+      "description": "Revive Adserver before 4.0.1 allows remote attackers to execute arbitrary code via serialized data in the cookies related to the delivery scripts.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-3415",
+      "cwe": "CWE-502",
+      "description": "Zimbra Collaboration before 8.7.0 allows remote attackers to conduct deserialization attacks via unspecified vectors, aka bug 102276.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-01-18",
+      "github_refs": []
+    }
+  ],
+  "CWE-20": [
+    {
+      "id": "CVE-2015-8747",
+      "cwe": "CWE-20",
+      "description": "The multifilesystem storage backend in Radicale before 1.1 allows remote attackers to read or write to arbitrary files via a crafted component name.",
+      "cvss_version": "3.0",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2016-02-03",
+      "github_refs": [
+        "https://github.com/Kozea/Radicale/pull/343",
+        "https://github.com/Unrud/Radicale/commit/bcaf452e516c02c9bed584a73736431c5e8831f1",
+        "https://github.com/Kozea/Radicale/pull/343"
+      ]
+    },
+    {
+      "id": "CVE-2010-4042",
+      "cwe": "CWE-20",
+      "description": "Google Chrome before 7.0.517.41 does not properly handle element maps, which allows remote attackers to cause a denial of service or possibly have unspecified other impact via vectors related to \"stale elements.\"",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2010-10-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-5254",
+      "cwe": "CWE-20",
+      "description": "Apache ActiveMQ 5.x before 5.13.0 does not restrict the classes that can be serialized in the broker, which allows remote attackers to execute arbitrary code via a crafted serialized Java Message Service (JMS) ObjectMessage object.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-01-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-0801",
+      "cwe": "CWE-20",
+      "description": "The Broadcom Wi-Fi driver in the kernel in Android 4.x before 4.4.4, 5.x before 5.1.1 LMY49G, and 6.x before 2016-02-01 allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via crafted wireless control message packets, aka internal bug 25662029.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-02-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-9757",
+      "cwe": "CWE-20",
+      "description": "The Ignite Realtime Smack XMPP API, as used in Atlassian Bamboo before 5.9.9 and 5.10.x before 5.10.0, allows remote configured XMPP servers to execute arbitrary Java code via serialized data in an XMPP message.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-02-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-8360",
+      "cwe": "CWE-20",
+      "description": "An unspecified resource in Atlassian Bamboo before 5.9.9 and 5.10.x before 5.10.0 allows remote attackers to execute arbitrary Java code via serialized data to the JMS port.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-02-08",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-0132",
+      "cwe": "CWE-20",
+      "description": "Microsoft .NET Framework 2.0 SP2, 3.0 SP2, 3.5, 3.5.1, 4.5.2, 4.6, and 4.6.1 mishandles signature validation for unspecified elements of XML documents, which allows remote attackers to spoof signatures via a modified document, aka \".NET XML Validation Security Feature Bypass.\"",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-03-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-0815",
+      "cwe": "CWE-20",
+      "description": "The MPEG4Source::fragmentedRead function in MPEG4Extractor.cpp in libstagefright in mediaserver in Android 4.x before 4.4.4, 5.x before 5.1.1 LMY49H, and 6.x before 2016-03-01 allows remote attackers to execute arbitrary code or cause a denial of service (memory corruption) via a crafted media file,",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-03-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1997",
+      "cwe": "CWE-20",
+      "description": "HPE Operations Orchestration 10.x before 10.51 and Operations Orchestration content before 1.7.0 allow remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the Apache Commons Collections library.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-03-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1998",
+      "cwe": "CWE-20",
+      "description": "HPE Service Manager (SM) 9.3x before 9.35 P4 and 9.4x before 9.41.P2 allows remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the Apache Commons Collections library.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-03-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1291",
+      "cwe": "CWE-20",
+      "description": "Cisco Prime Infrastructure 1.2.0 through 2.2(2) and Cisco Evolved Programmable Network Manager (EPNM) 1.2 allow remote attackers to execute arbitrary code via crafted deserialized data in an HTTP POST request, aka Bug ID CSCuw03192.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-2170",
+      "cwe": "CWE-20",
+      "description": "Apache OFBiz 12.04.x before 12.04.06 and 13.07.x before 13.07.03 allow remote attackers to execute arbitrary commands via a crafted serialized Java object, related to the Apache Commons Collections library.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-3655",
+      "cwe": "CWE-20",
+      "description": "The management web interface in Palo Alto Networks PAN-OS before 5.0.18, 6.0.x before 6.0.13, 6.1.x before 6.1.10, and 7.0.x before 7.0.5 allows remote attackers to execute arbitrary OS commands via an unspecified API call.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-7545",
+      "cwe": "CWE-20",
+      "description": "The (1) git-remote-ext and (2) unspecified other remote helper programs in Git before 2.3.10, 2.4.x before 2.4.10, 2.5.x before 2.5.4, and 2.6.x before 2.6.1 do not properly restrict the allowed protocols, which might allow remote attackers to execute arbitrary code via a URL in a (a) .gitmodules fi",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-13",
+      "github_refs": [
+        "https://github.com/git/git/blob/master/Documentation/RelNotes/2.3.10.txt",
+        "https://github.com/git/git/blob/master/Documentation/RelNotes/2.4.10.txt",
+        "https://github.com/git/git/blob/master/Documentation/RelNotes/2.5.4.txt"
+      ]
+    },
+    {
+      "id": "CVE-2016-0889",
+      "cwe": "CWE-20",
+      "description": "An HTTP servlet in vApp Manager in EMC Unisphere for VMAX Virtual Appliance before 8.2.0 allows remote attackers to write to arbitrary files via a crafted pathname.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-3082",
+      "cwe": "CWE-20",
+      "description": "XSLTResult in Apache Struts 2.x before 2.3.20.2, 2.3.24.x before 2.3.24.2, and 2.3.28.x before 2.3.28.1 allows remote attackers to execute arbitrary code via the stylesheet location parameter.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-04-26",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1209",
+      "cwe": "CWE-20",
+      "description": "The Ninja Forms plugin before 2.9.42.1 for WordPress allows remote attackers to conduct PHP object injection attacks via crafted serialized values in a POST request.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-5589",
+      "cwe": "CWE-20",
+      "description": "The phar_convert_to_other function in ext/phar/phar_object.c in PHP before 5.4.43, 5.5.x before 5.5.27, and 5.6.x before 5.6.11 does not validate a file pointer before a close operation, which allows remote attackers to cause a denial of service (segmentation fault) or possibly have unspecified othe",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-16",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-4071",
+      "cwe": "CWE-20",
+      "description": "Format string vulnerability in the php_snmp_error function in ext/snmp/snmp.c in PHP before 5.5.34, 5.6.x before 5.6.20, and 7.x before 7.0.5 allows remote attackers to execute arbitrary code via format string specifiers in an SNMP::get call.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-05-20",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1929",
+      "cwe": "CWE-20",
+      "description": "The XS engine in SAP HANA allows remote attackers to spoof log entries in trace files and consequently cause a denial of service (disk consumption and process crash) via a crafted HTTP request, related to an unspecified debug function, aka SAP Security Note 2241978.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.3,
+      "severity": "CRITICAL",
+      "published": "2016-01-20",
+      "github_refs": []
+    }
+  ],
+  "CWE-798": [
+    {
+      "id": "CVE-2005-0496",
+      "cwe": "CWE-798",
+      "description": "Arkeia Network Backup Client 5.x contains hard-coded credentials that effectively serve as a back door, which allows remote attackers to access the file system and possibly execute arbitrary commands.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2005-02-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2008-1160",
+      "cwe": "CWE-798",
+      "description": "ZyXEL ZyWALL 1050 has a hard-coded password for the Quagga and Zebra processes that is not changed when it is set by a user, which allows remote attackers to gain privileges.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2008-03-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2008-0961",
+      "cwe": "CWE-798",
+      "description": "EMV DiskXtender 6.20.060 has a hard-coded login and password, which allows remote attackers to bypass authentication via the RPC interface.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2008-04-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2010-1573",
+      "cwe": "CWE-798",
+      "description": "Linksys WAP54Gv3 firmware 3.04.03 and earlier uses a hard-coded username (Gemtek) and password (gemtekswd) for a debug interface for certain web pages, which allows remote attackers to execute arbitrary commands via the (1) data1, (2) data2, or (3) data3 parameters to (a) Debug_command_page.asp and ",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2010-06-10",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2012-3503",
+      "cwe": "CWE-798",
+      "description": "The installation script in Katello 1.0 and earlier does not properly generate the Application.config.secret_token value, which causes each default installation to have the same secret token, and allows remote attackers to authenticate to the CloudForms System Engine web interface as an arbitrary use",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2012-08-25",
+      "github_refs": [
+        "https://github.com/Katello/katello/commit/7c256fef9d75029d0ffff58ff1dcda915056d3a3",
+        "https://github.com/Katello/katello/pull/499",
+        "https://github.com/Katello/katello/commit/7c256fef9d75029d0ffff58ff1dcda915056d3a3"
+      ]
+    },
+    {
+      "id": "CVE-2016-2310",
+      "cwe": "CWE-798",
+      "description": "General Electric (GE) Multilink ML800, ML1200, ML1600, and ML2400 switches with firmware before 5.5.0 and ML810, ML3000, and ML3100 switches with firmware before 5.5.0k have hardcoded credentials, which allows remote attackers to modify configuration settings via the web interface.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-06-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5081",
+      "cwe": "CWE-798",
+      "description": "ZModo ZP-NE14-S and ZP-IBH-13W devices have a hardcoded root password, which makes it easier for remote attackers to obtain access via a TELNET session.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5333",
+      "cwe": "CWE-798",
+      "description": "VMware Photos OS OVA 1.0 before 2016-08-14 has a default SSH public key in an authorized_keys file, which allows remote attackers to obtain SSH access by leveraging knowledge of the private key.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-31",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-5678",
+      "cwe": "CWE-798",
+      "description": "NUUO NVRmini 2 1.0.0 through 3.0.0 and NUUO NVRsolo 1.0.0 through 3.0.0 have hardcoded root credentials, which allows remote attackers to obtain administrative access via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-08-31",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6535",
+      "cwe": "CWE-798",
+      "description": "AVer Information EH6108H+ devices with firmware X9.03.24.00.07l have hardcoded accounts, which allows remote attackers to obtain root access by leveraging knowledge of the credentials and establishing a TELNET session.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-09-19",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6530",
+      "cwe": "CWE-798",
+      "description": "Dentsply Sirona (formerly Schick) CDR Dicom 5 and earlier has default passwords for the sa and cdr accounts, which allows remote attackers to obtain administrative access by leveraging knowledge of these passwords.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-09-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6532",
+      "cwe": "CWE-798",
+      "description": "DEXIS Imaging Suite 10 has a hardcoded password for the sa account, which allows remote attackers to obtain administrative access by entering this password in a DEXIS_DATA SQL Server session.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-09-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-7560",
+      "cwe": "CWE-798",
+      "description": "The rsyncd server in Fortinet FortiWLC 6.1-2-29 and earlier, 7.0-9-1, 7.0-10-0, 8.0-5-0, 8.1-2-0, and 8.2-4-0 has a hardcoded rsync account, which allows remote attackers to read or write to arbitrary files via unspecified vectors.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-10-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6829",
+      "cwe": "CWE-798",
+      "description": "The trove service user in (1) Openstack deployment (aka crowbar-openstack) and (2) Trove Barclamp (aka barclamp-trove and crowbar-barclamp-trove) in the Crowbar Framework has a default password, which makes it easier for remote attackers to obtain access via unspecified vectors.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-12-09",
+      "github_refs": [
+        "https://github.com/crowbar/barclamp-trove/commit/932298f250365fed6963700870e52db3a7a32daa",
+        "https://github.com/crowbar/crowbar-openstack/commit/208230bdfbcb19d062149d083b1a66b429516a69",
+        "https://github.com/crowbar/barclamp-trove/commit/932298f250365fed6963700870e52db3a7a32daa"
+      ]
+    },
+    {
+      "id": "CVE-2016-9013",
+      "cwe": "CWE-798",
+      "description": "Django 1.8.x before 1.8.16, 1.9.x before 1.9.11, and 1.10.x before 1.10.3 use a hardcoded password for a temporary database user created when running tests with an Oracle database, which makes it easier for remote attackers to obtain access to the database server by leveraging failure to manually sp",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-12-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-10115",
+      "cwe": "CWE-798",
+      "description": "NETGEAR Arlo base stations with firmware 1.7.5_6178 and earlier, Arlo Q devices with firmware 1.8.0_5551 and earlier, and Arlo Q Plus devices with firmware 1.8.1_6094 and earlier have a default password of 12345678, which makes it easier for remote attackers to obtain access after a factory reset or",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-04",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-2867",
+      "cwe": "CWE-798",
+      "description": "A design flaw in the Trane ComfortLink II SCC firmware version 2.0.2 service allows remote attackers to take complete control of the system.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-10177",
+      "cwe": "CWE-798",
+      "description": "An issue was discovered on the D-Link DWR-932B router. Undocumented TELNET and SSH services provide logins to admin with the password admin and root with the password 1234.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-01-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2008-2369",
+      "cwe": "CWE-798",
+      "description": "manzier.pxt in Red Hat Network Satellite Server before 5.1.1 has a hard-coded authentication key, which allows remote attackers to connect to the server and obtain sensitive information about user accounts and entitlements.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2008-08-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-8491",
+      "cwe": "CWE-798",
+      "description": "The presence of a hardcoded account named 'core' in Fortinet FortiWLC allows attackers to gain unauthorized read/write access via a remote shell.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-02-01",
+      "github_refs": []
+    }
+  ],
+  "CWE-732": [
+    {
+      "id": "CVE-2017-6950",
+      "cwe": "CWE-732",
+      "description": "SAP GUI 7.2 through 7.5 allows remote attackers to bypass intended security policy restrictions and execute arbitrary code via a crafted ABAP code, aka SAP Security Note 2407616.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-8856",
+      "cwe": "CWE-732",
+      "description": "In Veritas NetBackup 8.0 and earlier and NetBackup Appliance 3.0 and earlier, there is unauthenticated, arbitrary remote command execution using the 'bprd' process.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-8857",
+      "cwe": "CWE-732",
+      "description": "In Veritas NetBackup 8.0 and earlier and NetBackup Appliance 3.0 and earlier, there is unauthenticated file copy and arbitrary remote command execution using the 'bprd' process.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-8858",
+      "cwe": "CWE-732",
+      "description": "In Veritas NetBackup 8.0 and earlier and NetBackup Appliance 3.0 and earlier, there is unauthenticated privileged remote file write using the 'bprd' process.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-9602",
+      "cwe": "CWE-732",
+      "description": "KBVault Mysql Free Knowledge Base application package 0.16a comes with a FileExplorer/Explorer.aspx?id=/Uploads file-management component. An unauthenticated user can access the file upload and deletion functionality. Through this functionality, a user can upload an ASPX script to Uploads/Documents/",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-16",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-9615",
+      "cwe": "CWE-732",
+      "description": "Password exposure in Cognito Software Moneyworks 8.0.3 and earlier allows attackers to gain administrator access to all data, because verbose logging writes the administrator password to a world-readable file.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-26",
+      "github_refs": [
+        "https://gist.github.com/ari/e0dd74c12d84f102e3bcb365118e8c30",
+        "https://gist.github.com/ari/e0dd74c12d84f102e3bcb365118e8c30"
+      ]
+    },
+    {
+      "id": "CVE-2017-9479",
+      "cwe": "CWE-732",
+      "description": "The Comcast firmware on Cisco DPC3939 (firmware version dpc3939-P20-18-v303r20421746-170221a-CMCST) devices allows remote attackers to execute arbitrary commands as root by leveraging local network access and connecting to the syseventd server, as demonstrated by copying configuration data into a re",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-07-31",
+      "github_refs": [
+        "https://github.com/BastilleResearch/CableTap/blob/master/doc/advisories/bastille-22.syseventd.txt",
+        "https://github.com/BastilleResearch/CableTap/blob/master/doc/advisories/bastille-22.syseventd.txt"
+      ]
+    },
+    {
+      "id": "CVE-2017-9482",
+      "cwe": "CWE-732",
+      "description": "The Comcast firmware on Cisco DPC3939 (firmware version dpc3939-P20-18-v303r20421746-170221a-CMCST) devices allows remote attackers to obtain root access to the Network Processor (NP) Linux system by enabling a TELNET daemon (through CVE-2017-9479 exploitation) and then establishing a TELNET session",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-07-31",
+      "github_refs": [
+        "https://github.com/BastilleResearch/CableTap/blob/master/doc/advisories/bastille-25.atom-telnet.txt",
+        "https://github.com/BastilleResearch/CableTap/blob/master/doc/advisories/bastille-25.atom-telnet.txt"
+      ]
+    },
+    {
+      "id": "CVE-2017-12816",
+      "cwe": "CWE-732",
+      "description": "In Kaspersky Internet Security for Android 11.12.4.1622, some of application exports activities have weak permissions, which might be used by a malware application to get unauthorized access to the product functionality by using Android IPC.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-08-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-1000153",
+      "cwe": "CWE-732",
+      "description": "Mahara 15.04 before 15.04.10 and 15.10 before 15.10.6 and 16.04 before 16.04.4 are vulnerable to incorrect access control after the password reset link is sent via email and then user changes default email, Mahara fails to invalidate old link.Consequently the link in email can be used to gain access",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-16638",
+      "cwe": "CWE-732",
+      "description": "The Gentoo net-misc/vde package before version 2.3.2-r4 may allow members of the \"qemu\" group to gain root privileges by creating a hard link in a directory on which \"chown\" is called recursively by the OpenRC service script.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-15877",
+      "cwe": "CWE-732",
+      "description": "Insecure Permissions vulnerability in db.php file in GPWeb 8.4.61 allows remote attackers to view the password and user database.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-12-19",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-16885",
+      "cwe": "CWE-732",
+      "description": "Improper Permissions Handling in the Portal on FiberHome LM53Q1 VH519R05C01S38 devices (intended for obtaining information about Internet Usage, Changing Passwords, etc.) allows remote attackers to look for the information without authenticating. The information includes Version of device, Firmware ",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-01-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1164",
+      "cwe": "CWE-732",
+      "description": "This vulnerability allows remote attackers to cause a denial-of-service condition on vulnerable installations of ZyXEL P-870H-51 DSL Router 1.00(AWG.3)D5. Authentication is not required to exploit this vulnerability. The specific flaw exists within numerous exposed CGI endpoints. The vulnerability i",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-02-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-7337",
+      "cwe": "CWE-732",
+      "description": "An improper Access Control vulnerability in Fortinet FortiPortal versions 4.0.0 and below allows an attacker to interact with unauthorized VDOMs or enumerate other ADOMs via another user's stolen session and CSRF tokens or the adomName parameter in the /fpc/sec/customer/policy/getAdomVersion request",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-05-27",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1000132",
+      "cwe": "CWE-732",
+      "description": "Mercurial version 4.5 and earlier contains a Incorrect Access Control (CWE-285) vulnerability in Protocol server that can result in Unauthorized data access. This attack appear to be exploitable via network connectivity. This vulnerability appears to have been fixed in 4.5.1.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-03-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1002150",
+      "cwe": "CWE-732",
+      "description": "Koji version 1.12, 1.13, 1.14 and 1.15 contain an incorrect access control vulnerability resulting in arbitrary filesystem read/write access. This vulnerability has been fixed in versions 1.12.1, 1.13.1, 1.14.1 and 1.15.1.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-04-04",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-8931",
+      "cwe": "CWE-732",
+      "description": "The AMD Ryzen, Ryzen Pro, and Ryzen Mobile processor chips have insufficient access control for the Secure Processor, aka RYZENFALL-1.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2018-03-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-8932",
+      "cwe": "CWE-732",
+      "description": "The AMD Ryzen and Ryzen Pro processor chips have insufficient access control for the Secure Processor, aka RYZENFALL-2, RYZENFALL-3, and RYZENFALL-4.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2018-03-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-8933",
+      "cwe": "CWE-732",
+      "description": "The AMD EPYC Server processor chips have insufficient access control for protected memory regions, aka FALLOUT-1, FALLOUT-2, and FALLOUT-3.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2018-03-22",
+      "github_refs": []
+    }
+  ],
+  "CWE-400": [
+    {
+      "id": "CVE-2017-9119",
+      "cwe": "CWE-400",
+      "description": "The i_zval_ptr_dtor function in Zend/zend_variables.h in PHP 7.1.5 allows attackers to cause a denial of service (memory consumption and application crash) or possibly have unspecified other impact by triggering crafted operations on array data structures.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-21",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-1000378",
+      "cwe": "CWE-400",
+      "description": "The NetBSD qsort() function is recursive, and not randomized, an attacker can construct a pathological input array of N elements that causes qsort() to deterministically recurse N/4 times. This allows attackers to consume arbitrary amounts of stack memory and manipulate stack memory to assist in arb",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-19",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-4412",
+      "cwe": "CWE-400",
+      "description": "BSON injection vulnerability in the legal? function in BSON (bson-ruby) gem before 3.0.4 for Ruby allows remote attackers to cause a denial of service (resource consumption) or inject arbitrary data via a crafted string.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-02-05",
+      "github_refs": [
+        "https://github.com/mongodb/bson-ruby/commit/976da329ff03ecdfca3030eb6efe3c85e6db9999",
+        "https://github.com/mongodb/bson-ruby/compare/7446d7c6764dfda8dc4480ce16d5c023e74be5ca...28f34978a85b689a4480b4d343389bf4886522e7",
+        "https://github.com/mongodb/bson-ruby/commit/976da329ff03ecdfca3030eb6efe3c85e6db9999"
+      ]
+    },
+    {
+      "id": "CVE-2018-19282",
+      "cwe": "CWE-400",
+      "description": "Rockwell Automation PowerFlex 525 AC Drives 5.001 and earlier allow remote attackers to cause a denial of service by crashing the Common Industrial Protocol (CIP) network stack. The vulnerability allows the attacker to crash the CIP in a way that it does not accept new connections, but keeps the cur",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-04-04",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-11936",
+      "cwe": "CWE-400",
+      "description": "Index of array is processed in a wrong way inside a while loop and result in invalid index (-1 or something else) leads to out of bound memory access. in Snapdragon Auto, Snapdragon Connectivity, Snapdragon Consumer Electronics Connectivity, Snapdragon Consumer IOT, Snapdragon Industrial IOT, Snapdr",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-05-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-2259",
+      "cwe": "CWE-400",
+      "description": "Resource allocation error while playing the video whose dimensions are more than supported dimension in Snapdragon Auto, Snapdragon Compute, Snapdragon Connectivity, Snapdragon Consumer IOT, Snapdragon Industrial IOT, Snapdragon Mobile, Snapdragon Voice & Music, Snapdragon Wearables in MSM8909W, MSM",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-06-14",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-10747",
+      "cwe": "CWE-400",
+      "description": "set-value is vulnerable to Prototype Pollution in versions lower than 3.0.1. The function mixin-deep could be tricked into adding or modifying properties of Object.prototype using any of the constructor, prototype and _proto_ payloads.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-08-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-10750",
+      "cwe": "CWE-400",
+      "description": "deeply is vulnerable to Prototype Pollution in versions before 3.1.0. The function assign-deep could be tricked into adding or modifying properties of Object.prototype using using a _proto_ payload.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-08-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-9104",
+      "cwe": "CWE-400",
+      "description": "An issue was discovered in adns before 1.5.2. It hangs, eating CPU, if a compression pointer loop is encountered.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-06-18",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2013-20004",
+      "cwe": "CWE-400",
+      "description": "A flaw was found in StarWind iSCSI target. StarWind service does not limit client connections and allocates memory on each connection attempt. An attacker could create a denial of service state by trying to connect a non-existent target multiple times. This affects iSCSI SAN (Windows Native) Version",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2022-02-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2023-28507",
+      "cwe": "CWE-400",
+      "description": "Rocket Software UniData versions prior to 8.2.4 build 3003 and UniVerse versions prior to 11.3.5 build 1001 or 12.2.1 build 2002 suffer from a memory-exhaustion issue, where a decompression routine will allocate increasing amounts of memory until all system memory is exhausted and the forked process",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2023-03-29",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-9750",
+      "cwe": "CWE-400",
+      "description": "In IoTivity through 1.3.1, the CoAP server interface can be used for Distributed Denial of Service attacks using source IP address spoofing and UDP-based traffic amplification. The reflected traffic is 6 times bigger than spoofed requests. This occurs because the construction of a \"4.01 Unauthorized",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2019-03-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2022-0671",
+      "cwe": "CWE-400",
+      "description": "A flaw was found in vscode-xml in versions prior to 0.19.0. Schema download could lead to blind SSRF or DoS via a large file.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2022-02-18",
+      "github_refs": [
+        "https://github.com/eclipse/lemminx/blob/master/CHANGELOG.md#0190-february-14-2022",
+        "https://github.com/redhat-developer/vscode-xml/blob/master/CHANGELOG.md#0190-february-14-2022",
+        "https://github.com/eclipse/lemminx/blob/master/CHANGELOG.md#0190-february-14-2022"
+      ]
+    },
+    {
+      "id": "CVE-2022-24118",
+      "cwe": "CWE-400",
+      "description": "Certain General Electric Renewable Energy products allow attackers to use a code to trigger a reboot into the factory default configuration. This affects iNET and iNET II before 8.3.0, SD before 6.4.7, TD220X before 2.0.16, and TD220MAX before 1.2.6.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2022-12-26",
+      "github_refs": []
+    }
+  ],
+  "CWE-611": [
+    {
+      "id": "CVE-2017-8110",
+      "cwe": "CWE-611",
+      "description": "www.modified-shop.org modified eCommerce Shopsoftware 2.0.2.2 rev 10690 has XXE in api/it-recht-kanzlei/api-it-recht-kanzlei.php.",
+      "cvss_version": "3.1",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2017-04-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-8348",
+      "cwe": "CWE-611",
+      "description": "An XML External Entity (XXE) issue was discovered in Emerson Liebert SiteScan Web Version 6.5, and prior. An attacker may enter malicious input to Liebert SiteScan through a weakly configured XML parser causing the application to execute arbitrary code or disclose file contents from a server or conn",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-6895",
+      "cwe": "CWE-611",
+      "description": "USB Pratirodh allows remote attackers to conduct XML External Entity (XXE) attacks via XML data in usb.xml.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-23",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-9924",
+      "cwe": "CWE-611",
+      "description": "Zimbra Collaboration Suite (ZCS) before 8.7.4 allows remote attackers to conduct XML External Entity (XXE) attacks.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-29",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-7273",
+      "cwe": "CWE-611",
+      "description": "Dell Integrated Remote Access Controller (iDRAC) 7/8 before 2.21.21.21 has XXE.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-04-10",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-7503",
+      "cwe": "CWE-611",
+      "description": "It was found that the Red Hat JBoss EAP 7.0.5 implementation of javax.xml.transform.TransformerFactory is vulnerable to XXE. An attacker could use this flaw to launch DoS or SSRF attacks, or read files from the server where EAP is deployed.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-18",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-7326",
+      "cwe": "CWE-611",
+      "description": "XML External Entity (XXE) vulnerability in Milton Webdav before 2.7.0.3.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-07",
+      "github_refs": [
+        "https://github.com/miltonio/milton2/commit/5f81b0c48a817d4337d8b0e99ea0b4744ecd720b",
+        "https://github.com/miltonio/milton2/commit/b41072b",
+        "https://github.com/miltonio/milton2/commit/b5851c1"
+      ]
+    },
+    {
+      "id": "CVE-2017-10670",
+      "cwe": "CWE-611",
+      "description": "An XML External Entity (XXE) issue exists in OSCI-Transport 1.2 as used in OSCI Transport Library 1.6.1 (Java) and OSCI Transport Library 1.6 (.NET), exploitable by sending a crafted standard-conforming OSCI message from within the infrastructure.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-8866",
+      "cwe": "CWE-611",
+      "description": "ext/libxml/libxml.c in PHP before 5.5.22 and 5.6.x before 5.6.6, when PHP-FPM is used, does not isolate each thread from libxml_disable_entity_loader changes in other threads, which allows remote attackers to conduct XML External Entity (XXE) and XML Entity Expansion (XEE) attacks via a crafted XML ",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2016-05-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6256",
+      "cwe": "CWE-611",
+      "description": "SAP Business One for Android 1.2.3 allows remote attackers to conduct XML External Entity (XXE) attacks via crafted XML data in a request to B1iXcellerator/exec/soap/vP.001sap0003.in_WCSX/com.sap.b1i.vplatform.runtime/INB_WS_CALL_SYNC_XPT/INB_WS_CALL_SYNC_XPT.ipo/proc, aka SAP Security Note 2378065.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2017-05-26",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2012-2239",
+      "cwe": "CWE-611",
+      "description": "Mahara 1.4.x before 1.4.4 and 1.5.x before 1.5.3 allows remote attackers to read arbitrary files or create TCP connections via an XML external entity (XXE) injection attack, as demonstrated by reading config.php.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2012-11-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2012-3363",
+      "cwe": "CWE-611",
+      "description": "Zend_XmlRpc in Zend Framework 1.x before 1.11.12 and 1.12.x before 1.12.0 does not properly handle SimpleXMLElement classes, which allows remote attackers to read arbitrary files or create TCP connections via an external entity reference in a DOCTYPE element in an XML-RPC request, aka an XML externa",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2013-02-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-3974",
+      "cwe": "CWE-611",
+      "description": "XML external entity (XXE) vulnerability in the Configuration Wizard in SAP NetWeaver Java AS 7.1 through 7.5 allows remote attackers to cause a denial of service, conduct SMB Relay attacks, or access arbitrary files via a crafted XML request to _tc~monitoring~webservice~web/ServerNodesWSService, aka",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-04-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2015-1832",
+      "cwe": "CWE-611",
+      "description": "XML external entity (XXE) vulnerability in the SqlXmlUtil code in Apache Derby before 10.12.1.1, when a Java Security Manager is not in place, allows context-dependent attackers to read arbitrary files or cause a denial of service (resource consumption) via vectors involving XmlVTI and the XML datat",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-10-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-9180",
+      "cwe": "CWE-611",
+      "description": "perl-XML-Twig: The option to `expand_external_ents`, documented as controlling external entity expansion in XML::Twig does not work. External entities are always expanded, regardless of the option's setting.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-12-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-7460",
+      "cwe": "CWE-611",
+      "description": "The Single Sign-On feature in VMware vCenter Server 5.5 before U3e and 6.0 before U2a and vRealize Automation 6.x before 6.2.5 allows remote attackers to read arbitrary files or cause a denial of service via an XML document containing an external entity declaration in conjunction with an entity refe",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2016-12-29",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-2908",
+      "cwe": "CWE-611",
+      "description": "IBM Single Sign On for Bluemix could allow a remote attacker to obtain sensitive information, caused by a XML external entity (XXE) error when processing XML data by the XML parser. A remote attacker could exploit this vulnerability to read arbitrary files on the system or cause a denial of service.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-02-01",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-9706",
+      "cwe": "CWE-611",
+      "description": "IBM Integration Bus 9.0 and 10.0 and WebSphere Message Broker SOAP FLOWS is vulnerable to a denial of service, caused by an XML External Entity Injection (XXE) error when processing XML data. A remote attacker could exploit this vulnerability to expose highly sensitive information or consume all ava",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-02-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6111",
+      "cwe": "CWE-611",
+      "description": "IBM Curam Social Program Management 6.0 and 7.0 are vulnerable to a denial of service, caused by an XML External Entity Injection (XXE) error when processing XML data. A remote attacker could exploit this vulnerability to expose highly sensitive information or consume all available memory resources.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2017-03-31",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-10127",
+      "cwe": "CWE-611",
+      "description": "PySAML2 allows remote attackers to conduct XML external entity (XXE) attacks via a crafted SAML XML request or response.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2017-03-03",
+      "github_refs": [
+        "https://github.com/rohe/pysaml2/commit/6e09a25d9b4b7aa7a506853210a9a14100b8bc9b",
+        "https://github.com/rohe/pysaml2/issues/366",
+        "https://github.com/rohe/pysaml2/pull/379"
+      ]
+    }
+  ],
+  "CWE-918": [
+    {
+      "id": "CVE-2017-8794",
+      "cwe": "CWE-918",
+      "description": "An issue was discovered on Accellion FTA devices before FTA_9_12_180. Because a regular expression (intended to match local https URLs) lacks an initial ^ character, courier/web/1000@/wmProgressval.html allows SSRF attacks with a file:///etc/passwd#https:// URL pattern.",
+      "cvss_version": "3.0",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2017-05-05",
+      "github_refs": [
+        "https://gist.github.com/anonymous/32e2894fa29176f3f32cb2b2bb7c24cb",
+        "https://gist.github.com/anonymous/32e2894fa29176f3f32cb2b2bb7c24cb"
+      ]
+    },
+    {
+      "id": "CVE-2017-12905",
+      "cwe": "CWE-918",
+      "description": "Server Side Request Forgery vulnerability in Vebto Pixie Image Editor 1.4 and 1.7 allows remote attackers to disclose information or execute arbitrary code via the url parameter to Launderer.php.",
+      "cvss_version": "3.1",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2017-09-25",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-11291",
+      "cwe": "CWE-918",
+      "description": "An issue was discovered in Adobe Connect 9.6.2 and earlier versions. A Server-Side Request Forgery (SSRF) vulnerability exists that could be abused to bypass network access controls.",
+      "cvss_version": "3.0",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2017-12-09",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1000124",
+      "cwe": "CWE-918",
+      "description": "I Librarian I-librarian version 4.8 and earlier contains a XML External Entity (XXE) vulnerability in line 154 of importmetadata.php(simplexml_load_string) that can result in an attacker reading the contents of a file and SSRF. This attack appear to be exploitable via posting xml in the Parameter fo",
+      "cvss_version": "3.1",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2018-03-13",
+      "github_refs": [
+        "https://github.com/mkucej/i-librarian/issues/116",
+        "https://github.com/mkucej/i-librarian/issues/116"
+      ]
+    },
+    {
+      "id": "CVE-2002-1484",
+      "cwe": "CWE-918",
+      "description": "DB4Web server, when configured to use verbose debug messages, allows remote attackers to use DB4Web as a proxy and attempt TCP connections to other systems (port scan) via a request for a URL that specifies the target IP address and port, which produces a connection status in the resulting error mes",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2003-04-22",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2004-2061",
+      "cwe": "CWE-918",
+      "description": "RiSearch 1.0.01 and RiSearch Pro 3.2.06 allows remote attackers to use the show.pl script as an open proxy, or read arbitrary local files, by setting the url parameter to a (1) http://, (2) ftp://, or (3) file:// URL.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2004-07-27",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-9458",
+      "cwe": "CWE-918",
+      "description": "XML external entity (XXE) vulnerability in the GlobalProtect internal and external gateway interface in Palo Alto Networks PAN-OS before 6.1.18, 7.0.x before 7.0.17, 7.1.x before 7.1.12, and 8.0.x before 8.0.3 allows remote attackers to obtain sensitive information, cause a denial of service, or con",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-09-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-0889",
+      "cwe": "CWE-918",
+      "description": "Paperclip ruby gem version 3.1.4 and later suffers from a Server-SIde Request Forgery (SSRF) vulnerability in the Paperclip::UriAdapter class. Attackers may be able to access information about internal network resources.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-13",
+      "github_refs": [
+        "https://github.com/thoughtbot/paperclip/pull/2435",
+        "https://github.com/thoughtbot/paperclip/pull/2435"
+      ]
+    },
+    {
+      "id": "CVE-2017-0905",
+      "cwe": "CWE-918",
+      "description": "The Recurly Client Ruby Library before 2.0.13, 2.1.11, 2.2.5, 2.3.10, 2.4.11, 2.5.4, 2.6.3, 2.7.8, 2.8.2, 2.9.2, 2.10.4, 2.11.3 is vulnerable to a Server-Side Request Forgery vulnerability in the \"Resource#find\" method that could result in compromise of API keys or other critical resources.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-13",
+      "github_refs": [
+        "https://github.com/recurly/recurly-client-ruby/commit/1bb0284d6e668b8b3d31167790ed6db1f6ccc4be",
+        "https://github.com/recurly/recurly-client-ruby/commit/1bb0284d6e668b8b3d31167790ed6db1f6ccc4be"
+      ]
+    },
+    {
+      "id": "CVE-2017-0906",
+      "cwe": "CWE-918",
+      "description": "The Recurly Client Python Library before 2.0.5, 2.1.16, 2.2.22, 2.3.1, 2.4.5, 2.5.1, 2.6.2 is vulnerable to a Server-Side Request Forgery vulnerability in the \"Resource.get\" method that could result in compromise of API keys or other critical resources.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-13",
+      "github_refs": [
+        "https://github.com/recurly/recurly-client-python/commit/049c74699ce93cf126feff06d632ea63fba36742",
+        "https://github.com/recurly/recurly-client-python/commit/049c74699ce93cf126feff06d632ea63fba36742"
+      ]
+    },
+    {
+      "id": "CVE-2017-0907",
+      "cwe": "CWE-918",
+      "description": "The Recurly Client .NET Library before 1.0.1, 1.1.10, 1.2.8, 1.3.2, 1.4.14, 1.5.3, 1.6.2, 1.7.1, 1.8.1 is vulnerable to a Server-Side Request Forgery vulnerability due to incorrect use of \"Uri.EscapeUriString\" that could result in compromise of API keys or other critical resources.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-13",
+      "github_refs": [
+        "https://github.com/recurly/recurly-client-net/commit/9eef460c0084afd5c24d66220c8b7a381cf9a1f1",
+        "https://github.com/recurly/recurly-client-net/commit/9eef460c0084afd5c24d66220c8b7a381cf9a1f1"
+      ]
+    },
+    {
+      "id": "CVE-2017-1000237",
+      "cwe": "CWE-918",
+      "description": "I, Librarian version <=4.6 & 4.7 is vulnerable to Server-Side Request Forgery in the ajaxsupplement.php resulting in the attacker being able to reset any user's password.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-7667",
+      "cwe": "CWE-918",
+      "description": "Adminer through 4.3.1 has SSRF via the server parameter.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-03-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2014-3990",
+      "cwe": "CWE-918",
+      "description": "The Cart::getProducts method in system/library/cart.php in OpenCart 1.5.6.4 and earlier allows remote attackers to conduct server-side request forgery (SSRF) attacks or possibly conduct XML External Entity (XXE) attacks and execute arbitrary code via a crafted serialized PHP object, related to the q",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-03-20",
+      "github_refs": [
+        "https://github.com/opencart-ce/opencart-ce/commit/c2aafc823bd85876f5e888f8ebc421069a5e076f",
+        "https://github.com/opencart-ce/opencart-ce/commit/c2aafc823bd85876f5e888f8ebc421069a5e076f"
+      ]
+    },
+    {
+      "id": "CVE-2017-16614",
+      "cwe": "CWE-918",
+      "description": "SSRF (Server Side Request Forgery) in tpshop 2.0.5 and 2.0.6 allows remote attackers to obtain sensitive information, attack intranet hosts, or possibly trigger remote command execution via the plugins/payment/weixin/lib/WxPay.tedatac.php fBill parameter.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-03-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-14323",
+      "cwe": "CWE-918",
+      "description": "SSRF (Server Side Request Forgery) in getRemoteImage.php in Ueditor in Onethink V1.0 and V1.1 allows remote attackers to obtain sensitive information, attack intranet hosts, or possibly trigger remote command execution via the upfile parameter.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-04-10",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-8939",
+      "cwe": "CWE-918",
+      "description": "An SSRF issue was discovered in NmAPI.exe in Ipswitch WhatsUp Gold before 2018 (18.0). Malicious actors can submit specially crafted requests via the NmAPI executable to (1) gain unauthorized access to the WhatsUp Gold system, (2) obtain information about the WhatsUp Gold system, or (3) execute remo",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-05-01",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1000138",
+      "cwe": "CWE-918",
+      "description": "I, Librarian version 4.8 and earlier contains a SSRF vulnerability in \"url\" parameter of getFromWeb in functions.php that can result in the attacker abusing functionality on the server to read or update internal resources.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-03-23",
+      "github_refs": [
+        "https://github.com/mkucej/i-librarian/blob/9535753a84bc615b210802d4c9542db73368d984/functions.php#L811",
+        "https://github.com/mkucej/i-librarian/issues/120",
+        "https://github.com/mkucej/i-librarian/blob/9535753a84bc615b210802d4c9542db73368d984/functions.php#L811"
+      ]
+    },
+    {
+      "id": "CVE-2017-14611",
+      "cwe": "CWE-918",
+      "description": "SSRF (Server Side Request Forgery) in Cockpit 0.13.0 allows remote attackers to read arbitrary files or send TCP traffic to intranet hosts via the url parameter, related to use of the discontinued aheinze/fetch_url_contents component.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-04-10",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-9302",
+      "cwe": "CWE-918",
+      "description": "SSRF (Server Side Request Forgery) in /assets/lib/fuc.js.php in Cockpit 0.4.4 through 0.5.5 allows remote attackers to read arbitrary files or send TCP traffic to intranet hosts via the url parameter. NOTE: this vulnerability exists because of an incomplete fix for CVE-2017-14611, which was about ve",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-05-02",
+      "github_refs": []
+    }
+  ],
+  "CWE-307": [
+    {
+      "id": "CVE-1999-1324",
+      "cwe": "CWE-307",
+      "description": "VAXstations running Open VMS 5.3 through 5.5-2 with VMS DECwindows or MOTIF do not properly disable access to user accounts that exceed the break-in limit threshold for failed login attempts, which makes it easier for attackers to conduct brute force password guessing.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "1999-12-31",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2001-1339",
+      "cwe": "CWE-307",
+      "description": "Beck IPC GmbH IPC@CHIP telnet service does not delay or disconnect users from the service when bad passwords are entered, which makes it easier for remote attackers to conduct brute force password guessing attacks.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2001-05-24",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2001-0395",
+      "cwe": "CWE-307",
+      "description": "Lightwave ConsoleServer 3200 does not disconnect users after unsuccessful login attempts, which could allow remote attackers to conduct brute force password guessing.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2001-07-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2001-1291",
+      "cwe": "CWE-307",
+      "description": "The telnet server for 3Com hardware such as PS40 SuperStack II does not delay or disconnect remote attackers who provide an incorrect username or password, which makes it easier to break into the server via brute force password guessing.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2001-07-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-7915",
+      "cwe": "CWE-307",
+      "description": "An Improper Restriction of Excessive Authentication Attempts issue was discovered in Moxa OnCell G3110-HSPA Version 1.3 build 15082117 and previous versions, OnCell G3110-HSDPA Version 1.2 Build 09123015 and previous versions, OnCell G3150-HSDPA Version 1.4 Build 11051315 and previous versions, OnCe",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-05-29",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-1197",
+      "cwe": "CWE-307",
+      "description": "IBM BigFix Compliance (TEMA SUAv1 SCA SCM) uses an inadequate account lockout setting that could allow a remote attacker to brute force account credentials. IBM X-Force ID: 123672.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-7898",
+      "cwe": "CWE-307",
+      "description": "An Improper Restriction of Excessive Authentication Attempts issue was discovered in Rockwell Automation Allen-Bradley MicroLogix 1100 programmable-logic controllers 1763-L16AWA, Series A and B, Version 16.00 and prior versions; 1763-L16BBB, Series A and B, Version 16.00 and prior versions; 1763-L16",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-06-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-11187",
+      "cwe": "CWE-307",
+      "description": "phpMyFAQ before 2.9.8 does not properly mitigate brute-force attacks that try many passwords in attempted logins quickly.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-07-12",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-7673",
+      "cwe": "CWE-307",
+      "description": "Apache OpenMeetings 1.0.0 uses not very strong cryptographic storage, captcha is not used in registration and forget password dialogs and auth forms missing brute force protection.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-07-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-15887",
+      "cwe": "CWE-307",
+      "description": "An improper restriction of excessive authentication attempts vulnerability in /principals in Synology CardDAV Server before 6.0.7-0085 allows remote attackers to obtain user credentials via a brute-force attack.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-07",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-5469",
+      "cwe": "CWE-307",
+      "description": "An Improper Restriction of Excessive Authentication Attempts issue was discovered in Belden Hirschmann RS, RSR, RSB, MACH100, MACH1000, MACH4000, MS, and OCTOPUS Classic Platform Switches. An improper restriction of excessive authentication vulnerability in the web interface has been identified, whi",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-03-06",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1475",
+      "cwe": "CWE-307",
+      "description": "IBM BigFix Platform 9.2 and 9.5 uses an inadequate account lockout setting that could allow a remote attacker to brute force account credentials. IBM X-Force ID: 140756.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-04-27",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-12649",
+      "cwe": "CWE-307",
+      "description": "An issue was discovered in app/Controller/UsersController.php in MISP 2.4.92. An adversary can bypass the brute-force protection by using a PUT HTTP method instead of a POST HTTP method in the login part, because this protection was only covering POST requests.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-06-22",
+      "github_refs": [
+        "https://github.com/MISP/MISP/commit/6ffacc1e239930e0e8464d0ca16e432e26cf36a9",
+        "https://github.com/MISP/MISP/commit/6ffacc1e239930e0e8464d0ca16e432e26cf36a9"
+      ]
+    },
+    {
+      "id": "CVE-2018-12993",
+      "cwe": "CWE-307",
+      "description": "onefilecms.php in OneFileCMS through 2012-04-14 might allow attackers to conduct brute-force attacks via the onefilecms_username and onefilecms_password fields.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-06-29",
+      "github_refs": [
+        "https://github.com/rocktronica/OneFileCMS/issues/6",
+        "https://github.com/rocktronica/OneFileCMS/issues/6"
+      ]
+    },
+    {
+      "id": "CVE-2018-19548",
+      "cwe": "CWE-307",
+      "description": "index.php?r=site%2Flogin in EduSec through 4.2.6 does not restrict sending a series of LoginForm[username] and LoginForm[password] parameters, which might make it easier for remote attackers to obtain access via a brute-force approach.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-11-26",
+      "github_refs": [
+        "https://github.com/EduSec/EduSec/issues/14",
+        "https://github.com/EduSec/EduSec/issues/14"
+      ]
+    },
+    {
+      "id": "CVE-2019-6524",
+      "cwe": "CWE-307",
+      "description": "Moxa IKS and EDS do not implement sufficient measures to prevent multiple failed authentication attempts, which may allow an attacker to discover passwords via brute force attack.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-03-05",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-15759",
+      "cwe": "CWE-307",
+      "description": "Pivotal Cloud Foundry On Demand Services SDK, versions prior to 0.24 contain an insecure method of verifying credentials. A remote unauthenticated malicious user may make many requests to the service broker with different credentials, allowing them to infer valid credentials and gain access to perfo",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-11-19",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1373",
+      "cwe": "CWE-307",
+      "description": "IBM Security Guardium Big Data Intelligence (SonarG) 3.1 uses an inadequate account lockout setting that could allow a remote attacker to brute force account credentials. IBM X-Force ID: 137773.",
+      "cvss_version": "3.0",
+      "cvss_score": 7.5,
+      "severity": "HIGH",
+      "published": "2018-03-02",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-19879",
+      "cwe": "CWE-307",
+      "description": "An issue was discovered in /cgi-bin/luci on Teltonika RTU9XX (e.g., RUT950) R_31.04.89 before R_00.05.00.5 devices. The authentication functionality is not protected from automated tools used to make login attempts to the application. An anonymous attacker has the ability to make unlimited login att",
+      "cvss_version": "3.0",
+      "cvss_score": 7.1,
+      "severity": "HIGH",
+      "published": "2019-03-28",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-11082",
+      "cwe": "CWE-307",
+      "description": "Cloud Foundry UAA, all versions prior to 4.20.0 and Cloud Foundry UAA Release, all versions prior to 61.0, allows brute forcing of MFA codes. A remote unauthenticated malicious user in possession of a valid username and password can brute force MFA to login as the targeted user.",
+      "cvss_version": "3.0",
+      "cvss_score": 6.6,
+      "severity": "MEDIUM",
+      "published": "2018-10-05",
+      "github_refs": []
+    }
+  ],
+  "CWE-352": [
+    {
+      "id": "CVE-2017-5145",
+      "cwe": "CWE-352",
+      "description": "An issue was discovered in Carlo Gavazzi VMU-C EM prior to firmware Version A11_U05, and VMU-C PV prior to firmware Version A17. Successful exploitation of this CROSS-SITE REQUEST FORGERY (CSRF) vulnerability can allow execution of unauthorized actions on the device such as configuration parameter c",
+      "cvss_version": "3.0",
+      "cvss_score": 10.0,
+      "severity": "CRITICAL",
+      "published": "2017-02-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-9866",
+      "cwe": "CWE-352",
+      "description": "An issue was discovered in phpMyAdmin. When the arg_separator is different from its default & value, the CSRF token was not properly stripped from the return URL of the preference import action. All 4.6.x versions (prior to 4.6.5), 4.4.x versions (prior to 4.4.15.9), and 4.0.x versions (prior to 4.0",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2016-12-11",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-5959",
+      "cwe": "CWE-352",
+      "description": "CSRF token bypass in GeniXCMS before 1.0.2 could result in escalation of privileges. The forgotpassword.php page can be used to acquire a token.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-02-21",
+      "github_refs": [
+        "https://github.com/semplon/GeniXCMS/issues/70",
+        "https://github.com/semplon/GeniXCMS/releases/tag/v1.0.2",
+        "https://github.com/semplon/GeniXCMS/issues/70"
+      ]
+    },
+    {
+      "id": "CVE-2017-6080",
+      "cwe": "CWE-352",
+      "description": "An issue was discovered in Zammad before 1.0.4, 1.1.x before 1.1.3, and 1.2.x before 1.2.1, caused by lack of a protection mechanism involving HTTP Access-Control headers. To exploit the vulnerability, an attacker can send cross-domain requests directly to the REST API for users with a valid session",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-03-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-1265",
+      "cwe": "CWE-352",
+      "description": "A remote unauthenticated network based attacker with access to Junos Space may execute arbitrary code on Junos Space or gain access to devices managed by Junos Space using cross site request forgery (CSRF), default authentication credentials, information leak and command injection attack vectors. Al",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-10-13",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2017-16780",
+      "cwe": "CWE-352",
+      "description": "The installer in MyBB before 1.8.13 allows remote attackers to execute arbitrary code by writing to the configuration file.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2017-11-10",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-18934",
+      "cwe": "CWE-352",
+      "description": "An issue was discovered in PopojiCMS v2.0.1. admin_component.php is exploitable via the po-admin/route.php?mod=component&act=addnew URI by using the fupload parameter to upload a ZIP file containing arbitrary PHP code (that is extracted and can be executed). This can also be exploited via CSRF.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2018-11-05",
+      "github_refs": [
+        "https://github.com/PopojiCMS/PopojiCMS/issues/12",
+        "https://github.com/PopojiCMS/PopojiCMS/issues/13",
+        "https://github.com/PopojiCMS/PopojiCMS/issues/12"
+      ]
+    },
+    {
+      "id": "CVE-2019-10655",
+      "cwe": "CWE-352",
+      "description": "Grandstream GAC2500 1.0.3.35, GXP2200 1.0.3.27, GVC3202 1.0.3.51, GXV3275 before 1.0.3.219 Beta, and GXV3240 before 1.0.3.219 Beta devices allow unauthenticated remote code execution via shell metacharacters in a /manager?action=getlogcat priority field, in conjunction with a buffer overflow (via th",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-03-30",
+      "github_refs": [
+        "https://github.com/scarvell/grandstream_exploits",
+        "https://github.com/scarvell/grandstream_exploits"
+      ]
+    },
+    {
+      "id": "CVE-2019-14551",
+      "cwe": "CWE-352",
+      "description": "Das Q before 2019-08-02 allows web sites to execute arbitrary code on client machines, as demonstrated by a cross-origin /install request with an attacker-controlled releaseUrl, which triggers download and execution of code within a ZIP archive.",
+      "cvss_version": "3.0",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-08-03",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-17495",
+      "cwe": "CWE-352",
+      "description": "A Cascading Style Sheets (CSS) injection vulnerability in Swagger UI before 3.23.11 allows attackers to use the Relative Path Overwrite (RPO) technique to perform CSS-based input field value exfiltration, such as exfiltration of a CSRF token value. In other words, this product intentionally allows t",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-10-10",
+      "github_refs": [
+        "https://github.com/swagger-api/swagger-ui/releases/tag/v3.23.11",
+        "https://github.com/tarantula-team/CSS-injection-in-Swagger-UI",
+        "https://github.com/swagger-api/swagger-ui/releases/tag/v3.23.11"
+      ]
+    },
+    {
+      "id": "CVE-2019-17600",
+      "cwe": "CWE-352",
+      "description": "Intelbras IWR 1000N 1.6.4 devices allow disclosure of the administrator login name and password because v1/system/user is mishandled.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2019-10-15",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2020-10181",
+      "cwe": "CWE-352",
+      "description": "goform/formEMR30 in Sumavision Enhanced Multimedia Router (EMR) 3.0.4.27 allows creation of arbitrary users with elevated privileges (administrator) on a device, as demonstrated by a setString=new_user<*1*>administrator<*1*>123456 request.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-03-11",
+      "github_refs": [
+        "https://github.com/s1kr10s/Sumavision_EMR3.0",
+        "https://github.com/s1kr10s/Sumavision_EMR3.0"
+      ]
+    },
+    {
+      "id": "CVE-2020-8465",
+      "cwe": "CWE-352",
+      "description": "A vulnerability in Trend Micro InterScan Web Security Virtual Appliance 6.5 SP2 could allow an attacker to manipulate system updates using a combination of CSRF bypass (CVE-2020-8461) and authentication bypass (CVE-2020-8464) to execute code as user root.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.8,
+      "severity": "CRITICAL",
+      "published": "2020-12-17",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2016-6637",
+      "cwe": "CWE-352",
+      "description": "Multiple cross-site request forgery (CSRF) vulnerabilities in Pivotal Cloud Foundry (PCF) before 242; UAA 2.x before 2.7.4.7, 3.x before 3.3.0.5, and 3.4.x before 3.4.4; UAA BOSH before 11.5 and 12.x before 12.5; Elastic Runtime before 1.6.40, 1.7.x before 1.7.21, and 1.8.x before 1.8.2; and Ops Man",
+      "cvss_version": "3.0",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2016-09-30",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2019-13363",
+      "cwe": "CWE-352",
+      "description": "admin.php?page=notification_by_mail in Piwigo 2.9.5 has XSS via the nbm&#95;send&#95;html&#95;mail, nbm&#95;send&#95;mail&#95;as, nbm&#95;send&#95;detailed&#95;content, nbm&#95;complementary&#95;mail&#95;content, nbm&#95;send&#95;recent&#95;post&#95;dates, or param&#95;submit parameter. This is expl",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2019-09-13",
+      "github_refs": [
+        "https://github.com/Piwigo/Piwigo/issues",
+        "https://github.com/Piwigo/Piwigo/issues"
+      ]
+    },
+    {
+      "id": "CVE-2019-13364",
+      "cwe": "CWE-352",
+      "description": "admin.php?page=account_billing in Piwigo 2.9.5 has XSS via the vat&#95;number, billing&#95;name, company, or billing&#95;address parameter. This is exploitable via CSRF.",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2019-09-13",
+      "github_refs": [
+        "https://github.com/Piwigo/Piwigo/issues",
+        "https://github.com/Piwigo/Piwigo/issues"
+      ]
+    },
+    {
+      "id": "CVE-2019-10784",
+      "cwe": "CWE-352",
+      "description": "phppgadmin through 7.12.1 allows sensitive actions to be performed without validating that the request originated from the application. One such area, \"database.php\" does not verify the source of an HTTP request. This can be leveraged by a remote attacker to trick a logged-in administrator to visit ",
+      "cvss_version": "3.1",
+      "cvss_score": 9.6,
+      "severity": "CRITICAL",
+      "published": "2020-02-04",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-20577",
+      "cwe": "CWE-352",
+      "description": "Orange Livebox 00.96.320S devices allow cgi-bin/restore.exe, cgi-bin/firewall_SPI.exe, cgi-bin/setup_remote_mgmt.exe, cgi-bin/setup_pass.exe, and cgi-bin/upgradep.exe CSRF. This is related to Firmware 01.11.2017-11:43:44, Boot v0.70.03, Modem 5.4.1.10.1.1A, Hardware 02, and Arcadyan ARV7519RW22-A-L ",
+      "cvss_version": "3.0",
+      "cvss_score": 9.1,
+      "severity": "CRITICAL",
+      "published": "2018-12-28",
+      "github_refs": [
+        "https://github.com/zadewg/LIVEBOX-0DAY",
+        "https://github.com/zadewg/LIVEBOX-0DAY"
+      ]
+    },
+    {
+      "id": "CVE-2019-19915",
+      "cwe": "CWE-352",
+      "description": "The \"301 Redirects - Easy Redirect Manager\" plugin before 2.45 for WordPress allows users (with subscriber or greater access) to modify, delete, or inject redirect rules, and exploit XSS, with the /admin-ajax.php?action=eps_redirect_save and /admin-ajax.php?action=eps_redirect_delete actions. This c",
+      "cvss_version": "3.1",
+      "cvss_score": 9.0,
+      "severity": "CRITICAL",
+      "published": "2019-12-19",
+      "github_refs": []
+    },
+    {
+      "id": "CVE-2018-1712",
+      "cwe": "CWE-352",
+      "description": "IBM API Connect's Developer Portal 5.0.0.0 through 5.0.8.3 is vulnerable to Server Side Request Forgery. An attacker, using specially crafted input parameters can trick the server into making potentially malicious calls within the trusted network. IBM X-Force ID: 146370.",
+      "cvss_version": "3.0",
+      "cvss_score": 8.6,
+      "severity": "HIGH",
+      "published": "2018-08-16",
+      "github_refs": []
+    }
+  ]
+}

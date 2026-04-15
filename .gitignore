@@ -1,0 +1,10 @@
+﻿venv/
+__pycache__/
+*.pyc
+.env
+data/users/
+data/patch_cache.json
+data/metrics.json
+*.zip
+*.rar
+uploads/
