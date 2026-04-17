@@ -1,4 +1,16 @@
-import sys, os, json, threading, shutil, zipfile, tempfile, re, io, base64, time
+import sys
+import os
+import json
+import threading
+import shutil
+import zipfile
+import tempfile
+import re
+import io
+import base64
+import time
+import secrets
+import string
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -592,7 +604,8 @@ def verify_2fa():
         if verify_totp(secret, code):
             session['2fa_ok']   = True
             session['need_2fa'] = False
-            return jsonify({"ok":True})
+            redirect_url = "/admin" if session.get('role') == 'admin' else "/dashboard"
+            return jsonify({"ok": True, "redirect": redirect_url})
         return jsonify({"error":"Code incorrect. Vérifiez votre application."}), 401
     return render_template('verify_2fa.html')
 
@@ -856,7 +869,8 @@ def list_files():
         fp=os.path.join(uld,fname)
         if not os.path.isfile(fp): continue
         if '_patched' in fname or '_extracted' in fname: continue
-        pname=fname.replace('.py','_patched.py')
+        _bn, _bext = os.path.splitext(fname)
+        pname = _bn + '_patched' + _bext
         ppath=os.path.join(uld,pname); st=os.stat(fp)
         files.append({"name":fname,"path":fp,
             "size":round(st.st_size/1024,1),
@@ -980,8 +994,6 @@ def load_requests():
 
 def save_requests(reqs):
     _write_json(REQUESTS_FILE, reqs)
-
-import secrets, string
 
 def generate_password(length=12):
     chars = string.ascii_letters + string.digits + '!@#$'
@@ -1156,9 +1168,8 @@ def admin_approve_request(req_id):
     return jsonify({
         "ok":        True,
         "username":  username,
-        "password":  password,
         "email_sent": email_sent,
-        "message":  f"Compte créé : {username} / {password}"
+        "message":  f"Compte créé : {username}" + ("" if email_sent else f" — mot de passe : {password}")
     })
 
 @app.route('/admin/requests/<req_id>/reject', methods=['POST'])

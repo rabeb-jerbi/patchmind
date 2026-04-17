@@ -47,10 +47,18 @@ def run_pipeline(file_path):
     
     for i, vuln in enumerate(unique_vulns, 1):
         
-        # ÉTAPE 2 : Enrichissement NVD (avant affichage sévérité)
+        # ÉTAPE 2 : Enrichissement NVD
+        print(f"\n{'=' * 60}")
+        print(f"🔍 Vulnérabilité {i}/{len(unique_vulns)}")
+        print(f"   CWE      : {vuln['cwe']}")
+        print(f"   Fichier  : {vuln['file']}:{vuln['line']}")
+
+        print(f"\n📌 ÉTAPE 2 : Enrichissement NVD...")
         cwe_clean = vuln['cwe'].split(":")[0].strip()
+        t0        = time.time()
         cves      = get_cves_by_cwe(cwe_clean)
-        
+        nvd_dur   = time.time() - t0
+
         # Calculer la sévérité CVSS
         known_cves = [c for c in cves if c.get("severity") != "UNKNOWN"]
         if known_cves:
@@ -58,19 +66,10 @@ def run_pipeline(file_path):
             cvss_display = f"{top_cve.get('severity')} (CVSS {top_cve.get('cvss_score')})"
         else:
             cvss_display = vuln['severity']
-        
-        print(f"\n{'=' * 60}")
-        print(f"🔍 Vulnérabilité {i}/{len(unique_vulns)}")
-        print(f"   CWE      : {vuln['cwe']}")
-        print(f"   Fichier  : {vuln['file']}:{vuln['line']}")
+
         print(f"   Sévérité : {cvss_display}")
-        
         metrics.start_vuln(vuln)
-        
-        # Afficher résultat NVD
-        print(f"\n📌 ÉTAPE 2 : Enrichissement NVD...")
-        t0      = time.time()
-        nvd_dur = time.time() - t0
+
         if cves:
             if known_cves:
                 print(f"✅ {len(cves)} CVE(s) — Score max : {top_cve.get('cvss_score')} ({top_cve.get('severity')}) — {nvd_dur:.1f}s")

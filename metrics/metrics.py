@@ -75,13 +75,13 @@ class PatchMindMetrics:
         history = []
         
         if os.path.exists(METRICS_FILE):
-            with open(METRICS_FILE, "r") as f:
+            with open(METRICS_FILE, "r", encoding="utf-8") as f:
                 history = json.load(f)
-        
+
         history.append(self.session)
-        
-        with open(METRICS_FILE, "w") as f:
-            json.dump(history, f, indent=2)
+
+        with open(METRICS_FILE, "w", encoding="utf-8") as f:
+            json.dump(history, f, indent=2, ensure_ascii=False)
         
         print(f"\n📊 Métriques sauvegardées dans : {METRICS_FILE}")
     

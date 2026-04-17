@@ -106,11 +106,12 @@ def analyze_trends(username):
 
     # Tendance du success rate
     rate_trend = "stable"
+    diff = 0.0
     if len(all_rates) >= 3:
         recent_avg  = sum(all_rates[-3:]) / 3
         older_avg   = sum(all_rates[:max(1, len(all_rates)-3)]) / max(1, len(all_rates)-3)
         diff = recent_avg - older_avg
-        if diff > 5:   rate_trend = "improving"
+        if diff > 5:    rate_trend = "improving"
         elif diff < -5: rate_trend = "declining"
 
     # Tendance MTTR
