@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Configurer 2FA</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060910;--surface:#0c1118;--panel:#111822;--border:#1a2535;--border2:#243040;--accent:#00ff88;--accent2:#00c4ff;--danger:#ff4757;--text:#cdd9e5;--muted:#3a5068;--text-dim:#5c7a96;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.wrap{position:relative;z-index:1;width:100%;max-width:520px;animation:fadeUp 0.4s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.brand{text-align:center;margin-bottom:24px;}
+.brand-name{font-size:26px;font-weight:800;color:#fff;}
+.brand-name span{color:var(--accent);}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px;box-shadow:0 0 40px rgba(0,0,0,0.4);}
+.step{display:none;} .step.active{display:block;}
+.step-header{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.step-header::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;}
+h3{font-size:18px;font-weight:700;margin-bottom:12px;}
+p{font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:16px;}
+.qr-wrap{text-align:center;margin:20px 0;padding:20px;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
+.qr-wrap img{border-radius:8px;max-width:180px;}
+.secret-box{font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--accent);background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:10px 16px;text-align:center;margin-top:12px;word-break:break-all;}
+.code-inputs{display:flex;gap:8px;justify-content:center;margin:20px 0;}
+.code-inputs input{width:44px;height:54px;text-align:center;background:var(--surface);border:2px solid var(--border);border-radius:8px;color:var(--accent);font-family:var(--mono);font-size:20px;font-weight:700;outline:none;transition:border-color 0.2s;}
+.code-inputs input:focus{border-color:var(--accent);}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-primary{background:var(--accent);color:#060910;width:100%;}
+.btn-primary:hover{background:#00e077;box-shadow:0 0 16px rgba(0,255,136,0.3);}
+.btn-primary:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;}
+.btn-outline{background:transparent;color:var(--text-dim);border:1px solid var(--border2);margin-top:10px;width:100%;justify-content:center;}
+.btn-outline:hover{border-color:var(--border);color:var(--text);}
+.err{margin-top:12px;padding:10px 14px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--danger);display:none;}
+.ok-msg{margin-top:12px;padding:10px 14px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--accent);display:none;text-align:center;}
+.steps-nav{display:flex;gap:6px;margin-bottom:24px;justify-content:center;}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background 0.3s;}
+.step-dot.active{background:var(--accent);}
+.app-logos{display:flex;gap:12px;justify-content:center;margin:16px 0;}
+.app-logo{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-name">Patch<span>Mind</span></div>
+  </div>
+
+  <div class="card">
+    <div class="steps-nav">
+      <div class="step-dot active" id="dot0"></div>
+      <div class="step-dot" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+    </div>
+
+    <!-- STEP 1: Intro -->
+    <div class="step active" id="step0">
+      <div class="step-header">Étape 1 / 3</div>
+      <h3>🔐 Activer la double authentification</h3>
+      <p>La 2FA protège votre compte même si votre mot de passe est compromis. Vous aurez besoin d'une application d'authentification :</p>
+      <div class="app-logos">
+        <div class="app-logo">📱 Google Authenticator</div>
+        <div class="app-logo">🔑 Authy</div>
+      </div>
+      <p>Téléchargez l'une de ces apps sur votre téléphone avant de continuer.</p>
+      <button class="btn btn-primary" onclick="generateQR()">→ Continuer</button>
+      <a href="/" class="btn btn-outline">← Retour au dashboard</a>
+    </div>
+
+    <!-- STEP 2: QR Code -->
+    <div class="step" id="step1">
+      <div class="step-header">Étape 2 / 3</div>
+      <h3>📱 Scanner le QR code</h3>
+      <p>Ouvrez votre application d'authentification et scannez ce QR code. Si vous ne pouvez pas scanner, entrez la clé manuellement.</p>
+      <div class="qr-wrap">
+        <div id="qrLoading" style="font-family:var(--mono);font-size:12px;color:var(--muted);padding:20px;">⏳ Génération…</div>
+        <img id="qrImg" style="display:none;" alt="QR Code 2FA">
+        <div class="secret-box" id="secretBox" style="display:none;"></div>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(2)">→ J'ai scanné le QR code</button>
+    </div>
+
+    <!-- STEP 3: Verify -->
+    <div class="step" id="step2">
+      <div class="step-header">Étape 3 / 3</div>
+      <h3>✅ Vérifier le code</h3>
+      <p>Entrez le code à 6 chiffres affiché dans votre application pour confirmer la configuration.</p>
+      <div class="code-inputs" id="codeInputs">
+        <input type="text" maxlength="1" inputmode="numeric" id="d0">
+        <input type="text" maxlength="1" inputmode="numeric" id="d1">
+        <input type="text" maxlength="1" inputmode="numeric" id="d2">
+        <input type="text" maxlength="1" inputmode="numeric" id="d3">
+        <input type="text" maxlength="1" inputmode="numeric" id="d4">
+        <input type="text" maxlength="1" inputmode="numeric" id="d5">
+      </div>
+      <button class="btn btn-primary" id="enableBtn" onclick="enable2FA()" disabled>🔐 Activer la 2FA</button>
+      <div class="err" id="errMsg"></div>
+      <div class="ok-msg" id="okMsg"></div>
+      <button class="btn btn-outline" onclick="goStep(1)">← Retour</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 0;
+
+function goStep(n) {
+  document.getElementById('step'+currentStep).classList.remove('active');
+  document.getElementById('dot'+currentStep).classList.remove('active');
+  currentStep = n;
+  document.getElementById('step'+n).classList.add('active');
+  document.getElementById('dot'+n).classList.add('active');
+  if (n === 2) { document.getElementById('d0').focus(); }
+}
+
+function generateQR() {
+  goStep(1);
+  fetch('/api/2fa/generate', {method:'POST'})
+    .then(r=>r.json())
+    .then(d => {
+      if (d.error) { alert(d.error); return; }
+      document.getElementById('qrLoading').style.display = 'none';
+      const img = document.getElementById('qrImg');
+      img.src = 'data:image/png;base64,' + d.qr;
+      img.style.display = 'block';
+      document.getElementById('secretBox').textContent = d.secret;
+      document.getElementById('secretBox').style.display = 'block';
+    });
+}
+
+// Code inputs
+const inputs = Array.from(document.querySelectorAll('#codeInputs input'));
+inputs.forEach((inp,i) => {
+  inp.addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g,'');
+    e.target.value = v;
+    if (v && i<5) inputs[i+1].focus();
+    document.getElementById('enableBtn').disabled = inputs.map(x=>x.value).join('').length !== 6;
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key==='Backspace' && !inp.value && i>0) inputs[i-1].focus();
+    if (e.key==='Enter') enable2FA();
+  });
+  inp.addEventListener('paste', e => {
+    e.preventDefault();
+    const txt = e.clipboardData.getData('text').replace(/\D/g,'').substring(0,6);
+    txt.split('').forEach((c,j)=>{ if(inputs[j]) inputs[j].value=c; });
+    document.getElementById('enableBtn').disabled = txt.length !== 6;
+    checkReady();
+  });
+});
+
+function enable2FA() {
+  const code = inputs.map(i=>i.value).join('');
+  const btn = document.getElementById('enableBtn');
+  const err = document.getElementById('errMsg');
+  const ok  = document.getElementById('okMsg');
+  btn.disabled = true; btn.textContent = '⏳ Activation…';
+  err.style.display = 'none'; ok.style.display = 'none';
+
+  fetch('/api/2fa/enable', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({code})
+  }).then(r=>r.json()).then(d=>{
+    if (d.ok) {
+      ok.textContent = '🎉 ' + d.message;
+      ok.style.display = 'block';
+      btn.textContent = '✅ Activé !';
+      setTimeout(()=>{ window.location.href='/'; }, 1500);
+    } else {
+      err.textContent = '⚠ ' + d.error;
+      err.style.display = 'block';
+      inputs.forEach(i=>{ i.value=''; });
+      inputs[0].focus();
+      btn.disabled = false;
+      btn.textContent = '🔐 Activer la 2FA';
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── THEME VARIABLES ── */
+:root {
+  --bg:        #060910;
+  --surface:   #0c1118;
+  --panel:     #111822;
+  --border:    #1a2535;
+  --border2:   #243040;
+  --accent:    #00ff88;
+  --accent2:   #00c4ff;
+  --warn:      #ffaa00;
+  --danger:    #ff4757;
+  --muted:     #3a5068;
+  --text:      #cdd9e5;
+  --text-dim:  #5c7a96;
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Syne', sans-serif;
+  --confidence-high: #00ff88;
+  --confidence-mid:  #ffaa00;
+  --confidence-low:  #ff4757;
+}
+body.light {
+  --bg:        #f0f4f8;
+  --surface:   #ffffff;
+  --panel:     #f8fafc;
+  --border:    #e2e8f0;
+  --border2:   #cbd5e0;
+  --accent:    #00aa55;
+  --accent2:   #0077cc;
+  --warn:      #d97706;
+  --danger:    #dc2626;
+  --muted:     #94a3b8;
+  --text:      #1e293b;
+  --text-dim:  #64748b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+
+body:not(.light)::before {
+  content:'';
+  position:fixed; inset:0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.012) 2px, rgba(0,255,136,0.012) 4px);
+  pointer-events:none; z-index:9999;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:240px; min-height:100vh;
+  background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  position:fixed; top:0; left:0; bottom:0; z-index:100;
+  transition: background 0.3s, border-color 0.3s;
+}
+.logo { padding:28px 24px 24px; border-bottom:1px solid var(--border); }
+.logo-mark { font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:4px; opacity:0.7; }
+.logo-name { font-family:var(--sans); font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+.logo-name span { color:var(--accent); }
+.nav-section { padding:20px 12px 8px; font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 16px; margin:2px 8px; border-radius:6px;
+  cursor:pointer; font-size:14px; font-weight:600; color:var(--text-dim);
+  transition:all 0.2s; border:1px solid transparent; text-decoration:none;
+}
+.nav-item:hover { background:var(--panel); color:var(--text); border-color:var(--border); }
+.nav-item.active { background:rgba(0,255,136,0.08); color:var(--accent); border-color:rgba(0,255,136,0.2); }
+.nav-item .icon { font-size:16px; width:20px; text-align:center; }
+.sidebar-footer { margin-top:auto; padding:20px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); margin-right:8px; animation:pulse 2s infinite; }
+.status-label { font-family:var(--mono); font-size:11px; color:var(--text-dim); }
+
+/* Theme toggle */
+.theme-toggle {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:20px; padding:4px 10px; cursor:pointer;
+  font-size:14px; color:var(--text-dim); transition:all 0.2s;
+}
+.theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── MAIN ── */
+.main { margin-left:240px; flex:1; display:flex; flex-direction:column; min-height:100vh; }
+.topbar {
+  height:60px; background:var(--surface); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 32px; gap:12px;
+  position:sticky; top:0; z-index:50; transition: background 0.3s;
+}
+.topbar-title { font-size:16px; font-weight:700; color:var(--text); flex:1; }
+.topbar-tag { font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:4px; background:rgba(0,255,136,0.1); color:var(--accent); border:1px solid rgba(0,255,136,0.25); letter-spacing:1px; }
+.content { padding:32px; flex:1; }
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── CARDS ── */
+.card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:24px; margin-bottom:20px; animation:fadeIn 0.3s ease both; transition: background 0.3s, border-color 0.3s; }
+.card-title { font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dim); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.card-title::before { content:''; display:inline-block; width:3px; height:14px; background:var(--accent); border-radius:2px; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:6px; font-family:var(--sans); font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; text-decoration:none; }
+.btn-primary { background:var(--accent); color:#060910; }
+.btn-primary:hover { background:#00e077; box-shadow:0 0 16px rgba(0,255,136,0.3); }
+.btn-primary:disabled { background:var(--border2); color:var(--muted); cursor:not-allowed; box-shadow:none; }
+.btn-outline { background:transparent; color:var(--accent2); border:1px solid rgba(0,196,255,0.3); }
+.btn-outline:hover { background:rgba(0,196,255,0.08); border-color:var(--accent2); }
+.btn-excel { background:rgba(0,180,100,0.15); color:#00b464; border:1px solid rgba(0,180,100,0.3); }
+.btn-excel:hover { background:rgba(0,180,100,0.25); }
+.btn-sm { padding:6px 14px; font-size:12px; }
+
+/* ── UPLOAD ── */
+.upload-zone { border:1px dashed var(--border2); border-radius:8px; padding:48px 32px; text-align:center; cursor:pointer; transition:all 0.3s; position:relative; overflow:hidden; }
+.upload-zone:hover, .upload-zone.drag-over { border-color:var(--accent); background:rgba(0,255,136,0.03); }
+.upload-icon { font-size:40px; margin-bottom:12px; display:block; }
+.upload-zone h3 { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.upload-zone p { font-family:var(--mono); font-size:12px; color:var(--text-dim); }
+.file-selected { display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:6px 14px; background:rgba(0,255,136,0.1); border:1px solid rgba(0,255,136,0.3); border-radius:20px; font-family:var(--mono); font-size:12px; color:var(--accent); }
+input[type="file"] { display:none; }
+
+/* ── PROGRESS ── */
+.progress-wrap { margin:16px 0 8px; }
+.progress-track { background:var(--surface); border-radius:4px; height:6px; overflow:hidden; border:1px solid var(--border); }
+.progress-bar-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:4px; transition:width 0.5s ease; box-shadow:0 0 8px rgba(0,255,136,0.5); }
+.progress-info { display:flex; justify-content:space-between; margin-top:6px; font-family:var(--mono); font-size:11px; color:var(--text-dim); }
+
+/* ── TERMINAL ── */
+.terminal { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:16px; height:180px; overflow-y:auto; font-family:var(--mono); font-size:12px; line-height:1.7; }
+.log-line { color:var(--text-dim); }
+.log-line.success { color:var(--accent); }
+.log-line.error   { color:var(--danger); }
+.log-line.info    { color:var(--accent2); }
+.log-line.cache   { color:var(--warn); }
+
+/* ── FILTERS ── */
+.filters-bar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.filter-select {
+  background:var(--surface); border:1px solid var(--border2); border-radius:6px;
+  padding:7px 12px; color:var(--text); font-family:var(--mono); font-size:12px;
+  outline:none; cursor:pointer; transition:border-color 0.2s;
+}
+.filter-select:focus { border-color:var(--accent2); }
+.filter-search {
+  flex:1; min-width:180px; background:var(--surface); border:1px solid var(--border2);
+  border-radius:6px; padding:7px 12px; color:var(--text); font-family:var(--mono); font-size:12px; outline:none;
+}
+.filter-search:focus { border-color:var(--accent2); }
+.filter-badge { font-family:var(--mono); font-size:11px; color:var(--text-dim); padding:0 4px; }
+
+/* ── RESULTS ── */
+.result-item { display:flex; align-items:flex-start; gap:16px; padding:14px 16px; background:var(--surface); border-radius:6px; border:1px solid var(--border); margin-bottom:8px; transition:border-color 0.2s; }
+.result-item:hover { border-color:var(--border2); }
+.result-item.ok  { border-left:3px solid var(--accent); }
+.result-item.bad { border-left:3px solid var(--danger); }
+.result-status { font-size:18px; flex-shrink:0; margin-top:2px; }
+.result-body   { flex:1; min-width:0; }
+.result-cwe { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent2); margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.result-meta { font-family:var(--mono); font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.result-sev  { font-family:var(--mono); font-size:11px; color:var(--warn); margin-top:2px; }
+.result-badge { font-family:var(--mono); font-size:11px; font-weight:700; padding:4px 10px; border-radius:4px; flex-shrink:0; }
+.badge-ok  { background:rgba(0,255,136,0.12); color:var(--accent); border:1px solid rgba(0,255,136,0.25); }
+.badge-bad { background:rgba(255,71,87,0.12);  color:var(--danger); border:1px solid rgba(255,71,87,0.25); }
+
+/* Confidence bar */
+.confidence-wrap { margin-top:6px; display:flex; align-items:center; gap:8px; }
+.confidence-bar { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.confidence-fill { height:100%; border-radius:2px; transition:width 0.5s; }
+.confidence-label { font-family:var(--mono); font-size:10px; min-width:32px; text-align:right; }
+
+/* Cache badge */
+.cache-badge { font-family:var(--mono); font-size:10px; padding:2px 6px; background:rgba(255,170,0,0.15); color:var(--warn); border:1px solid rgba(255,170,0,0.3); border-radius:3px; }
+
+/* ── DIFF MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:1000; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--panel); border:1px solid var(--border2); border-radius:12px; width:90%; max-width:900px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border); }
+.modal-title { font-family:var(--mono); font-size:13px; font-weight:700; color:var(--accent2); }
+.modal-close { background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; padding:4px 8px; border-radius:4px; }
+.modal-close:hover { color:var(--danger); }
+.modal-body { overflow-y:auto; padding:20px 24px; flex:1; }
+.diff-container { font-family:var(--mono); font-size:12px; line-height:1.7; }
+.diff-line { padding:2px 8px; border-radius:2px; white-space:pre-wrap; word-break:break-all; }
+.diff-add { background:rgba(0,255,136,0.08); color:var(--accent); }
+.diff-rem { background:rgba(255,71,87,0.08); color:var(--danger); }
+.diff-ctx { color:var(--text-dim); }
+.diff-hdr { color:var(--accent2); opacity:0.6; }
+
+/* ── COMMENT / ASSIGN / STATUS ── */
+.vuln-actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.action-btn { font-family:var(--mono); font-size:11px; padding:3px 8px; border-radius:4px; cursor:pointer; border:1px solid var(--border2); background:var(--surface); color:var(--text-dim); transition:all 0.2s; }
+.action-btn:hover { border-color:var(--accent2); color:var(--accent2); }
+.status-select { font-family:var(--mono); font-size:11px; padding:3px 8px; border-radius:4px; background:var(--surface); border:1px solid var(--border2); color:var(--text-dim); cursor:pointer; }
+.vuln-note { font-family:var(--mono); font-size:11px; color:var(--warn); margin-top:4px; font-style:italic; }
+.assignee-tag { font-family:var(--mono); font-size:10px; padding:2px 6px; background:rgba(0,196,255,0.1); color:var(--accent2); border:1px solid rgba(0,196,255,0.2); border-radius:3px; }
+
+/* ── OVERVIEW ── */
+.overview-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.overview-box { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:18px 20px; }
+.overview-box .ov-val { font-family:var(--mono); font-size:28px; font-weight:700; color:var(--accent); }
+.overview-box .ov-lbl { font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; }
+
+/* Comparison banner */
+.comparison-banner { padding:12px 16px; border-radius:6px; margin-bottom:16px; font-family:var(--mono); font-size:12px; display:none; }
+.comparison-better { background:rgba(0,255,136,0.08); border:1px solid rgba(0,255,136,0.2); color:var(--accent); }
+.comparison-worse  { background:rgba(255,71,87,0.08); border:1px solid rgba(255,71,87,0.2); color:var(--danger); }
+.comparison-same   { background:rgba(0,196,255,0.08); border:1px solid rgba(0,196,255,0.2); color:var(--accent2); }
+
+/* ── METRICS GRID ── */
+.metrics-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
+.metric-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; text-align:center; }
+.metric-val { font-family:var(--mono); font-size:36px; font-weight:700; color:var(--accent); line-height:1; margin-bottom:8px; }
+.metric-val.blue   { color:var(--accent2); }
+.metric-val.red    { color:var(--danger); }
+.metric-val.yellow { color:var(--warn); }
+.metric-lbl { font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; }
+
+/* ── CHARTS ── */
+.chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+.chart-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:20px; }
+.chart-title { font-family:var(--mono); font-size:11px; color:var(--text-dim); letter-spacing:2px; text-transform:uppercase; margin-bottom:16px; }
+.chart-canvas { width:100% !important; }
+
+/* ── PATCHED FILES ── */
+.patched-file-item { display:flex; flex-direction:column; gap:12px; padding:14px 16px; background:var(--surface); border:1px solid rgba(0,255,136,0.2); border-left:3px solid var(--accent); border-radius:6px; margin-bottom:8px; }
+
+/* ── GITHUB INPUT ── */
+.github-input-wrap { display:flex; gap:12px; align-items:center; }
+.github-input { flex:1; background:var(--surface); border:1px solid var(--border2); border-radius:6px; padding:11px 16px; color:var(--text); font-family:var(--mono); font-size:13px; outline:none; transition:border-color 0.2s; }
+.github-input:focus { border-color:var(--accent2); }
+.github-input::placeholder { color:var(--muted); }
+
+/* ── HISTORY ── */
+.rate-pill { display:inline-block; padding:3px 10px; border-radius:4px; font-size:11px; font-weight:700; }
+.rate-good { background:rgba(0,255,136,0.12); color:var(--accent); }
+.rate-bad  { background:rgba(255,71,87,0.12);  color:var(--danger); }
+.empty { text-align:center; padding:48px 20px; color:var(--text-dim); }
+.empty-icon { font-size:40px; margin-bottom:12px; opacity:0.4; }
+.empty p { font-family:var(--mono); font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <a href="/" style="text-decoration:none;" class="logo">
+    <div class="logo-mark">v2.0 · SAST</div>
+    <div class="logo-name">Patch<span>Mind</span></div>
+  </a>
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+    <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+    <div>
+      <div id="sidebarUsername" style="font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:700;">—</div>
+      <div id="sidebarRole" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;">—</div>
+    </div>
+  </div>
+  <div class="nav-section">Principal</div>
+  <div class="nav-item active" onclick="showPage('analyse')"><span class="icon">⚡</span> Analyse</div>
+  <div class="nav-item" onclick="showPage('fichiers')"><span class="icon">🗂</span> Mes fichiers</div>
+  <div class="nav-section">Données</div>
+  <div class="nav-item" onclick="showPage('metriques')"><span class="icon">📊</span> Métriques</div>
+  <div class="nav-item" onclick="showPage('historique')"><span class="icon">🕐</span> Historique</div>
+  <div class="nav-section">Compte</div>
+  <a id="adminLink" href="/admin" class="nav-item" style="display:none;color:var(--warn);"><span class="icon">⚙</span> Admin Panel</a>
+  <a href="/setup-2fa" class="nav-item" style="color:var(--accent2);"><span class="icon">🔐</span> Configurer 2FA</a>
+  <a href="/logout" class="nav-item" style="color:var(--danger);"><span class="icon">→</span> Déconnexion</a>
+  <div class="sidebar-footer">
+    <div><span class="status-dot"></span><span class="status-label">Système actif</span></div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Mode sombre/clair">🌙</button>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Analyse</div>
+    <button id="exportExcelBtn" onclick="exportExcel()" style="display:none;" class="btn btn-sm btn-excel">📊 Export Excel</button>
+    <a id="reportBtn" href="/report" style="display:none;text-decoration:none;" class="btn btn-sm btn-outline">📄 Rapport PDF</a>
+    <span class="topbar-tag" id="pipelineTag">PIPELINE ACTIF</span>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ PAGE ANALYSE ══ -->
+    <div class="page active" id="page-analyse">
+
+      <!-- Comparaison sessions -->
+      <div class="comparison-banner" id="comparisonBanner"></div>
+
+      <!-- Overview -->
+      <div class="overview-row" id="overviewRow">
+        <div class="overview-box"><div class="ov-val" id="ov-total">—</div><div class="ov-lbl">Vulnérabilités</div></div>
+        <div class="overview-box"><div class="ov-val" id="ov-validated">—</div><div class="ov-lbl">Patches validés</div></div>
+        <div class="overview-box"><div class="ov-val" id="ov-rate">—</div><div class="ov-lbl">Success rate</div></div>
+        <div class="overview-box"><div class="ov-val" id="ov-mttr">—</div><div class="ov-lbl">MTTR moyen</div></div>
+      </div>
+
+      <!-- Upload -->
+      <div class="card">
+        <div class="card-title">Upload fichier source</div>
+        <div id="formatError" style="display:none;margin-bottom:12px;padding:10px 14px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--danger);">⚠ Format non supporté</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+          <span class="upload-icon">📂</span>
+          <h3>Déposer un fichier à analyser</h3>
+          <p>Python · JavaScript · Java · PHP · Go · Ruby · C/C++ · Kotlin · Swift · Rust</p>
+          <p style="margin-top:6px;color:var(--accent2);">ou un <strong>.zip</strong> / <strong>.rar</strong></p>
+          <div id="fileNameBadge" style="display:none;align-items:center;gap:8px;margin-top:12px;justify-content:center;">
+            <span class="file-selected"><span>📄</span><span id="fileNameText"></span></span>
+            <button onclick="clearFile(event)" style="background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);color:var(--danger);border-radius:4px;padding:4px 10px;font-family:var(--mono);font-size:11px;cursor:pointer;">✕</button>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept=".py,.js,.jsx,.ts,.tsx,.java,.php,.go,.rb,.cpp,.c,.kt,.swift,.rs,.zip,.rar" onchange="handleFile(this)">
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="analyzeBtn" onclick="startAnalysis()" disabled>⚡ Lancer l'analyse</button>
+          <button class="btn btn-outline" id="newAnalysisBtn" style="display:none;" onclick="resetForNewAnalysis()">🔄 Nouvelle analyse</button>
+        </div>
+      </div>
+
+      <!-- GitHub -->
+      <div class="card">
+        <div class="card-title">Analyser un repo GitHub</div>
+        <div class="github-input-wrap">
+          <input class="github-input" type="text" id="githubUrl" placeholder="https://github.com/username/repo">
+          <button class="btn btn-outline" onclick="startGithubAnalysis()">🔗 Analyser</button>
+        </div>
+      </div>
+
+      <!-- Pipeline -->
+      <div class="card" id="progressCard" style="display:none">
+        <div class="card-title">Pipeline en cours</div>
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+          <div class="progress-info"><span id="progressPct">0%</span><span id="progressLabel">Initialisation…</span></div>
+        </div>
+        <div class="terminal" id="logsContainer"></div>
+        <div id="pipelineDoneActions" style="display:none;margin-top:16px;">
+          <button class="btn btn-primary btn-sm" onclick="scrollToTop()">↑ Retour au menu</button>
+        </div>
+      </div>
+
+      <!-- Filtres + Résultats -->
+      <div class="card" id="resultsCard" style="display:none">
+        <div class="card-title">Vulnérabilités détectées</div>
+        <!-- Filtres -->
+        <div class="filters-bar">
+          <select class="filter-select" id="filterCwe" onchange="applyFilters()">
+            <option value="">Tous les CWE</option>
+          </select>
+          <select class="filter-select" id="filterSev" onchange="applyFilters()">
+            <option value="">Toutes sévérités</option>
+            <option value="CRITICAL">CRITICAL</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+          </select>
+          <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+            <option value="">Tous statuts</option>
+            <option value="ok">Validés</option>
+            <option value="bad">Rejetés</option>
+          </select>
+          <select class="filter-select" id="filterFile" onchange="applyFilters()">
+            <option value="">Tous les fichiers</option>
+          </select>
+          <input class="filter-search" type="text" id="filterSearch" placeholder="🔍 Rechercher…" oninput="applyFilters()">
+          <span class="filter-badge" id="filterCount"></span>
+        </div>
+        <div id="resultsGrid"></div>
+      </div>
+
+      <!-- Fichiers corrigés -->
+      <div class="card" id="patchedFilesCard" style="display:none">
+        <div class="card-title">Fichiers corrigés</div>
+        <div id="patchedFilesList"></div>
+      </div>
+
+    </div>
+
+    <!-- ══ PAGE FICHIERS ══ -->
+    <div class="page" id="page-fichiers">
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between;display:flex;align-items:center;">
+          <span style="display:flex;align-items:center;gap:8px;"><span style="display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;"></span>Fichiers uploadés</span>
+          <button class="btn btn-sm btn-outline" onclick="loadFiles()">↻ Actualiser</button>
+        </div>
+        <div id="filesTable"><div class="empty"><div class="empty-icon">🗂</div><p>Chargement…</p></div></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE MÉTRIQUES ══ -->
+    <div class="page" id="page-metriques">
+      <!-- Session en cours -->
+      <div class="card">
+        <div class="card-title">Session en cours</div>
+        <div class="metrics-row" id="sessionMetrics">
+          <div class="metric-box"><div class="metric-val" id="sm-total">—</div><div class="metric-lbl">Total vulns</div></div>
+          <div class="metric-box"><div class="metric-val" id="sm-validated">—</div><div class="metric-lbl">Validés</div></div>
+          <div class="metric-box"><div class="metric-val red" id="sm-rejected">—</div><div class="metric-lbl">Rejetés</div></div>
+          <div class="metric-box"><div class="metric-val blue" id="sm-rate">—</div><div class="metric-lbl">Success rate</div></div>
+          <div class="metric-box"><div class="metric-val yellow" id="sm-mttr">—</div><div class="metric-lbl">MTTR (s)</div></div>
+          <div class="metric-box"><div class="metric-val" id="sm-duration">—</div><div class="metric-lbl">Durée totale</div></div>
+        </div>
+      </div>
+
+      <!-- Graphiques -->
+      <div class="chart-grid">
+        <div class="chart-box">
+          <div class="chart-title">Success rate dans le temps</div>
+          <canvas id="chartRate" class="chart-canvas" height="200"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">MTTR dans le temps</div>
+          <canvas id="chartMttr" class="chart-canvas" height="200"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Vulnérabilités par session</div>
+          <canvas id="chartVulns" class="chart-canvas" height="200"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">CWE les plus fréquents</div>
+          <canvas id="chartCwe" class="chart-canvas" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- Agrégat -->
+      <div class="card">
+        <div class="card-title">Statistiques agrégées</div>
+        <div id="aggregateStats"><div class="empty"><div class="empty-icon">📊</div><p>Lance une analyse pour voir les métriques</p></div></div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE HISTORIQUE ══ -->
+    <div class="page" id="page-historique">
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between;display:flex;align-items:center;">
+          <span style="display:flex;align-items:center;gap:8px;"><span style="display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;"></span>Sessions passées</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm btn-excel" onclick="exportHistoryExcel()">📊 Export Excel</button>
+            <button class="btn btn-sm btn-outline" onclick="loadHistory()">↻ Actualiser</button>
+          </div>
+        </div>
+        <div id="historyTable"><div class="empty"><div class="empty-icon">🕐</div><p>Chargement…</p></div></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══ DIFF MODAL ══ -->
+<div class="modal-overlay" id="diffModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="diffModalTitle">Diff — avant / après</span>
+      <button class="modal-close" onclick="closeDiff()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="diff-container" id="diffContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COMMENT MODAL ══ -->
+<div class="modal-overlay" id="commentModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span class="modal-title">Annoter la vulnérabilité</span>
+      <button class="modal-close" onclick="closeComment()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;font-family:var(--mono);font-size:12px;color:var(--text-dim);" id="commentVulnId"></div>
+      <textarea id="commentText" style="width:100%;height:120px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px;color:var(--text);font-family:var(--mono);font-size:12px;resize:vertical;outline:none;" placeholder="Ajouter une note…"></textarea>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <input id="assigneeInput" style="flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;" placeholder="Assigner à (ex: alice)">
+        <button class="btn btn-primary btn-sm" onclick="saveComment()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ STATE ══
+let selectedFile = null, polling = null;
+let allResults = [], vulnAnnotations = {}, currentCommentIdx = null;
+let charts = {};
+
+const SUPPORTED_EXT = ['.py','.js','.jsx','.ts','.tsx','.java','.php','.go','.rb','.cpp','.c','.kt','.swift','.rs','.zip','.rar'];
+
+// ══ THEME ══
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.querySelector('.theme-toggle').textContent = isLight ? '🌑' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  rebuildCharts();
+}
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.querySelector('.theme-toggle').textContent = '🌑';
+}
+
+// ══ INIT ══
+fetch('/me').then(r=>r.json()).then(d=>{
+  document.getElementById('sidebarUsername').textContent = '@' + d.username;
+  document.getElementById('sidebarRole').textContent     = d.role;
+  if (d.role === 'admin') document.getElementById('adminLink').style.display = 'flex';
+}).catch(()=>{ window.location.href='/login'; });
+
+// ══ NAVIGATION ══
+const pages = { analyse:'Analyse', fichiers:'Mes fichiers', metriques:'Métriques', historique:'Historique' };
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if (n.textContent.trim().toLowerCase().includes(name.substring(0,4))) n.classList.add('active');
+  });
+  document.getElementById('topbarTitle').textContent = pages[name];
+  if (name==='fichiers')   loadFiles();
+  if (name==='historique') loadHistory();
+  if (name==='metriques')  loadMetriques();
+}
+
+// ══ CWE DESCRIPTIONS ══
+const CWE_DESC = {
+  'CWE-89' :'Injection SQL — des données utilisateur sont insérées directement dans une requête SQL. Un attaquant peut lire, modifier ou supprimer toute votre base de données.',
+  'CWE-79' :'Cross-Site Scripting (XSS) — du code JavaScript malveillant peut s\'exécuter dans le navigateur de vos utilisateurs et voler leurs sessions ou données.',
+  'CWE-22' :'Path Traversal — un attaquant peut manipuler les chemins de fichiers pour accéder à des fichiers sensibles en dehors du dossier prévu (ex: /etc/passwd).',
+  'CWE-78' :'Injection de commande OS — des commandes système arbitraires peuvent être exécutées sur le serveur en manipulant les entrées de l\'application.',
+  'CWE-327':'Algorithme cryptographique faible — MD5 ou SHA-1 sont utilisés. Ces algorithmes sont obsolètes et facilement cassables avec du matériel moderne.',
+  'CWE-502':'Désérialisation non sécurisée — des données non fiables sont converties en objets exécutables, permettant l\'exécution de code arbitraire.',
+  'CWE-798':'Credentials hardcodés — un mot de passe, une clé API ou un secret est écrit directement dans le code source, exposé à quiconque accède au dépôt.',
+  'CWE-918':'SSRF — le serveur peut être forcé à faire des requêtes vers des ressources internes (métadonnées cloud, services internes) non accessibles publiquement.',
+  'CWE-20' :'Validation insuffisante des entrées — les données fournies par l\'utilisateur ne sont pas vérifiées, ouvrant la porte à de nombreuses attaques.',
+  'CWE-611':'Injection XXE — un fichier XML malveillant peut lire des fichiers locaux ou provoquer des requêtes réseau internes via les entités XML externes.',
+  'CWE-94' :'Injection de code — du code fourni par l\'utilisateur est exécuté par l\'interpréteur, permettant une prise de contrôle complète du serveur.',
+  'CWE-95' :'Eval non sécurisé — la fonction eval() exécute du code dynamique non contrôlé, permettant l\'injection de code malveillant.',
+  'CWE-400':'Déni de service (DoS) — une entrée malveillante peut consommer des ressources excessives (CPU, mémoire) et rendre le service indisponible.',
+  'CWE-190':'Dépassement d\'entier — un calcul numérique peut déborder et produire un résultat inattendu, causant des comportements imprévisibles.',
+  'CWE-321':'Clé cryptographique codée en dur — une clé secrète est fixée dans le code source, compromettant tout le chiffrement si le code est divulgué.',
+  'CWE-330':'Aléatoire insuffisant — des valeurs pseudo-aléatoires prévisibles sont utilisées pour des opérations critiques (tokens, clés, identifiants de session).',
+  'CWE-601':'Redirection ouverte — l\'application redirige vers une URL contrôlée par l\'attaquant, facilitant le phishing.',
+  'CWE-352':'CSRF — une requête forgée peut forcer un utilisateur authentifié à effectuer des actions non voulues à son insu.',
+  'CWE-434':'Upload de fichier dangereux — des fichiers malveillants (scripts, exécutables) peuvent être uploadés et exécutés sur le serveur.',
+  'CWE-732':'Permissions de fichier trop permissives — des fichiers sensibles sont lisibles ou modifiables par des utilisateurs non autorisés.',
+  'CWE-863':'Autorisation incorrecte — les contrôles d\'accès sont mal implémentés, permettant d\'accéder à des ressources non autorisées.',
+  'CWE-862':'Autorisation manquante — aucune vérification d\'accès n\'est effectuée avant d\'exposer une ressource ou une action sensible.',
+  'CWE-916':'Hashage de mot de passe faible — les mots de passe sont hashés avec un algorithme inadapté (MD5, SHA1) sans sel, facilement craquables.',
+  'CWE-326':'Chiffrement insuffisant — la longueur de clé ou l\'algorithme utilisé ne garantit pas une protection adéquate des données.',
+  'CWE-319':'Transmission en clair — des données sensibles (mots de passe, tokens) transitent sans chiffrement et peuvent être interceptées.',
+  'CWE-328':'Fonction de hash faible — une fonction de hachage non résistante aux collisions est utilisée pour des vérifications d\'intégrité.',
+};
+function getCweDesc(cwe) {
+  const n = cwe.toUpperCase().replace(/^CWE-0*(\d+)$/, 'CWE-$1');
+  return CWE_DESC[n] || 'Vulnérabilité de sécurité détectée — consultez la documentation MITRE CWE pour plus de détails.';
+}
+
+// ══ CONFIDENCE LABELS ══
+function confLabel(conf, fromCache) {
+  if (fromCache || conf >= 90) return { text:'⚡ Déjà validé',     tip:'Patch issu du cache ou précédemment validé — fiabilité maximale.' };
+  if (conf >= 80)               return { text:'✅ Prêt à appliquer', tip:'Validé par Semgrep — faible risque de régression.' };
+  if (conf >= 70)               return { text:'👀 Vérifier le diff', tip:'Validé mais inspectez le diff avant de déployer en production.' };
+  return                               { text:'⚠️ Correction manuelle', tip:'Patch rejeté ou score faible — intervention humaine recommandée.' };
+}
+
+// ══ FILE HANDLING ══
+function getExt(name) { const m=name.match(/(\.[^.]+)$/); return m?m[1].toLowerCase():''; }
+function handleDrop(e) { e.preventDefault(); document.getElementById('uploadZone').classList.remove('drag-over'); if(e.dataTransfer.files[0]) applyFile(e.dataTransfer.files[0]); }
+function handleFile(input) { if(input.files&&input.files[0]) applyFile(input.files[0]); }
+function applyFile(file) {
+  const ext=getExt(file.name);
+  if (!SUPPORTED_EXT.includes(ext)) { document.getElementById('formatError').style.display='block'; return; }
+  document.getElementById('formatError').style.display='none';
+  selectedFile=file;
+  document.getElementById('fileNameText').textContent=file.name;
+  document.getElementById('fileNameBadge').style.display='flex';
+  document.getElementById('analyzeBtn').disabled=false;
+}
+function clearFile(e) {
+  if(e&&e.stopPropagation) e.stopPropagation();
+  selectedFile=null;
+  document.getElementById('fileNameBadge').style.display='none';
+  document.getElementById('fileInput').value='';
+  document.getElementById('analyzeBtn').disabled=true;
+}
+
+// ══ ANALYSIS ══
+function startAnalysis() {
+  if (!selectedFile) return;
+  const fd=new FormData(); fd.append('file',selectedFile);
+  resetPipeline();
+  fetch('/upload',{method:'POST',body:fd}).then(r=>r.json()).then(data=>{
+    if (data.error){alert('Erreur: '+data.error);return;}
+    polling=setInterval(checkStatus,2000);
+  });
+}
+function startGithubAnalysis() {
+  const url=document.getElementById('githubUrl').value.trim();
+  if(!url){alert('Entrez un lien GitHub valide');return;}
+  resetPipeline();
+  fetch('/github',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})})
+    .then(r=>r.json()).then(()=>{polling=setInterval(checkStatus,2000);});
+}
+function resetPipeline() {
+  document.getElementById('progressCard').style.display='block';
+  document.getElementById('resultsCard').style.display='none';
+  document.getElementById('patchedFilesCard').style.display='none';
+  document.getElementById('pipelineDoneActions').style.display='none';
+  document.getElementById('reportBtn').style.display='none';
+  document.getElementById('exportExcelBtn').style.display='none';
+  document.getElementById('progressFill').style.width='0%';
+  document.getElementById('progressPct').textContent='0%';
+  document.getElementById('progressLabel').textContent='Initialisation…';
+  document.getElementById('logsContainer').innerHTML='';
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('newAnalysisBtn').style.display='none';
+  document.getElementById('comparisonBanner').style.display='none';
+  ['ov-total','ov-validated','ov-rate','ov-mttr'].forEach(id=>document.getElementById(id).textContent='—');
+}
+function scrollToTop() { window.scrollTo({top:0,behavior:'smooth'}); }
+function resetForNewAnalysis() {
+  clearFile({});
+  document.getElementById('progressCard').style.display='none';
+  document.getElementById('resultsCard').style.display='none';
+  document.getElementById('patchedFilesCard').style.display='none';
+  document.getElementById('newAnalysisBtn').style.display='none';
+  document.getElementById('githubUrl').value='';
+  ['ov-total','ov-validated','ov-rate','ov-mttr'].forEach(id=>document.getElementById(id).textContent='—');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══ STATUS POLLING ══
+function checkStatus() {
+  fetch('/status').then(r=>r.json()).then(data=>{
+    document.getElementById('progressFill').style.width=data.progress+'%';
+    document.getElementById('progressPct').textContent=data.progress+'%';
+    document.getElementById('progressLabel').textContent=data.running?'Analyse en cours…':'Terminé';
+
+    // Logs
+    const logsEl=document.getElementById('logsContainer');
+    logsEl.innerHTML=data.logs.map(l=>{
+      let cls='log-line';
+      if(l.includes('✅')||l.includes('🎉')) cls+=' success';
+      else if(l.includes('❌')) cls+=' error';
+      else if(l.includes('⚡')||l.includes('cache')) cls+=' cache';
+      else if(l.includes('🤖')||l.includes('🌐')||l.includes('📥')) cls+=' info';
+      return `<div class="${cls}">${l}</div>`;
+    }).join('');
+    logsEl.scrollTop=logsEl.scrollHeight;
+
+    // Results
+    if (data.results.length>0) {
+      allResults=data.results;
+      renderResults(data.results);
+      updateFilters(data.results);
+    }
+
+    // Patched files
+    if (!data.running && data.metrics && data.metrics.patched_files && data.metrics.patched_files.length>0) {
+      renderPatchedFiles(data.metrics.patched_files, data.results);
+    }
+
+    // Done
+    if (!data.running && Object.keys(data.metrics).length>0) {
+      clearInterval(polling);
+      document.getElementById('analyzeBtn').disabled=false;
+      document.getElementById('newAnalysisBtn').style.display='inline-flex';
+      document.getElementById('reportBtn').style.display='inline-flex';
+      document.getElementById('exportExcelBtn').style.display='inline-flex';
+      document.getElementById('pipelineDoneActions').style.display='block';
+      const m=data.metrics;
+      document.getElementById('ov-total').textContent=m.total;
+      document.getElementById('ov-validated').textContent=m.validated;
+      document.getElementById('ov-rate').textContent=m.success_rate+'%';
+      document.getElementById('ov-mttr').textContent=m.mttr+'s';
+      window._lastMetrics=m;
+      showComparison(m);
+    }
+  });
+}
+
+// ══ RENDER RESULTS ══
+function renderResults(results, filtered) {
+  const list = filtered !== undefined ? filtered : results;
+  document.getElementById('resultsCard').style.display='block';
+  document.getElementById('resultsGrid').innerHTML=list.map((r,i)=>{
+    const ann = vulnAnnotations[i] || {};
+    const conf = r.confidence || 0;
+    const confColor = conf>=80 ? 'var(--confidence-high)' : conf>=50 ? 'var(--confidence-mid)' : 'var(--confidence-low)';
+    const cl = confLabel(conf, r.from_cache);
+    const realIdx = results.indexOf(r);
+    return `
+    <div class="result-item ${r.success?'ok':'bad'}" id="result-${realIdx}">
+      <div class="result-status">${r.success?'✅':'❌'}</div>
+      <div class="result-body">
+        <div class="result-cwe">
+          ${r.cwe}
+          ${r.from_cache ? '<span class="cache-badge">⚡ cache</span>' : ''}
+          ${ann.assignee ? `<span class="assignee-tag">@${ann.assignee}</span>` : ''}
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:3px 0 4px;line-height:1.5;">${getCweDesc(r.cwe)}</div>
+        <div class="result-meta">📁 ${r.file} · ligne ${r.line}</div>
+        <div class="result-sev">⚠ ${r.severity}</div>
+        <!-- Confidence -->
+        <div class="confidence-wrap">
+          <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%;background:${confColor};"></div></div>
+          <span class="confidence-label" style="color:${confColor};min-width:max-content;cursor:help;" title="${cl.tip}">${cl.text}</span>
+        </div>
+        ${ann.note ? `<div class="vuln-note">💬 ${ann.note}</div>` : ''}
+        ${ann.status ? `<div style="font-family:var(--mono);font-size:10px;margin-top:4px;color:var(--text-dim);">Statut: <strong style="color:var(--accent2);">${ann.status}</strong></div>` : ''}
+        <!-- Actions collaboration -->
+        <div class="vuln-actions">
+          ${r.diff ? `<button class="action-btn" onclick="showDiff(${realIdx},'${r.cwe}')">🔍 Voir diff</button>` : ''}
+          <button class="action-btn" onclick="openComment(${realIdx})">💬 Annoter</button>
+          <select class="status-select" onchange="setStatus(${realIdx},this.value)">
+            <option value="">— Statut</option>
+            <option value="accepted" ${ann.status==='accepted'?'selected':''}>✅ Accepté</option>
+            <option value="false-positive" ${ann.status==='false-positive'?'selected':''}>🚫 Faux positif</option>
+            <option value="pending" ${ann.status==='pending'?'selected':''}>⏳ En attente</option>
+          </select>
+        </div>
+      </div>
+      <span class="result-badge ${r.success?'badge-ok':'badge-bad'}">${r.success?'VALIDÉ':'REJETÉ'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ══ FILTERS ══
+function updateFilters(results) {
+  const cwes=[...new Set(results.map(r=>r.cwe))].sort();
+  const files=[...new Set(results.map(r=>r.file))].sort();
+  const cweEl=document.getElementById('filterCwe');
+  cweEl.innerHTML='<option value="">Tous les CWE</option>'+cwes.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const fileEl=document.getElementById('filterFile');
+  fileEl.innerHTML='<option value="">Tous les fichiers</option>'+files.map(f=>`<option value="${f}">${f}</option>`).join('');
+}
+function applyFilters() {
+  const cwe=document.getElementById('filterCwe').value;
+  const sev=document.getElementById('filterSev').value;
+  const status=document.getElementById('filterStatus').value;
+  const file=document.getElementById('filterFile').value;
+  const search=document.getElementById('filterSearch').value.toLowerCase();
+  const filtered=allResults.filter(r=>{
+    if(cwe && r.cwe!==cwe) return false;
+    if(sev && !r.severity.includes(sev)) return false;
+    if(status==='ok' && !r.success) return false;
+    if(status==='bad' && r.success) return false;
+    if(file && r.file!==file) return false;
+    if(search && !r.cwe.toLowerCase().includes(search) && !r.file.toLowerCase().includes(search) && !r.message.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  document.getElementById('filterCount').textContent=`${filtered.length}/${allResults.length}`;
+  renderResults(allResults, filtered);
+}
+
+// ══ DIFF MODAL ══
+function showDiff(idx, cwe) {
+  const r=allResults[idx];
+  if(!r||!r.diff) return;
+  document.getElementById('diffModalTitle').textContent=`Diff — ${cwe} · ${r.file}:${r.line}`;
+  const lines=r.diff.split('\n');
+  document.getElementById('diffContent').innerHTML=lines.map(l=>{
+    if(l.startsWith('+')&&!l.startsWith('+++')) return `<div class="diff-line diff-add">${escHtml(l)}</div>`;
+    if(l.startsWith('-')&&!l.startsWith('---')) return `<div class="diff-line diff-rem">${escHtml(l)}</div>`;
+    if(l.startsWith('@@')) return `<div class="diff-line diff-hdr">${escHtml(l)}</div>`;
+    return `<div class="diff-line diff-ctx">${escHtml(l)}</div>`;
+  }).join('');
+  document.getElementById('diffModal').classList.add('open');
+}
+function closeDiff() { document.getElementById('diffModal').classList.remove('open'); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+document.getElementById('diffModal').addEventListener('click',function(e){ if(e.target===this) closeDiff(); });
+
+// ══ COMMENT / ASSIGN / STATUS ══
+function openComment(idx) {
+  currentCommentIdx=idx;
+  const ann=vulnAnnotations[idx]||{};
+  document.getElementById('commentVulnId').textContent=`${allResults[idx]?.cwe} · ${allResults[idx]?.file}:${allResults[idx]?.line}`;
+  document.getElementById('commentText').value=ann.note||'';
+  document.getElementById('assigneeInput').value=ann.assignee||'';
+  document.getElementById('commentModal').classList.add('open');
+}
+function closeComment() { document.getElementById('commentModal').classList.remove('open'); }
+function saveComment() {
+  if(currentCommentIdx===null) return;
+  vulnAnnotations[currentCommentIdx]={
+    ...(vulnAnnotations[currentCommentIdx]||{}),
+    note:document.getElementById('commentText').value,
+    assignee:document.getElementById('assigneeInput').value,
+  };
+  closeComment();
+  renderResults(allResults);
+}
+function setStatus(idx,status) {
+  vulnAnnotations[idx]={...(vulnAnnotations[idx]||{}),status};
+  renderResults(allResults);
+}
+document.getElementById('commentModal').addEventListener('click',function(e){ if(e.target===this) closeComment(); });
+
+// ══ PATCHED FILES ══
+function renderPatchedFiles(pf, results) {
+  document.getElementById('patchedFilesCard').style.display='block';
+  document.getElementById('patchedFilesList').innerHTML=pf.map(f=>{
+    const baseSrc=f.name.replace('_patched','');
+    const related=results.filter(r=>r.file===baseSrc||r.patched_name===f.name);
+    const fixed=related.filter(r=>r.success);
+    const missed=related.filter(r=>!r.success);
+    return `
+    <div class="patched-file-item">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:22px;flex-shrink:0;">🛡</div>
+        <div style="flex:1;"><div style="font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;">${f.name}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">${fixed.length} corrigée(s)${missed.length>0?' · '+missed.length+' non corrigée(s)':''}</div></div>
+        <a href="/download?file=${encodeURIComponent(f.path)}" class="btn btn-primary btn-sm" style="text-decoration:none;">⬇ Télécharger</a>
+      </div>
+      ${fixed.length>0?`<div style="padding:10px 14px;background:rgba(0,255,136,0.05);border-radius:6px;border:1px solid rgba(0,255,136,0.1);">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">✅ Inclus</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${fixed.map(r=>`<span style="font-family:var(--mono);font-size:11px;padding:3px 8px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);border-radius:4px;color:var(--accent);">${r.cwe} · L${r.line}</span>`).join('')}</div>
+      </div>`:''}
+      ${missed.length>0?`<div style="padding:10px 14px;background:rgba(255,71,87,0.05);border-radius:6px;border:1px solid rgba(255,71,87,0.15);">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--danger);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">⚠ Non corrigées</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${missed.map(r=>`<span style="font-family:var(--mono);font-size:11px;padding:3px 8px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.2);border-radius:4px;color:var(--danger);">${r.cwe} · L${r.line}</span>`).join('')}</div>
+      </div>`:''}
+    </div>`;
+  }).join('')+(pf.length>1?`<div style="margin-top:12px;text-align:right;"><a href="/download-all" class="btn btn-outline btn-sm" style="text-decoration:none;">⬇ Tout (.zip)</a></div>`:'');
+}
+
+// ══ COMPARISON ══
+function showComparison(currentMetrics) {
+  fetch('/history').then(r=>r.json()).then(sessions=>{
+    if(sessions.length<2) return;
+    const prev=sessions[sessions.length-2];
+    const diff=currentMetrics.success_rate-(prev.success_rate||0);
+    const banner=document.getElementById('comparisonBanner');
+    banner.style.display='block';
+    if(Math.abs(diff)<1) {
+      banner.className='comparison-banner comparison-same';
+      banner.textContent=`≈ Même niveau que la session précédente (${currentMetrics.success_rate}%)`;
+    } else if(diff>0) {
+      banner.className='comparison-banner comparison-better';
+      banner.textContent=`📈 +${diff.toFixed(1)}% par rapport à la session précédente — Amélioration continue !`;
+    } else {
+      banner.className='comparison-banner comparison-worse';
+      banner.textContent=`📉 ${diff.toFixed(1)}% par rapport à la session précédente`;
+    }
+  });
+}
+
+// ══ FILES ══
+function loadFiles() {
+  document.getElementById('filesTable').innerHTML='<div class="empty"><div class="empty-icon">🛡</div><p>Chargement…</p></div>';
+  fetch('/files').then(r=>r.json()).then(files=>{
+    if(!files.length){
+      document.getElementById('filesTable').innerHTML='<div class="empty"><div class="empty-icon">🛡</div><p>Aucun fichier corrigé disponible.<br>Lancez une analyse pour générer des patches.</p></div>';
+      return;
+    }
+    document.getElementById('filesTable').innerHTML=`<table style="width:100%;border-collapse:collapse;">
+      <thead><tr>${['Fichier corrigé','Taille','Date du patch','Télécharger'].map(h=>`<th style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface);">${h}</th>`).join('')}</tr></thead>
+      <tbody>${files.map(f=>`<tr style="transition:background 0.15s;" onmouseover="this.style.background='var(--panel)'" onmouseout="this.style.background=''">
+        <td style="padding:12px 14px;font-family:var(--mono);font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);">🛡 ${f.name}</td>
+        <td style="padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-bottom:1px solid var(--border);">${f.size} Ko</td>
+        <td style="padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-bottom:1px solid var(--border);">${f.patched_at}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid var(--border);"><a href="/download?file=${encodeURIComponent(f.path)}" class="btn btn-sm btn-primary" style="text-decoration:none;">⬇ Télécharger</a></td>
+      </tr>`).join('')}</tbody></table>`;
+  });
+}
+
+// ══ HISTORY ══
+function loadHistory() {
+  document.getElementById('historyTable').innerHTML='<div class="empty"><div class="empty-icon">🕐</div><p>Chargement…</p></div>';
+  fetch('/history').then(r=>r.json()).then(sessions=>{
+    if(!sessions.length){document.getElementById('historyTable').innerHTML='<div class="empty"><div class="empty-icon">🕐</div><p>Aucune session</p></div>';return;}
+    document.getElementById('historyTable').innerHTML=[...sessions].reverse().map(s=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);">
+        ${[s.timestamp?.substring(0,19)||'—',`${s.total_vulns??'—'} vulns`,`${s.patches_validated??'—'} ✓`,`${s.patches_rejected??'—'} ✗`].map(v=>`<div style="padding:12px 16px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">${v}</div>`).join('')}
+        <div style="padding:12px 8px;text-align:center;"><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></div>
+        <div style="padding:12px 8px;font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:center;">${s.mttr_seconds??'—'}s</div>
+        <div style="padding:12px 8px;font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:center;">${s.total_duration??'—'}s</div>
+      </div>
+      ${(s.patched_files||[]).length>0?`<div style="padding:12px 16px;background:rgba(0,255,136,0.03);">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Fichiers corrigés</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">${(s.patched_files||[]).map(p=>`<a href="/download?file=${encodeURIComponent(p.path)}" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;">🛡 ${p.name} ⬇</a>`).join('')}</div>
+      </div>`:''}
+    </div>`).join('');
+  });
+}
+
+// ══ METRICS + CHARTS ══
+function loadMetriques() {
+  const m=window._lastMetrics;
+  if(m){
+    document.getElementById('sm-total').textContent=m.total;
+    document.getElementById('sm-validated').textContent=m.validated;
+    document.getElementById('sm-rejected').textContent=m.rejected;
+    document.getElementById('sm-rate').textContent=m.success_rate+'%';
+    document.getElementById('sm-mttr').textContent=m.mttr;
+    document.getElementById('sm-duration').textContent=m.duration;
+  }
+  fetch('/history').then(r=>r.json()).then(sessions=>{
+    if(!sessions.length) return;
+    buildCharts(sessions);
+    const total=sessions.reduce((a,s)=>a+(s.total_vulns||0),0);
+    const validated=sessions.reduce((a,s)=>a+(s.patches_validated||0),0);
+    const avgRate=(sessions.reduce((a,s)=>a+(s.success_rate||0),0)/sessions.length).toFixed(1);
+    const avgMttr=(sessions.reduce((a,s)=>a+(s.mttr_seconds||0),0)/sessions.length).toFixed(1);
+    document.getElementById('aggregateStats').innerHTML=`<div class="metrics-row">
+      <div class="metric-box"><div class="metric-val">${sessions.length}</div><div class="metric-lbl">Sessions</div></div>
+      <div class="metric-box"><div class="metric-val">${total}</div><div class="metric-lbl">Vulns totales</div></div>
+      <div class="metric-box"><div class="metric-val">${validated}</div><div class="metric-lbl">Patches validés</div></div>
+      <div class="metric-box"><div class="metric-val blue">${avgRate}%</div><div class="metric-lbl">Avg success rate</div></div>
+      <div class="metric-box"><div class="metric-val yellow">${avgMttr}s</div><div class="metric-lbl">Avg MTTR</div></div>
+      <div class="metric-box"><div class="metric-val">${total-validated}</div><div class="metric-lbl">Rejetés total</div></div>
+    </div>`;
+  });
+}
+
+function buildCharts(sessions) {
+  const isDark = !document.body.classList.contains('light');
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const textColor = isDark ? '#5c7a96' : '#64748b';
+  const labels = sessions.map((s,i)=>`S${i+1}`);
+  const opts = { responsive:true, plugins:{legend:{display:false}}, scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{family:'JetBrains Mono',size:10}}},y:{grid:{color:gridColor},ticks:{color:textColor,font:{family:'JetBrains Mono',size:10}}}}};
+
+  // Destroy existing
+  Object.values(charts).forEach(c=>c.destroy());
+  charts={};
+
+  charts.rate = new Chart(document.getElementById('chartRate'),{type:'line',data:{labels,datasets:[{label:'Success rate',data:sessions.map(s=>s.success_rate||0),borderColor:'#00ff88',backgroundColor:'rgba(0,255,136,0.08)',fill:true,tension:0.4,pointBackgroundColor:'#00ff88'}]},options:{...opts,scales:{...opts.scales,y:{...opts.scales.y,min:0,max:100}}}});
+  charts.mttr = new Chart(document.getElementById('chartMttr'),{type:'line',data:{labels,datasets:[{label:'MTTR',data:sessions.map(s=>s.mttr_seconds||0),borderColor:'#ffaa00',backgroundColor:'rgba(255,170,0,0.08)',fill:true,tension:0.4,pointBackgroundColor:'#ffaa00'}]},options:opts});
+  charts.vulns = new Chart(document.getElementById('chartVulns'),{type:'bar',data:{labels,datasets:[{label:'Total',data:sessions.map(s=>s.total_vulns||0),backgroundColor:'rgba(0,196,255,0.3)',borderColor:'#00c4ff',borderWidth:1},{label:'Validés',data:sessions.map(s=>s.patches_validated||0),backgroundColor:'rgba(0,255,136,0.3)',borderColor:'#00ff88',borderWidth:1}]},options:{...opts,plugins:{legend:{display:true,labels:{color:textColor,font:{family:'JetBrains Mono',size:10}}}}}});
+
+  // CWE frequency from current results
+  const cweCounts={};
+  allResults.forEach(r=>{ cweCounts[r.cwe]=(cweCounts[r.cwe]||0)+1; });
+  const sorted=Object.entries(cweCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  charts.cwe = new Chart(document.getElementById('chartCwe'),{type:'doughnut',data:{labels:sorted.map(e=>e[0]),datasets:[{data:sorted.map(e=>e[1]),backgroundColor:['#00ff88','#00c4ff','#ffaa00','#ff4757','#a29bfe','#fd79a8','#55efc4','#fdcb6e'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{labels:{color:textColor,font:{family:'JetBrains Mono',size:10}}}}}});
+}
+
+function rebuildCharts() {
+  fetch('/history').then(r=>r.json()).then(sessions=>{ if(sessions.length) buildCharts(sessions); });
+}
+
+// ══ EXCEL EXPORT ══
+function exportExcel() {
+  if(!allResults.length) return;
+  const data=allResults.map((r,i)=>{
+    const ann=vulnAnnotations[i]||{};
+    return {
+      CWE:r.cwe, Fichier:r.file, Ligne:r.line, Sévérité:r.severity,
+      Statut:r.success?'VALIDÉ':'REJETÉ', Description:getCweDesc(r.cwe),
+      Confiance:r.confidence+'%', Cache:r.from_cache?'Oui':'Non',
+      Note:ann.note||'', Assigné:ann.assignee||'', StatutManuel:ann.status||'',
+      Heure:r.analyzed_at
+    };
+  });
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Vulnérabilités');
+  XLSX.writeFile(wb,`patchmind_${new Date().toISOString().substring(0,10)}.xlsx`);
+}
+
+function exportHistoryExcel() {
+  fetch('/history').then(r=>r.json()).then(sessions=>{
+    if(!sessions.length) return;
+    const data=sessions.map(s=>({
+      Date:s.timestamp?.substring(0,19)||'', 'Total vulns':s.total_vulns,
+      Validés:s.patches_validated, Rejetés:s.patches_rejected,
+      'Success rate':s.success_rate+'%', 'MTTR (s)':s.mttr_seconds,
+      'Durée totale (s)':s.total_duration
+    }));
+    const ws=XLSX.utils.json_to_sheet(data);
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Historique');
+    XLSX.writeFile(wb,`patchmind_history_${new Date().toISOString().substring(0,10)}.xlsx`);
+  });
+}
+</script>
+</body>
+</html>

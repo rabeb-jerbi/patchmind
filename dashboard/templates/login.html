@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060910;--surface:#0c1118;--panel:#111822;
+  --border:#1a2535;--accent:#00ff88;--accent2:#00c4ff;
+  --danger:#ff4757;--text:#cdd9e5;--muted:#3a5068;
+  --mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+}
+body{
+  font-family:var(--sans);background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+
+/* Grid background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
+
+/* Glow orb */
+body::after{
+  content:'';position:fixed;
+  width:600px;height:600px;
+  background:radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+
+.login-wrap{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+  padding:20px;
+  animation:fadeUp 0.5s ease both;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.brand{text-align:center;margin-bottom:32px;}
+.brand-tag{
+  font-family:var(--mono);font-size:11px;
+  color:var(--accent);letter-spacing:3px;
+  text-transform:uppercase;opacity:0.7;margin-bottom:6px;
+}
+.brand-name{
+  font-family:var(--sans);font-size:36px;font-weight:800;
+  color:#fff;letter-spacing:-1px;
+}
+.brand-name span{color:var(--accent);}
+.brand-sub{
+  font-family:var(--mono);font-size:11px;
+  color:var(--muted);margin-top:4px;
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:36px;
+  box-shadow:0 0 40px rgba(0,0,0,0.4), 0 0 80px rgba(0,255,136,0.05);
+}
+
+.card-title{
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:24px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title::before{
+  content:'';display:inline-block;
+  width:3px;height:14px;
+  background:var(--accent);border-radius:2px;
+}
+
+.field{margin-bottom:18px;}
+.field label{
+  display:block;font-family:var(--mono);
+  font-size:11px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:8px;
+}
+.field input{
+  width:100%;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;
+  padding:12px 16px;color:var(--text);
+  font-family:var(--mono);font-size:13px;
+  outline:none;transition:border-color 0.2s;
+}
+.field input:focus{border-color:var(--accent);}
+.field input::placeholder{color:var(--muted);}
+
+.btn-login{
+  width:100%;padding:13px;
+  background:var(--accent);color:#060910;
+  border:none;border-radius:8px;
+  font-family:var(--sans);font-size:14px;font-weight:800;
+  cursor:pointer;transition:all 0.2s;margin-top:8px;
+  letter-spacing:0.5px;
+}
+.btn-login:hover{background:#00e077;box-shadow:0 0 20px rgba(0,255,136,0.3);}
+.btn-login:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;}
+
+.error-msg{
+  margin-top:14px;padding:10px 14px;
+  background:rgba(255,71,87,0.1);
+  border:1px solid rgba(255,71,87,0.3);
+  border-radius:6px;font-family:var(--mono);
+  font-size:12px;color:var(--danger);
+  display:none;text-align:center;
+}
+
+.footer-note{
+  text-align:center;margin-top:20px;
+  font-family:var(--mono);font-size:11px;color:var(--muted);
+}
+
+/* Scan line animation on card */
+.card::before{
+  content:'';position:absolute;
+  left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  top:0;border-radius:14px 14px 0 0;
+  animation:scan 3s ease-in-out infinite;
+  opacity:0.5;
+}
+.card{position:relative;overflow:hidden;}
+@keyframes scan{
+  0%,100%{opacity:0.3;}50%{opacity:0.8;}
+}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="brand">
+    <div class="brand-tag">v2.0 · SAST Platform</div>
+    <div class="brand-name">Patch<span>Mind</span></div>
+    <div class="brand-sub">Automated Vulnerability Remediation System</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Connexion</div>
+
+    <div class="field">
+      <label>Identifiant</label>
+      <input type="text" id="username" placeholder="votre identifiant" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">
+      → Se connecter
+    </button>
+    <div class="error-msg" id="errMsg"></div>
+  </div>
+
+  <div class="footer-note">PatchMind © 2026 · Sécurité automatisée</div>
+  <div style="text-align:center;margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+    Pas encore de compte ? <a href="/request-access" style="color:var(--accent2);text-decoration:none;">Demander un accès →</a>
+  </div>
+</div>
+
+<script>
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogin() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('errMsg');
+  if (!u || !p) { showErr('Remplissez tous les champs'); return; }
+  btn.disabled = true;
+  btn.textContent = '⏳ Connexion…';
+  err.style.display = 'none';
+
+  fetch('/login', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({username:u, password:p})
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      if (d.need_2fa) {
+        window.location.href = '/verify-2fa';
+      } else {
+        window.location.href = d.redirect || '/dashboard';
+      }
+    } else {
+      showErr(d.error || 'Erreur inconnue');
+      btn.disabled = false;
+      btn.textContent = '→ Se connecter';
+    }
+  })
+  .catch(() => {
+    showErr('Erreur de connexion au serveur');
+    btn.disabled = false;
+    btn.textContent = '→ Se connecter';
+  });
+}
+
+function showErr(msg) {
+  const e = document.getElementById('errMsg');
+  e.textContent = '⚠ ' + msg;
+  e.style.display = 'block';
+}
+</script>
+</body>
+</html>

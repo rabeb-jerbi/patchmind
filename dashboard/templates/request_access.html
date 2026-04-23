@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Demander un accès</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060910;--surface:#0c1118;--panel:#111822;--border:#1a2535;--border2:#243040;--accent:#00ff88;--accent2:#00c4ff;--danger:#ff4757;--warn:#ffaa00;--text:#cdd9e5;--muted:#3a5068;--text-dim:#5c7a96;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+body::after{content:'';position:fixed;width:700px;height:700px;background:radial-gradient(circle,rgba(0,255,136,0.05) 0%,transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:560px;animation:fadeUp 0.5s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* BRAND */
+.brand{text-align:center;margin-bottom:32px;}
+.brand-tag{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;opacity:0.7;margin-bottom:6px;}
+.brand-name{font-size:34px;font-weight:800;color:#fff;letter-spacing:-1px;}
+.brand-name span{color:var(--accent);}
+.brand-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* CARD */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:36px;box-shadow:0 0 60px rgba(0,0,0,0.5),0 0 100px rgba(0,255,136,0.04);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scan 3s ease-in-out infinite;opacity:0.6;}
+@keyframes scan{0%,100%{opacity:0.3}50%{opacity:0.9}}
+
+.card-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;}
+.card-desc{font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:28px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.field{margin-bottom:0;}
+.field.full{grid-column:1/-1;}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.field input,.field textarea,.field select{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:11px 14px;color:var(--text);
+  font-family:var(--mono);font-size:13px;outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.field input:focus,.field textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(0,255,136,0.08);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6;}
+
+/* FEATURES */
+.features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 28px;}
+.feature{display:flex;align-items:flex-start;gap:10px;padding:12px;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.1);border-radius:8px;}
+.feature-icon{font-size:18px;flex-shrink:0;}
+.feature-text{font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:1.5;}
+.feature-text strong{color:var(--text);display:block;margin-bottom:2px;}
+
+/* BUTTON */
+.btn-submit{
+  width:100%;padding:14px;margin-top:20px;
+  background:var(--accent);color:#060910;
+  border:none;border-radius:8px;
+  font-family:var(--sans);font-size:14px;font-weight:800;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;
+}
+.btn-submit:hover{background:#00e077;box-shadow:0 0 24px rgba(0,255,136,0.35);}
+.btn-submit:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;box-shadow:none;}
+
+/* MESSAGES */
+.msg{margin-top:16px;padding:12px 16px;border-radius:8px;font-family:var(--mono);font-size:12px;display:none;line-height:1.6;}
+.msg.error{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--danger);}
+.msg.success{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:var(--accent);}
+
+/* SUCCESS STATE */
+.success-state{display:none;text-align:center;padding:20px 0;}
+.success-icon{font-size:56px;margin-bottom:16px;}
+.success-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;}
+.success-desc{font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.7;}
+
+/* FOOTER */
+.footer{text-align:center;margin-top:20px;font-family:var(--mono);font-size:11px;color:var(--muted);}
+.footer a{color:var(--accent2);text-decoration:none;}
+.footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-tag">v2.0 · SAST Platform</div>
+    <div class="brand-name">Patch<span>Mind</span></div>
+    <div class="brand-sub">Automated Vulnerability Remediation System</div>
+  </div>
+
+  <div class="card">
+    <!-- FORM STATE -->
+    <div id="formState">
+      <div class="card-title">Demander un accès</div>
+      <div class="card-desc">Remplissez ce formulaire pour rejoindre la bêta de PatchMind. Notre équipe examinera votre demande sous 24h.</div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">🔍</div>
+          <div class="feature-text"><strong>Scan SAST</strong>Multi-langages, détection en temps réel</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-text"><strong>Patches IA</strong>Correction automatique par LLM</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📊</div>
+          <div class="feature-text"><strong>Dashboard pro</strong>Métriques, historique, rapports PDF</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-text"><strong>2FA inclus</strong>Sécurité renforcée dès le départ</div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Nom complet *</label>
+          <input type="text" id="full_name" placeholder="Jean Dupont">
+        </div>
+        <div class="field">
+          <label>Email professionnel *</label>
+          <input type="email" id="email" placeholder="jean@entreprise.com">
+        </div>
+        <div class="field">
+          <label>Entreprise *</label>
+          <input type="text" id="company" placeholder="Ma Startup SAS">
+        </div>
+        <div class="field">
+          <label>Taille d'équipe</label>
+          <input type="text" id="team_size" placeholder="1-10 développeurs">
+        </div>
+        <div class="field full">
+          <label>Cas d'usage *</label>
+          <textarea id="use_case" placeholder="Décrivez comment vous comptez utiliser PatchMind (ex: audit de sécurité de nos APIs, intégration dans notre CI/CD, etc.)"></textarea>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitRequest()">
+        → Envoyer ma demande
+      </button>
+      <div class="msg error" id="errMsg"></div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-state" id="successState">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Demande envoyée !</div>
+      <div class="success-desc">
+        Votre demande a bien été reçue.<br>
+        Notre équipe l'examinera sous <strong style="color:var(--accent)">24h</strong>.<br><br>
+        Vous recevrez vos identifiants de connexion une fois approuvée.
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Déjà un compte ? <a href="/login">Se connecter →</a>
+    &nbsp;·&nbsp; PatchMind © 2026
+  </div>
+</div>
+
+<script>
+function submitRequest() {
+  const full_name = document.getElementById('full_name').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const company   = document.getElementById('company').value.trim();
+  const use_case  = document.getElementById('use_case').value.trim();
+  const btn       = document.getElementById('submitBtn');
+  const err       = document.getElementById('errMsg');
+
+  err.style.display = 'none';
+
+  if (!full_name || !email || !company || !use_case) {
+    err.textContent = '⚠ Veuillez remplir tous les champs obligatoires (*)';
+    err.style.display = 'block'; return;
+  }
+  if (!email.includes('@') || !email.split('@')[1].includes('.')) {
+    err.textContent = '⚠ Adresse email invalide';
+    err.style.display = 'block'; return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi en cours…';
+
+  fetch('/request-access', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({full_name, email, company, use_case})
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      document.getElementById('formState').style.display   = 'none';
+      document.getElementById('successState').style.display = 'block';
+    } else {
+      err.textContent = '⚠ ' + (d.error || 'Erreur inconnue');
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '→ Envoyer ma demande';
+    }
+  })
+  .catch(() => {
+    err.textContent = '⚠ Erreur de connexion au serveur';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '→ Envoyer ma demande';
+  });
+}
+
+// Enter sur les champs
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') submitRequest();
+});
+</script>
+</body>
+</html>

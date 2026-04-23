@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Vérification 2FA</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060910;--surface:#0c1118;--panel:#111822;--border:#1a2535;--accent:#00ff88;--danger:#ff4757;--text:#cdd9e5;--muted:#3a5068;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.wrap{position:relative;z-index:1;width:100%;max-width:400px;padding:20px;animation:fadeUp 0.4s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.brand{text-align:center;margin-bottom:28px;}
+.brand-name{font-family:var(--sans);font-size:28px;font-weight:800;color:#fff;}
+.brand-name span{color:var(--accent);}
+.brand-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:36px;box-shadow:0 0 40px rgba(0,0,0,0.4),0 0 80px rgba(0,255,136,0.04);}
+.card-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;}
+.desc{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.code-inputs{display:flex;gap:8px;justify-content:center;margin-bottom:20px;}
+.code-inputs input{
+  width:44px;height:56px;text-align:center;
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:8px;color:var(--accent);
+  font-family:var(--mono);font-size:22px;font-weight:700;
+  outline:none;transition:border-color 0.2s;caret-color:var(--accent);
+}
+.code-inputs input:focus{border-color:var(--accent);}
+.code-inputs input.filled{border-color:rgba(0,255,136,0.4);}
+.btn{width:100%;padding:13px;background:var(--accent);color:#060910;border:none;border-radius:8px;font-family:var(--sans);font-size:14px;font-weight:800;cursor:pointer;transition:all 0.2s;}
+.btn:hover{background:#00e077;box-shadow:0 0 20px rgba(0,255,136,0.3);}
+.btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;}
+.err{margin-top:14px;padding:10px 14px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--danger);display:none;text-align:center;}
+.back-link{text-align:center;margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--muted);}
+.back-link a{color:var(--accent);text-decoration:none;}
+.shield{font-size:36px;text-align:center;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="brand-name">Patch<span>Mind</span></div>
+    <div class="brand-sub">Vérification en deux étapes</div>
+  </div>
+  <div class="card">
+    <div class="shield">🔐</div>
+    <div class="card-title">Authentification 2FA</div>
+    <div class="desc">Entrez le code à 6 chiffres généré par votre application d'authentification (Google Authenticator, Authy…)</div>
+
+    <div class="code-inputs" id="codeInputs">
+      <input type="text" maxlength="1" inputmode="numeric" id="d0">
+      <input type="text" maxlength="1" inputmode="numeric" id="d1">
+      <input type="text" maxlength="1" inputmode="numeric" id="d2">
+      <input type="text" maxlength="1" inputmode="numeric" id="d3">
+      <input type="text" maxlength="1" inputmode="numeric" id="d4">
+      <input type="text" maxlength="1" inputmode="numeric" id="d5">
+    </div>
+
+    <button class="btn" id="verifyBtn" onclick="verify()" disabled>→ Vérifier</button>
+    <div class="err" id="errMsg"></div>
+  </div>
+  <div class="back-link"><a href="/logout">← Changer de compte</a></div>
+</div>
+
+<script>
+const inputs = Array.from(document.querySelectorAll('.code-inputs input'));
+
+inputs.forEach((inp, i) => {
+  inp.addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g,'');
+    e.target.value = v;
+    if (v && i < 5) inputs[i+1].focus();
+    inp.classList.toggle('filled', !!v);
+    checkReady();
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i-1].focus();
+    if (e.key === 'Enter') verify();
+  });
+  inp.addEventListener('paste', e => {
+    e.preventDefault();
+    const txt = e.clipboardData.getData('text').replace(/\D/g,'').substring(0,6);
+    txt.split('').forEach((c,j) => { if (inputs[j]) { inputs[j].value=c; inputs[j].classList.add('filled'); }});
+    if (inputs[Math.min(txt.length,5)]) inputs[Math.min(txt.length,5)].focus();
+    checkReady();
+  });
+});
+
+inputs[0].focus();
+
+function checkReady() {
+  const code = inputs.map(i=>i.value).join('');
+  document.getElementById('verifyBtn').disabled = code.length !== 6;
+}
+
+function verify() {
+  const code = inputs.map(i=>i.value).join('');
+  if (code.length !== 6) return;
+  const btn = document.getElementById('verifyBtn');
+  const err = document.getElementById('errMsg');
+  btn.disabled = true; btn.textContent = '⏳ Vérification…';
+  err.style.display = 'none';
+
+  fetch('/verify-2fa', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({code})
+  }).then(r=>r.json()).then(d=>{
+    if (d.ok) { window.location.href='/dashboard'; }
+    else {
+      err.textContent = '⚠ ' + (d.error||'Code incorrect');
+      err.style.display='block';
+      inputs.forEach(i=>{ i.value=''; i.classList.remove('filled'); });
+      inputs[0].focus();
+      btn.disabled=false; btn.textContent='→ Vérifier';
+    }
+  });
+}
+</script>
+</body>
+</html>
