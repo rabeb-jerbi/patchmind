@@ -261,10 +261,10 @@ input[type="file"] { display:none; }
 
 <!-- ═══ SIDEBAR ═══ -->
 <aside class="sidebar">
-  <a href="/" style="text-decoration:none;" class="logo">
+  <div class="logo">
     <div class="logo-mark">v2.0 · SAST</div>
     <div class="logo-name">Patch<span>Mind</span></div>
-  </a>
+  </div>
   <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
     <div style="width:32px;height:32px;border-radius:50%;background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
     <div>
@@ -538,44 +538,21 @@ function showPage(name) {
 
 // ══ CWE DESCRIPTIONS ══
 const CWE_DESC = {
-  'CWE-89' :'Injection SQL — des données utilisateur sont insérées directement dans une requête SQL. Un attaquant peut lire, modifier ou supprimer toute votre base de données.',
-  'CWE-79' :'Cross-Site Scripting (XSS) — du code JavaScript malveillant peut s\'exécuter dans le navigateur de vos utilisateurs et voler leurs sessions ou données.',
-  'CWE-22' :'Path Traversal — un attaquant peut manipuler les chemins de fichiers pour accéder à des fichiers sensibles en dehors du dossier prévu (ex: /etc/passwd).',
-  'CWE-78' :'Injection de commande OS — des commandes système arbitraires peuvent être exécutées sur le serveur en manipulant les entrées de l\'application.',
-  'CWE-327':'Algorithme cryptographique faible — MD5 ou SHA-1 sont utilisés. Ces algorithmes sont obsolètes et facilement cassables avec du matériel moderne.',
-  'CWE-502':'Désérialisation non sécurisée — des données non fiables sont converties en objets exécutables, permettant l\'exécution de code arbitraire.',
-  'CWE-798':'Credentials hardcodés — un mot de passe, une clé API ou un secret est écrit directement dans le code source, exposé à quiconque accède au dépôt.',
-  'CWE-918':'SSRF — le serveur peut être forcé à faire des requêtes vers des ressources internes (métadonnées cloud, services internes) non accessibles publiquement.',
-  'CWE-20' :'Validation insuffisante des entrées — les données fournies par l\'utilisateur ne sont pas vérifiées, ouvrant la porte à de nombreuses attaques.',
-  'CWE-611':'Injection XXE — un fichier XML malveillant peut lire des fichiers locaux ou provoquer des requêtes réseau internes via les entités XML externes.',
-  'CWE-94' :'Injection de code — du code fourni par l\'utilisateur est exécuté par l\'interpréteur, permettant une prise de contrôle complète du serveur.',
-  'CWE-95' :'Eval non sécurisé — la fonction eval() exécute du code dynamique non contrôlé, permettant l\'injection de code malveillant.',
-  'CWE-400':'Déni de service (DoS) — une entrée malveillante peut consommer des ressources excessives (CPU, mémoire) et rendre le service indisponible.',
-  'CWE-190':'Dépassement d\'entier — un calcul numérique peut déborder et produire un résultat inattendu, causant des comportements imprévisibles.',
-  'CWE-321':'Clé cryptographique codée en dur — une clé secrète est fixée dans le code source, compromettant tout le chiffrement si le code est divulgué.',
-  'CWE-330':'Aléatoire insuffisant — des valeurs pseudo-aléatoires prévisibles sont utilisées pour des opérations critiques (tokens, clés, identifiants de session).',
-  'CWE-601':'Redirection ouverte — l\'application redirige vers une URL contrôlée par l\'attaquant, facilitant le phishing.',
-  'CWE-352':'CSRF — une requête forgée peut forcer un utilisateur authentifié à effectuer des actions non voulues à son insu.',
-  'CWE-434':'Upload de fichier dangereux — des fichiers malveillants (scripts, exécutables) peuvent être uploadés et exécutés sur le serveur.',
-  'CWE-732':'Permissions de fichier trop permissives — des fichiers sensibles sont lisibles ou modifiables par des utilisateurs non autorisés.',
-  'CWE-863':'Autorisation incorrecte — les contrôles d\'accès sont mal implémentés, permettant d\'accéder à des ressources non autorisées.',
-  'CWE-862':'Autorisation manquante — aucune vérification d\'accès n\'est effectuée avant d\'exposer une ressource ou une action sensible.',
-  'CWE-916':'Hashage de mot de passe faible — les mots de passe sont hashés avec un algorithme inadapté (MD5, SHA1) sans sel, facilement craquables.',
-  'CWE-326':'Chiffrement insuffisant — la longueur de clé ou l\'algorithme utilisé ne garantit pas une protection adéquate des données.',
-  'CWE-319':'Transmission en clair — des données sensibles (mots de passe, tokens) transitent sans chiffrement et peuvent être interceptées.',
-  'CWE-328':'Fonction de hash faible — une fonction de hachage non résistante aux collisions est utilisée pour des vérifications d\'intégrité.',
+  'CWE-89':'Injection SQL','CWE-79':'Cross-Site Scripting (XSS)','CWE-22':'Path Traversal',
+  'CWE-78':'Injection de commande OS','CWE-327':'Algorithme cryptographique faible',
+  'CWE-502':'Désérialisation non sécurisée','CWE-20':'Validation insuffisante des entrées',
+  'CWE-611':'Injection XXE','CWE-918':'SSRF','CWE-94':'Injection de code','CWE-95':'Eval non sécurisé',
+  'CWE-400':'Consommation excessive de ressources','CWE-190':'Dépassement d\'entier',
+  'CWE-798':'Identifiants codés en dur','CWE-321':'Clé cryptographique codée en dur',
+  'CWE-330':'Aléatoire insuffisant','CWE-601':'Redirection ouverte','CWE-352':'CSRF',
+  'CWE-434':'Upload de fichier dangereux','CWE-732':'Permissions de fichier trop permissives',
+  'CWE-863':'Autorisation incorrecte','CWE-862':'Autorisation manquante',
+  'CWE-916':'Hashage de mot de passe faible','CWE-326':'Chiffrement insuffisant',
+  'CWE-319':'Transmission en clair','CWE-328':'Fonction de hash faible',
 };
 function getCweDesc(cwe) {
-  const n = cwe.toUpperCase().replace(/^CWE-0*(\d+)$/, 'CWE-$1');
-  return CWE_DESC[n] || 'Vulnérabilité de sécurité détectée — consultez la documentation MITRE CWE pour plus de détails.';
-}
-
-// ══ CONFIDENCE LABELS ══
-function confLabel(conf, fromCache) {
-  if (fromCache || conf >= 90) return { text:'⚡ Déjà validé',     tip:'Patch issu du cache ou précédemment validé — fiabilité maximale.' };
-  if (conf >= 80)               return { text:'✅ Prêt à appliquer', tip:'Validé par Semgrep — faible risque de régression.' };
-  if (conf >= 70)               return { text:'👀 Vérifier le diff', tip:'Validé mais inspectez le diff avant de déployer en production.' };
-  return                               { text:'⚠️ Correction manuelle', tip:'Patch rejeté ou score faible — intervention humaine recommandée.' };
+  const n = cwe.toUpperCase().replace(/^CWE-0*(\d+)$/,'CWE-$1');
+  return CWE_DESC[n] || 'Vulnérabilité de sécurité détectée';
 }
 
 // ══ FILE HANDLING ══
@@ -702,7 +679,17 @@ function renderResults(results, filtered) {
     const ann = vulnAnnotations[i] || {};
     const conf = r.confidence || 0;
     const confColor = conf>=80 ? 'var(--confidence-high)' : conf>=50 ? 'var(--confidence-mid)' : 'var(--confidence-low)';
-    const cl = confLabel(conf, r.from_cache);
+    // Label simple pour les développeurs sans expertise sécurité
+    const confLabel = r.from_cache ? '⚡ Déjà validé' :
+                      conf>=90 ? '🔒 Hautement fiable' :
+                      conf>=80 ? '✅ Prêt à appliquer' :
+                      conf>=70 ? '👀 Vérifier le diff' :
+                                 '⚠️ Correction manuelle';
+    const confTip = r.from_cache ? 'Ce patch a déjà été validé lors d\'une analyse précédente' :
+                    conf>=90 ? 'Le patch corrige la vulnérabilité de façon optimale' :
+                    conf>=80 ? 'Le patch est correct — tu peux l\'appliquer directement' :
+                    conf>=70 ? 'Le patch semble correct — clique sur "Voir diff" pour vérifier' :
+                               'PatchMind n\'a pas pu corriger automatiquement — correction manuelle requise';
     const realIdx = results.indexOf(r);
     return `
     <div class="result-item ${r.success?'ok':'bad'}" id="result-${realIdx}">
@@ -713,13 +700,13 @@ function renderResults(results, filtered) {
           ${r.from_cache ? '<span class="cache-badge">⚡ cache</span>' : ''}
           ${ann.assignee ? `<span class="assignee-tag">@${ann.assignee}</span>` : ''}
         </div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:3px 0 4px;line-height:1.5;">${getCweDesc(r.cwe)}</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text);margin:3px 0 4px;">${getCweDesc(r.cwe)}</div>
         <div class="result-meta">📁 ${r.file} · ligne ${r.line}</div>
         <div class="result-sev">⚠ ${r.severity}</div>
-        <!-- Confidence -->
+        <!-- Fiabilité du patch -->
         <div class="confidence-wrap">
           <div class="confidence-bar"><div class="confidence-fill" style="width:${conf}%;background:${confColor};"></div></div>
-          <span class="confidence-label" style="color:${confColor};min-width:max-content;cursor:help;" title="${cl.tip}">${cl.text}</span>
+          <span class="confidence-label" style="color:${confColor};font-size:11px;min-width:160px;text-align:right;" title="${confTip}">${confLabel}</span>
         </div>
         ${ann.note ? `<div class="vuln-note">💬 ${ann.note}</div>` : ''}
         ${ann.status ? `<div style="font-family:var(--mono);font-size:10px;margin-top:4px;color:var(--text-dim);">Statut: <strong style="color:var(--accent2);">${ann.status}</strong></div>` : ''}
@@ -863,19 +850,17 @@ function showComparison(currentMetrics) {
 
 // ══ FILES ══
 function loadFiles() {
-  document.getElementById('filesTable').innerHTML='<div class="empty"><div class="empty-icon">🛡</div><p>Chargement…</p></div>';
+  document.getElementById('filesTable').innerHTML='<div class="empty"><div class="empty-icon">🗂</div><p>Chargement…</p></div>';
   fetch('/files').then(r=>r.json()).then(files=>{
-    if(!files.length){
-      document.getElementById('filesTable').innerHTML='<div class="empty"><div class="empty-icon">🛡</div><p>Aucun fichier corrigé disponible.<br>Lancez une analyse pour générer des patches.</p></div>';
-      return;
-    }
+    if(!files.length){document.getElementById('filesTable').innerHTML='<div class="empty"><div class="empty-icon">🗂</div><p>Aucun fichier</p></div>';return;}
     document.getElementById('filesTable').innerHTML=`<table style="width:100%;border-collapse:collapse;">
-      <thead><tr>${['Fichier corrigé','Taille','Date du patch','Télécharger'].map(h=>`<th style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface);">${h}</th>`).join('')}</tr></thead>
-      <tbody>${files.map(f=>`<tr style="transition:background 0.15s;" onmouseover="this.style.background='var(--panel)'" onmouseout="this.style.background=''">
-        <td style="padding:12px 14px;font-family:var(--mono);font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);">🛡 ${f.name}</td>
+      <thead><tr>${['Fichier','Taille','Uploadé le','Patch','Actions'].map(h=>`<th style="font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface);">${h}</th>`).join('')}</tr></thead>
+      <tbody>${files.map(f=>`<tr>
+        <td style="padding:12px 14px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--border);">📄 ${f.name}</td>
         <td style="padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-bottom:1px solid var(--border);">${f.size} Ko</td>
-        <td style="padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-bottom:1px solid var(--border);">${f.patched_at}</td>
-        <td style="padding:12px 14px;border-bottom:1px solid var(--border);"><a href="/download?file=${encodeURIComponent(f.path)}" class="btn btn-sm btn-primary" style="text-decoration:none;">⬇ Télécharger</a></td>
+        <td style="padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--text-dim);border-bottom:1px solid var(--border);">${f.uploaded_at}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid var(--border);">${f.has_patch?'<span style="font-family:var(--mono);font-size:11px;padding:3px 10px;background:rgba(0,255,136,0.1);color:var(--accent);border:1px solid rgba(0,255,136,0.2);border-radius:4px;">✅ Disponible</span>':'—'}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid var(--border);">${f.has_patch?`<a href="/download?file=${encodeURIComponent(f.patched_path)}" class="btn btn-sm btn-outline" style="text-decoration:none;">⬇</a>`:'—'}</td>
       </tr>`).join('')}</tbody></table>`;
   });
 }

@@ -1,80 +1,83 @@
-name: PatchMind Security CI
+# .github/workflows/patchmind.yml
+# GitHub Actions — Lance PatchMind automatiquement à chaque push
+# Place dans : .github/workflows/patchmind.yml
+
+name: PatchMind Security Scan
 
 on:
   push:
-    branches: ["**"]
+    branches: [ main, master, develop ]
   pull_request:
-    branches: ["**"]
+    branches: [ main, master ]
 
 jobs:
   patchmind-scan:
-    name: Automated Vulnerability Scan & Patch
+    name: 🛡️ PatchMind Security Analysis
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Install Semgrep
-        run: pip install semgrep
-
-      - name: Install PatchMind dependencies
+      - name: 📦 Install dependencies
         run: |
-          pip install groq python-dotenv sentence-transformers faiss-cpu requests
+          pip install semgrep groq python-dotenv requests sentence-transformers faiss-cpu numpy
 
-      - name: Run PatchMind CI scan
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      - name: 🔑 Configure PatchMind
         run: |
-          python ci_scan.py --output ci_report.json --fail-on-critical
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
+          echo "PATCHMIND_SECRET=${{ secrets.PATCHMIND_SECRET }}" >> .env
+          # Optionnel :
+          # echo "SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}" >> .env
+          # echo "JIRA_BASE_URL=${{ secrets.JIRA_BASE_URL }}" >> .env
+          # echo "JIRA_EMAIL=${{ secrets.JIRA_EMAIL }}" >> .env
+          # echo "JIRA_API_TOKEN=${{ secrets.JIRA_API_TOKEN }}" >> .env
+
+      - name: 🔍 Run PatchMind scan
+        id: scan
+        run: |
+          python ci_scan.py --path . --output results.json
         continue-on-error: true
 
-      - name: Upload scan artifact
+      - name: 📊 Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: patchmind-report-${{ github.run_number }}
-          path: ci_report.json
+          name: patchmind-results
+          path: results.json
           retention-days: 30
 
-      - name: Comment PR with results
+      - name: 💬 Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            if (!fs.existsSync('ci_report.json')) {
-              console.log('No report found, skipping comment');
-              return;
-            }
-            const report = JSON.parse(fs.readFileSync('ci_report.json', 'utf8'));
-            const total    = report.total_vulns    ?? 0;
-            const patched  = report.patches_applied ?? 0;
-            const critical = report.critical_unpatched ?? 0;
-            const risk     = report.risk_score ?? 0;
+            let results = {};
+            try { results = JSON.parse(fs.readFileSync('results.json', 'utf8')); } catch(e) {}
 
-            const status = critical > 0 ? '🔴 CRITIQUE' : total === 0 ? '✅ PROPRE' : '🟡 ATTENTION';
-            const body = [
-              `## 🛡️ PatchMind — Rapport de sécurité`,
-              ``,
-              `| Métrique | Valeur |`,
-              `|----------|--------|`,
-              `| Score de risque | ${risk}/100 |`,
-              `| Vulnérabilités détectées | ${total} |`,
-              `| Patches appliqués | ${patched} |`,
-              `| Critiques non corrigées | ${critical} |`,
-              `| Statut | ${status} |`,
-              ``,
-              `> Rapport complet disponible dans les artefacts CI.`,
-              `> _Généré par [PatchMind](https://github.com/anthropics/claude-code) · Run #${{ github.run_number }}_`
-            ].join('\n');
+            const total     = results.total_vulns || 0;
+            const validated = results.patches_validated || 0;
+            const rejected  = results.patches_rejected || 0;
+            const rate      = results.success_rate || 0;
+            const emoji     = rate >= 80 ? '✅' : rate >= 50 ? '⚠️' : '❌';
+
+            const body = `## 🛡️ PatchMind Security Scan Results
+
+            | Métrique | Valeur |
+            |---------|--------|
+            | Vulnérabilités détectées | ${total} |
+            | Patches validés | ${validated} ✅ |
+            | Patches rejetés | ${rejected} ❌ |
+            | Success rate | ${emoji} ${rate}% |
+
+            ${rejected > 0 ? '> ⚠️ **' + rejected + ' vulnérabilité(s) nécessitent une correction manuelle.** Voir les détails dans les artifacts.' : '> ✅ Toutes les vulnérabilités ont été corrigées automatiquement !'}
+
+            *Généré par [PatchMind](https://github.com/your-repo) · ${new Date().toISOString().substring(0,10)}*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -83,8 +86,18 @@ jobs:
               body
             });
 
-      - name: Fail if critical vulnerabilities remain unpatched
+      - name: 🚨 Fail if critical vulns not fixed
         run: |
-          if [ -f ci_report.json ]; then
-            CRITICAL=$(python -c "import json,sys; r=json.load(open('ci_report.json')); sys.exit(1 if r.get('critical_unpatched',0)>0 else 0)")
-          fi
+          python -c "
+          import json, sys
+          try:
+              with open('results.json') as f:
+                  r = json.load(f)
+              critical_rejected = r.get('critical_rejected', 0)
+              if critical_rejected > 0:
+                  print(f'FAIL: {critical_rejected} vulnérabilité(s) CRITICAL non corrigée(s)')
+                  sys.exit(1)
+              print('OK: Pas de vulnérabilités critiques non corrigées')
+          except Exception as e:
+              print(f'Warning: {e}')
+          "

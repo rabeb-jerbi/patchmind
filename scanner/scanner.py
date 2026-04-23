@@ -1,11 +1,13 @@
-﻿# -*- coding: utf-8 -*-
 import subprocess
 import json
 import os
 
-import shutil
-SEMGREP_PATH = shutil.which("semgrep") or "semgrep"
-# Extensions supportÃ©es par langage
+SEMGREP_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "venv", "Scripts", "semgrep.exe"
+)
+
+# Extensions supportées par langage
 SUPPORTED_EXTENSIONS = {
     "python":     [".py"],
     "javascript": [".js", ".jsx", ".mjs"],
@@ -27,7 +29,7 @@ SUPPORTED_EXTENSIONS = {
 ALL_EXTENSIONS = [ext for exts in SUPPORTED_EXTENSIONS.values() for ext in exts]
 
 def detect_language(file_path):
-    """DÃ©tecte le langage d'un fichier."""
+    """Détecte le langage d'un fichier."""
     ext = os.path.splitext(file_path)[1].lower()
     filename = os.path.basename(file_path)
     
@@ -37,19 +39,19 @@ def detect_language(file_path):
     return "unknown"
 
 def is_supported_file(file_path):
-    """VÃ©rifie si le fichier est supportÃ©."""
+    """Vérifie si le fichier est supporté."""
     ext = os.path.splitext(file_path)[1].lower()
     filename = os.path.basename(file_path)
     return ext in ALL_EXTENSIONS or filename in ALL_EXTENSIONS
 
 def run_scan(file_path):
-    """Lance Semgrep sur un fichier et retourne les vulnÃ©rabilitÃ©s."""
+    """Lance Semgrep sur un fichier et retourne les vulnérabilités."""
     
     if not is_supported_file(file_path):
         return []
     
     lang = detect_language(file_path)
-    print(f"ðŸ” Scan de : {os.path.basename(file_path)} ({lang})")
+    print(f"🔍 Scan de : {os.path.basename(file_path)} ({lang})")
     
     result = subprocess.run(
         [SEMGREP_PATH, "--config=auto", "--json", file_path],
@@ -86,7 +88,7 @@ def run_scan(file_path):
 
 
 def scan_directory(directory_path):
-    """Scanne tous les fichiers supportÃ©s dans un dossier."""
+    """Scanne tous les fichiers supportés dans un dossier."""
     
     all_vulns = []
     scanned   = 0
@@ -104,7 +106,7 @@ def scan_directory(directory_path):
                 all_vulns.extend(vulns)
                 scanned += 1
     
-    print(f"ðŸ“Š {scanned} fichier(s) scannÃ©s â€” {len(all_vulns)} vulnÃ©rabilitÃ©(s) trouvÃ©e(s)")
+    print(f"📊 {scanned} fichier(s) scannés — {len(all_vulns)} vulnérabilité(s) trouvée(s)")
     return all_vulns
 
 
@@ -118,10 +120,10 @@ if __name__ == "__main__":
     else:
         results = run_scan(target)
     
-    print(f"\nâœ… {len(results)} vulnÃ©rabilitÃ©(s) :\n")
+    print(f"\n✅ {len(results)} vulnérabilité(s) :\n")
     for v in results:
-        print(f"  ðŸ“ {v['file']} ({v['language']})")
-        print(f"  ðŸ“ Ligne     : {v['line']}")
-        print(f"  ðŸ·ï¸  CWE       : {v['cwe']}")
-        print(f"  âš ï¸  SÃ©vÃ©ritÃ©  : {v['severity']}")
+        print(f"  📁 {v['file']} ({v['language']})")
+        print(f"  📍 Ligne     : {v['line']}")
+        print(f"  🏷️  CWE       : {v['cwe']}")
+        print(f"  ⚠️  Sévérité  : {v['severity']}")
         print()

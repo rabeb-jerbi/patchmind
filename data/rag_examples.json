@@ -347,72 +347,51 @@
     {
       "cwe": "CWE-89",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco",
-      "fixed": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco"
-    },
-    {
-      "cwe": "CWE-89",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco",
-      "fixed": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco"
-    },
-    {
-      "cwe": "CWE-89",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request.args.get('q', '')\n\n    # ❌ F",
-      "fixed": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request.args.get('q', '')\n\n    # ❌ F"
-    },
-    {
-      "cwe": "CWE-89",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request.args.get('q', '')\n\n    # ❌ F",
-      "fixed": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request.args.get('q', '')\n\n    # Cor"
-    },
-    {
-      "cwe": "CWE-89",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-89",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-89",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-89",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-89",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-89",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "package org.owasp.webgoat.lessons;\n\nimport java.sql.Connection;\nimport java.sql.ResultSet;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.ArrayList;\nimport java.util.List;\n\nimport org.apache.ecs.Element;\nimport org.apache.ecs.ElementContainer;\nimport org.apache.ecs.html.A;\nimport org.apache.ecs.html.IMG;\nimport org.apache.ecs.html.Input;\nimport org.apache.ecs.html.P;\nimport org.owasp.webgoat.session.DatabaseUtilities;\nimport org.owasp.webgoat.session.ECSFactory;\nimport",
+      "fixed": "package org.owasp.webgoat.lessons;\n\nimport java.sql.Connection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.ArrayList;\nimport java.util.List;\n\nimport org.apache.ecs.Element;\nimport org.apache.ecs.ElementContainer;\nimport org.apache.ecs.html.A;\nimport org.apache.ecs.html.IMG;\nimport org.apache.ecs.html.Input;\nimport org.apache.ecs.html.P;\nimport org.owasp.webgoat.session.DatabaseUtilities;\nimport org.owasp"
+    },
+    {
+      "cwe": "CWE-89",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "\npackage org.owasp.webgoat.lessons;\n\nimport java.io.BufferedReader;\nimport java.io.FileReader;\nimport java.io.InputStreamReader;\nimport java.io.StringReader;\nimport java.net.HttpURLConnection;\nimport java.net.URL;\nimport java.sql.ResultSet;\nimport java.sql.SQLException;\nimport java.sql.Statement;\nimport java.util.HashMap;\nimport java.util.LinkedList;\nimport java.util.List;\nimport java.util.Map;\n\nimport org.apache.ecs.Element;\nimport org.apache.ecs.ElementContainer;\nimport org.apache.ecs.StringEl",
+      "fixed": "public boolean isAuthorized(WebSession s, String role, String functionId)\n{\n\tboolean authorized = false;\n\ttry\n\t{\n\t\tString query = \"SELECT * FROM auth WHERE role = ? and functionid = ?\";\n\t\tPreparedStatement answer_statement = WebSession.getConnection(s).prepareStatement(query);\n\t\tanswer_statement.setString(1, role);\n\t\tanswer_statement.setString(2, functionId);\n\t\tResultSet answer_results = answer_statement.executeQuery();\n\t\tauthorized = answer_results.first();\n\t} catch (SQLException sqle)\n\t{\n\t\ts.s"
     }
   ],
   "CWE-79": [
@@ -742,16 +721,16 @@
     {
       "cwe": "CWE-79",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n    \"html/template\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\""
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco",
+      "fixed": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\nconst DOMPurify = require('dompurify');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TO"
     },
     {
       "cwe": "CWE-79",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n    \"html/template\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\""
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco",
+      "fixed": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\nconst DOMPurify = require('dompurify');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TO"
     }
   ],
   "CWE-22": [
@@ -902,7 +881,7 @@
     {
       "cwe": "CWE-22",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     }
@@ -1145,14 +1124,14 @@
     {
       "cwe": "CWE-78",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-78",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     }
@@ -1364,23 +1343,23 @@
     {
       "cwe": "CWE-327",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/auth.py\n# ⚠️ Démo sécurité : vulnérabilités + corrections\n\nimport os\nfrom flask import Blueprint, request, jsonify, session\nfrom extensions import db\nfrom models import User\nfrom middleware.auth_middleware import login_required, get_current_user\nfrom werkzeug.utils import secure_filename\nfrom PIL import Image\nfrom functools import wraps\nimport hashlib  # ❌ volontairement vulnérable\n\nauth_bp = Blueprint('auth', __name__)\n\n# ═══════════════════════════════════════════════\n# ❌ LIB VULNÉRAB",
-      "fixed": "# routes/auth.py\n# ⚠️ Démo sécurité : vulnérabilités + corrections\n\nimport os\nfrom flask import Blueprint, request, jsonify, session\nfrom extensions import db\nfrom models import User\nfrom middleware.auth_middleware import login_required, get_current_user\nfrom werkzeug.utils import secure_filename\nfrom PIL import Image\nfrom functools import wraps\nimport hashlib  # ❌ volontairement vulnérable\n\nauth_bp = Blueprint('auth', __name__)\n\n# ═══════════════════════════════════════════════\n# ❌ LIB VULNÉRAB"
-    },
-    {
-      "cwe": "CWE-327",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/aes\"\n    \"crypto/cipher\"\n    \"crypto/rand\"\n    \"crypto/sha256\"\n    \"database/sql\"\n    \"encoding/base64\"\n    \"encoding/xml\"\n    \"fmt\"\n    \"io\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"time\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWrit"
-    },
-    {
-      "cwe": "CWE-327",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nimport secrets\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.arg"
+    },
+    {
+      "cwe": "CWE-327",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco",
+      "fixed": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco"
+    },
+    {
+      "cwe": "CWE-327",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco",
+      "fixed": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco"
     }
   ],
   "CWE-276": [
@@ -1482,7 +1461,7 @@
     {
       "cwe": "CWE-502",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nimport json\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.g"
     }
@@ -1540,9 +1519,9 @@
     {
       "cwe": "CWE-798",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nimport os\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get"
     }
   ],
   "CWE-20": [
@@ -1929,23 +1908,23 @@
     {
       "cwe": "CWE-918",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"net/url\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    "
-    },
-    {
-      "cwe": "CWE-918",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom urllib.parse import urlparse\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    ke"
     },
     {
       "cwe": "CWE-918",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom urllib.parse import urlparse\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    ke"
+    },
+    {
+      "cwe": "CWE-918",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "<?php\n\ndefine( 'DVWA_WEB_PAGE_TO_ROOT', '' );\nrequire_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/dvwaPage.inc.php';\nrequire_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/Parsedown.php';\n\ndvwaPageStartup( array( ) );\n\n$page = dvwaPageNewGrab();\n$page[ 'title' ]   = 'Instructions' . $page[ 'title_separator' ].$page[ 'title' ];\n$page[ 'page_id' ] = 'instructions';\n\n$docs = array(\n\t'readme'         => array( 'type' => 'markdown', 'legend' => 'Read Me', 'file' => 'README.md' ),\n\t'PDF'            => ar",
+      "fixed": "<?php\n\ndefine( 'DVWA_WEB_PAGE_TO_ROOT', '' );\nrequire_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/dvwaPage.inc.php';\nrequire_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/Parsedown.php';\n\ndvwaPageStartup( array( ) );\n\n$page = dvwaPageNewGrab();\n$page[ 'title' ]   = 'Instructions' . $page[ 'title_separator' ].$page[ 'title' ];\n$page[ 'page_id' ] = 'instructions';\n\n$docs = array(\n\t'readme'         => array( 'type' => 'markdown', 'legend' => 'Read Me', 'file' => 'README.md' ),\n\t'PDF'            => ar"
     }
   ],
   "CWE-307": [
@@ -2019,6 +1998,20 @@
       "description": "Auto-saved validated fix — 2026-04-14",
       "vulnerable": "const express = require('express');\nconst fs = require('fs');\nconst path = require('path');\nconst http = require('http');\nconst { exec, execSync } = require('child_process');\nconst serialize = require('node-serialize');\n\nconst app = express();\nconst JWT_SECRET = \"hardcoded-jwt-secret\";  // CWE-321\nconst DB_PASS = \"admin123\";  // CWE-798\n\n// CWE-918: SSRF\napp.get('/proxy', async (req, res) => {\n    const url = req.query.url;\n    const response = await fetch(url);  // CWE-918\n    res.send(await re",
       "fixed": "const express = require('express');\nconst fs = require('fs');\nconst path = require('path');\nconst http = require('http');\nconst { exec, execSync } = require('child_process');\nconst serialize = require('node-serialize');\nconst csrf = require('csurf');\n\nconst app = express();\nconst JWT_SECRET = \"hardcoded-jwt-secret\";  // CWE-321\nconst DB_PASS = \"admin123\";  // CWE-798\nconst csrfProtection = csrf({ cookie: true });\n\n// CWE-918: SSRF\napp.get('/proxy', csrfProtection, async (req, res) => {\n    const"
+    },
+    {
+      "cwe": "CWE-352",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco",
+      "fixed": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\nconst csrf    = require('csurf');\n\nconst app = express();\napp.use(express.json());\nconst csrfProtection = csrf({ cookie: true });\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_"
+    },
+    {
+      "cwe": "CWE-352",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\n\nconst app = express();\napp.use(express.json());\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_secret_2024_do_not_share\";\nconst ADMIN_TOKEN = \"admin_token_hardcoded_xyz123\";\nco",
+      "fixed": "/**\n * API Express — Application de blog\n * Vulnérabilités différentes des tests précédents\n */\nconst express = require('express');\nconst mysql   = require('mysql2');\nconst fs      = require('fs');\nconst path    = require('path');\nconst crypto  = require('crypto');\nconst jwt     = require('jsonwebtoken');\nconst csrf    = require('csurf');\n\nconst app = express();\napp.use(express.json());\nconst csrfProtection = csrf({ cookie: true });\n\n// CWE-798: JWT secret hardcodé\nconst JWT_SECRET  = \"blog_jwt_"
     }
   ],
   "CWE-601": [
@@ -2070,16 +2063,9 @@
     {
       "cwe": "CWE-601",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"net/url\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    "
-    },
-    {
-      "cwe": "CWE-601",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom urllib.parse import urlparse\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    ke"
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session, url_for\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get("
     }
   ],
   "CWE-209": [
@@ -2162,13 +2148,6 @@
       "cwe": "CWE-338",
       "source": "validated",
       "description": "Auto-saved validated fix — 2026-04-14",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rand\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/big\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n "
-    },
-    {
-      "cwe": "CWE-338",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
       "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
       "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rand\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/big\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n "
     }
@@ -2351,13 +2330,6 @@
       "cwe": "CWE-319",
       "source": "validated",
       "description": "Auto-saved validated fix — 2026-04-14",
-      "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
-      "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"crypto/tls\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n "
-    },
-    {
-      "cwe": "CWE-319",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
       "vulnerable": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n    resp, err := h",
       "fixed": "package main\n\nimport (\n    \"crypto/md5\"\n    \"crypto/rc4\"\n    \"crypto/tls\"\n    \"database/sql\"\n    \"fmt\"\n    \"io/ioutil\"\n    \"log\"\n    \"math/rand\"\n    \"net/http\"\n    \"os/exec\"\n    \"path/filepath\"\n    \"strings\"\n    \"encoding/xml\"\n)\n\n// CWE-798: Hardcoded credentials\nconst (\n    DBPassword = \"admin123\"\n    APISecret  = \"hardcoded-api-secret\"\n    JWTSecret  = \"my-jwt-secret-key\"\n)\n\n// CWE-918: SSRF\nfunc proxyHandler(w http.ResponseWriter, r *http.Request) {\n    targetURL := r.URL.Query().Get(\"url\")\n "
     }
@@ -2637,30 +2609,16 @@
     {
       "cwe": "CWE-915",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco",
-      "fixed": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco"
-    },
-    {
-      "cwe": "CWE-915",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request.args.get('q', '')\n\n    # ❌ F",
-      "fixed": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\nfrom sqlalchemy import text\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request."
-    },
-    {
-      "cwe": "CWE-915",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom sqlalchemy import text\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword "
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-915",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom sqlalchemy import text\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword "
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     }
   ],
   "CWE-704": [
@@ -2681,30 +2639,16 @@
     {
       "cwe": "CWE-704",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco",
-      "fixed": "# routes/admin.py\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import User, Book, Order, Borrow\nfrom middleware.auth_middleware import admin_required\nfrom functools import wraps\nimport time\n\nadmin_bp = Blueprint('admin', __name__)\n\n# ════════════════════════════════════════════════════════════════\n# 🔐 RATE LIMIT (simple démo)\n# ════════════════════════════════════════════════════════════════\n_login_attempts = {}\n\ndef rate_limit(max_attempts=5):\n    def deco"
-    },
-    {
-      "cwe": "CWE-704",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request.args.get('q', '')\n\n    # ❌ F",
-      "fixed": "# routes/books.py\n# ⚠️ Démo sécurité\n\nfrom flask import Blueprint, request, jsonify\nfrom extensions import db\nfrom models import Book\nfrom middleware.auth_middleware import login_required, get_current_user\nfrom sqlalchemy import text\n\nbooks_bp = Blueprint('books', __name__)\n\n\n# ═══════════════════════════════════════════════\n# ❌ VULN 1 : Injection SQL (recherche)\n# ═══════════════════════════════════════════════\n@books_bp.route('/vuln/search', methods=['GET'])\ndef search_vuln():\n    q = request."
-    },
-    {
-      "cwe": "CWE-704",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom sqlalchemy import text\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword "
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     },
     {
       "cwe": "CWE-704",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
-      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\nfrom sqlalchemy import text\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword "
+      "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     }
   ],
   "CWE-668": [
@@ -2727,14 +2671,7 @@
     {
       "cwe": "CWE-489",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# app.py — ⚠️ Démo sécurité (vulnérabilités + corrections)\n\nimport os\nfrom flask import Flask, send_from_directory\nfrom flask_cors import CORS\nfrom dotenv import load_dotenv\nfrom datetime import timedelta\n\nload_dotenv()\n\nfrom extensions import db, migrate, bcrypt\n\ndef create_app():\n    app = Flask(__name__, static_folder='.', static_url_path='')\n    app.url_map.strict_slashes = False\n\n    # ═══════════════════════════════════════════════════════\n    # ❌ VULN 1 : SECRET KEY faible\n    # ═════════",
-      "fixed": "# app.py — ⚠️ Démo sécurité (vulnérabilités + corrections)\n\nimport os\nfrom flask import Flask, send_from_directory\nfrom flask_cors import CORS\nfrom dotenv import load_dotenv\nfrom datetime import timedelta\n\nload_dotenv()\n\nfrom extensions import db, migrate, bcrypt\n\ndef create_app():\n    app = Flask(__name__, static_folder='.', static_url_path='')\n    app.url_map.strict_slashes = False\n\n    # ═══════════════════════════════════════════════════════\n    # ❌ VULN 1 : SECRET KEY faible\n    # ═════════"
-    },
-    {
-      "cwe": "CWE-489",
-      "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
+      "description": "Auto-saved validated fix — 2026-04-15",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     }
@@ -2755,13 +2692,22 @@
       "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\nfrom markupsafe import escape\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)"
     }
   ],
-  "CWE-521": [
+  "CWE-470": [
     {
-      "cwe": "CWE-521",
+      "cwe": "CWE-470",
       "source": "validated",
-      "description": "Auto-saved validated fix — 2026-04-23",
-      "vulnerable": "# app.py — ⚠️ Démo sécurité (vulnérabilités + corrections)\n\nimport os\nfrom flask import Flask, send_from_directory\nfrom flask_cors import CORS\nfrom dotenv import load_dotenv\nfrom datetime import timedelta\n\nload_dotenv()\n\nfrom extensions import db, migrate, bcrypt\n\ndef create_app():\n    app = Flask(__name__, static_folder='.', static_url_path='')\n    app.url_map.strict_slashes = False\n\n    # ═══════════════════════════════════════════════════════\n    # ❌ VULN 1 : SECRET KEY faible\n    # ═════════",
-      "fixed": "# app.py — ⚠️ Démo sécurité (vulnérabilités + corrections)\n\nimport os\nfrom flask import Flask, send_from_directory\nfrom flask_cors import CORS\nfrom dotenv import load_dotenv\nfrom datetime import timedelta\nfrom django.contrib.auth.password_validation import validate_password\n\nload_dotenv()\n\nfrom extensions import db, migrate, bcrypt\n\ndef create_app():\n    app = Flask(__name__, static_folder='.', static_url_path='')\n    app.url_map.strict_slashes = False\n\n    # ════════════════════════════════════"
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "package org.owasp.webgoat.lessons;\n\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.io.OutputStreamWriter;\nimport java.lang.reflect.Method;\nimport java.net.URL;\nimport java.net.URLConnection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport java.util.ArrayList;\nimport java.util.Calendar;\nimport java.util.List;\nimport java.util.StringTokenizer;\nimport org.apache.ecs.Element;\nimport org.apache.ecs.Ele",
+      "fixed": "package org.owasp.webgoat.lessons;\n\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.io.OutputStreamWriter;\nimport java.io.PrintWriter;\nimport java.lang.reflect.Method;\nimport java.net.URL;\nimport java.net.URLConnection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.List;\nimport java.util.StringTokenizer;\nimport org.apache.ecs.Element;"
+    }
+  ],
+  "CWE-697": [
+    {
+      "cwe": "CWE-697",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-15",
+      "vulnerable": "<?php\n\ndefine( 'DVWA_WEB_PAGE_TO_ROOT', '' );\nrequire_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/dvwaPage.inc.php';\n\ndvwaPageStartup( array( ) );\n\ndvwaDatabaseConnect();\n\nif( isset( $_POST[ 'Login' ] ) ) {\n\t// Anti-CSRF\n\tif (array_key_exists (\"session_token\", $_SESSION)) {\n\t\t$session_token = $_SESSION[ 'session_token' ];\n\t} else {\n\t\t$session_token = \"\";\n\t}\n\n\tcheckToken( $_REQUEST[ 'user_token' ], $session_token, 'login.php' );\n\n\t$user = $_POST[ 'username' ];\n\t$user = stripslashes( $user );\n\t$us",
+      "fixed": "<?php\n\ndefine( 'DVWA_WEB_PAGE_TO_ROOT', '' );\nrequire_once DVWA_WEB_PAGE_TO_ROOT . 'dvwa/includes/dvwaPage.inc.php';\n\ndvwaPageStartup( array( ) );\n\ndvwaDatabaseConnect();\n\nif( isset( $_POST[ 'Login' ] ) ) {\n\t// Anti-CSRF\n\tif (array_key_exists (\"session_token\", $_SESSION)) {\n\t\t$session_token = $_SESSION[ 'session_token' ];\n\t} else {\n\t\t$session_token = \"\";\n\t}\n\n\tcheckToken( $_REQUEST[ 'user_token' ], $session_token, 'login.php' );\n\n\t$user = $_POST[ 'username' ];\n\t$user = stripslashes( $user );\n\t$us"
     }
   ]
 }

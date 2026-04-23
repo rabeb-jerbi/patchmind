@@ -40,10 +40,8 @@ body::before{
 .nav-item.active{background:rgba(255,170,0,0.08);color:var(--warn);border-color:rgba(255,170,0,0.2);}
 .nav-item.back{color:var(--accent2);}
 .nav-item.back:hover{background:rgba(0,196,255,0.08);}
-.sidebar-footer{margin-top:auto;padding:20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sidebar-footer{margin-top:auto;padding:20px;border-top:1px solid var(--border);}
 .admin-badge{font-family:var(--mono);font-size:11px;padding:4px 10px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.3);border-radius:4px;color:var(--warn);}
-.theme-toggle{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--text-dim);transition:all 0.2s;}
-.theme-toggle:hover{border-color:var(--accent);color:var(--accent);}
 
 /* MAIN */
 .main{margin-left:240px;flex:1;display:flex;flex-direction:column;}
@@ -115,10 +113,10 @@ body::before{
 <body>
 
 <aside class="sidebar">
-  <a href="/" style="text-decoration:none;" class="logo">
+  <div class="logo">
     <div class="logo-mark">⚙ Admin Panel</div>
     <div class="logo-name">Patch<span>Mind</span></div>
-  </a>
+  </div>
 
   <div class="nav-section">Administration</div>
   <div class="nav-item active" onclick="showPage('dashboard')">
@@ -138,9 +136,9 @@ body::before{
   <a href="/dashboard" class="nav-item back"><span>⚡</span> Dashboard Analyse</a>
   <a href="/logout" class="nav-item" style="color:var(--danger);"><span>→</span> Déconnexion</a>
 
-  <div class="sidebar-footer">
+  <div class="sidebar-footer" style="display:flex;align-items:center;justify-content:space-between;">
     <span class="admin-badge">⚙ ADMIN</span>
-    <button class="theme-toggle" onclick="toggleTheme()" title="Mode sombre/clair">🌙</button>
+    <button onclick="toggleTheme()" style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:4px 10px;cursor:pointer;font-size:14px;color:var(--text-dim);transition:all 0.2s;" title="Mode sombre/clair" id="themeBtn">🌙</button>
   </div>
 </aside>
 
@@ -207,7 +205,7 @@ body::before{
     <h3>👤 Créer un utilisateur</h3>
     <div class="field"><label>Nom complet</label><input type="text" id="newFullname" placeholder="Jean Dupont"></div>
     <div class="field"><label>Identifiant</label><input type="text" id="newUsername" placeholder="jean.dupont"></div>
-    <div class="field"><label>Email <span style="color:var(--danger)">*</span></label><input type="email" id="newEmail" placeholder="jean.dupont@entreprise.com"></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="newPassword" placeholder="••••••••"></div>
     <div class="field">
       <label>Rôle</label>
       <select id="newRole">
@@ -215,19 +213,29 @@ body::before{
         <option value="admin">Administrateur</option>
       </select>
     </div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);padding:10px 0;line-height:1.6;">
-      🔑 Un mot de passe temporaire sera généré automatiquement et envoyé par email à l'utilisateur.
-    </div>
     <div class="err" id="createErr"></div>
-    <div class="success-msg" id="createOk">✅ Compte créé — identifiants envoyés par email !</div>
+    <div class="success-msg" id="createOk">✅ Utilisateur créé avec succès !</div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="createUser()">Créer & Envoyer</button>
+      <button class="btn btn-primary" onclick="createUser()">Créer</button>
     </div>
   </div>
 </div>
 
 <script>
+// ── THEME ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeBtn').textContent = isLight ? '🌑' : '🌙';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+if (localStorage.getItem('theme') === 'light') {
+  document.body.classList.add('light');
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = '🌑';
+  });
+}
 const titles = {dashboard:'Vue globale',users:'Utilisateurs',requests:'Demandes d\'accès',activity:'Activité récente'};
 
 function showPage(name) {
@@ -286,8 +294,8 @@ function approveRequest(id, btn) {
     .then(r=>r.json()).then(d=>{
       if (d.ok) {
         const emailStatus = d.email_sent
-          ? '📧 Les identifiants ont été envoyés par email à l\'utilisateur.'
-          : '⚠️ Email non envoyé. Configurez PATCHMIND_EMAIL dans le fichier .env.';
+          ? '📧 Les identifiants ont été envoyés automatiquement par email à l\'utilisateur.'
+          : '⚠️ Email non configuré.\n\nIdentifiant : ' + d.username + '\nMot de passe : ' + d.password + '\n\nTransmettez ces informations manuellement.';
         alert('✅ Compte créé !\n\n' + emailStatus);
         loadRequests(); loadStats();
       } else { alert('Erreur : '+(d.error||'Inconnue')); btn.disabled=false; btn.textContent='✅ Approuver'; }
@@ -417,37 +425,26 @@ function closeModal() {
 }
 
 function createUser() {
-  const fn  = document.getElementById('newFullname').value.trim();
-  const u   = document.getElementById('newUsername').value.trim();
-  const em  = document.getElementById('newEmail').value.trim();
-  const r   = document.getElementById('newRole').value;
-  const err = document.getElementById('createErr');
-  const ok  = document.getElementById('createOk');
-  if (!u || !em) { err.textContent='Identifiant et email requis'; err.style.display='block'; return; }
+  const fn = document.getElementById('newFullname').value.trim();
+  const u  = document.getElementById('newUsername').value.trim();
+  const p  = document.getElementById('newPassword').value;
+  const r  = document.getElementById('newRole').value;
+  const err= document.getElementById('createErr');
+  const ok = document.getElementById('createOk');
+  if (!u||!p) { err.textContent='Identifiant et mot de passe requis'; err.style.display='block'; return; }
 
   fetch('/admin/users', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({username:u, email:em, full_name:fn, role:r})
-  }).then(res=>res.json()).then(d=>{
+    body: JSON.stringify({username:u,password:p,full_name:fn,role:r})
+  }).then(r=>r.json()).then(d=>{
     if (d.ok) {
       ok.style.display='block'; err.style.display='none';
-      setTimeout(()=>{ closeModal(); loadUsers(); }, 1500);
+      setTimeout(()=>{ closeModal(); loadUsers(); }, 1200);
     } else {
-      err.textContent = d.error || 'Erreur lors de la création'; err.style.display='block';
+      err.textContent=d.error||'Erreur'; err.style.display='block';
     }
   });
-}
-
-// ── THEME ──
-function toggleTheme() {
-  const isLight = document.body.classList.toggle('light');
-  document.querySelector('.theme-toggle').textContent = isLight ? '🌑' : '🌙';
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-}
-if (localStorage.getItem('theme') === 'light') {
-  document.body.classList.add('light');
-  document.querySelector('.theme-toggle').textContent = '🌑';
 }
 
 // ── INIT ──

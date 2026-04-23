@@ -1,4 +1,16 @@
-import sys, os, json, threading, shutil, zipfile, tempfile, re, io, base64, time
+import sys
+import os
+import json
+import threading
+import shutil
+import zipfile
+import tempfile
+import re
+import io
+import base64
+import time
+import secrets
+import string
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -183,14 +195,11 @@ _pipelines = {}
 
 def get_pipeline(u):
     if u not in _pipelines:
-        last = _load_last_results(u)
         _pipelines[u] = {
             "running":  False, "progress": 0,
-            "results":  last.get("results", []),
-            "metrics":  last.get("metrics", {}),
-            "logs":     [],
-            "gitleaks": last.get("gitleaks", []),
-            "snyk":     last.get("snyk", []),
+            "results":  [], "metrics": {}, "logs": [],
+            "gitleaks": [],   # Secrets détectés
+            "snyk":     [],   # Dépendances vulnérables
         }
     return _pipelines[u]
 
@@ -240,48 +249,6 @@ def norm_cwe(raw):
     return re.sub(r'^(?i)CWE-0*(\d+)$', lambda m:f'CWE-{m.group(1)}',
                   raw.split(':')[0].strip())
 
-# Patterns superficiels signalant un risque élevé (sans Semgrep)
-_RISKY_PATTERNS = [
-    (r'execute\s*\(\s*["\'].*%', 10, 'SQL concat'),
-    (r'eval\s*\(',               10, 'eval()'),
-    (r'exec\s*\(',               8,  'exec()'),
-    (r'subprocess.*shell\s*=\s*True', 9, 'shell=True'),
-    (r'pickle\.loads',           8,  'pickle'),
-    (r'hashlib\.(md5|sha1)\b',   6,  'weak hash'),
-    (r'password\s*=\s*["\'][^"\']{3,}["\']', 7, 'hardcoded pwd'),
-    (r'secret\s*=\s*["\'][^"\']{3,}["\']',   7, 'hardcoded secret'),
-    (r'innerHTML\s*=',           6,  'innerHTML'),
-    (r'document\.write\s*\(',    6,  'document.write'),
-    (r'os\.system\s*\(',         8,  'os.system'),
-    (r'random\.random\(\)',      4,  'weak random'),
-    (r'base64\.b64decode',       3,  'b64decode'),
-]
-
-def _quick_risk_estimate(file_paths):
-    score = 0; factors = []; total_lines = 0
-    for fp in file_paths:
-        try:
-            with open(fp, 'r', encoding='utf-8', errors='ignore') as f:
-                code = f.read()
-            lines = code.splitlines()
-            total_lines += len(lines)
-            for pattern, weight, label in _RISKY_PATTERNS:
-                hits = len(re.findall(pattern, code, re.IGNORECASE))
-                if hits:
-                    score += hits * weight
-                    factors.append(f"{label} ({hits}x)")
-        except Exception:
-            pass
-    # Bonus volume
-    if len(file_paths) > 20: score += 5
-    if total_lines > 5000:   score += 5
-    score = min(score, 100)
-    if score >= 70:   level = 'CRITIQUE'
-    elif score >= 45: level = 'ÉLEVÉ'
-    elif score >= 20: level = 'MODÉRÉ'
-    else:             level = 'FAIBLE'
-    return score, level, list(dict.fromkeys(factors))[:5]
-
 def save_session_history(username, m):
     path = get_user_metrics_path(username)
     data = _read_json(path, {"sessions":[]})
@@ -294,33 +261,9 @@ def save_session_history(username, m):
         "success_rate":      m["success_rate"],
         "mttr_seconds":      m["mttr"],
         "total_duration":    m["duration"],
-        "patched_files":     m.get("patched_files",[]),
-        "all_uploaded":      m.get("all_uploaded",[])
+        "patched_files":     m.get("patched_files",[])
     })
     _write_json(path, data)
-
-def _get_last_results_path(username):
-    d = os.path.join(DATA_DIR, username)
-    os.makedirs(d, exist_ok=True)
-    return os.path.join(d, 'last_results.json')
-
-def _save_last_results(username, ps):
-    try:
-        _write_json(_get_last_results_path(username), {
-            "results":  ps.get("results", []),
-            "metrics":  ps.get("metrics", {}),
-            "gitleaks": ps.get("gitleaks", []),
-            "snyk":     ps.get("snyk", []),
-            "saved_at": datetime.now().isoformat()
-        })
-    except Exception as e:
-        print(f"[last_results] Erreur sauvegarde : {e}")
-
-def _load_last_results(username):
-    try:
-        return _read_json(_get_last_results_path(username), {})
-    except Exception:
-        return {}
 
 def _compute_confidence(ok, from_cache, cwe, fixed_code):
     """Calcule un score de confiance sur le patch généré."""
@@ -366,13 +309,6 @@ def run_pipeline(username, file_paths):
     root_dir = os.path.dirname(file_paths[0]) if file_paths else ""
 
     try:
-        # ── Prédiction de risque rapide ───────────────────────────
-        risk_score, risk_level, risk_factors = _quick_risk_estimate(file_paths)
-        risk_emoji = {'FAIBLE':'🟢','MODÉRÉ':'🟡','ÉLEVÉ':'🟠','CRITIQUE':'🔴'}.get(risk_level,'⚪')
-        logp(username, f"{risk_emoji} Estimation risque : {risk_level} ({risk_score}/100)")
-        if risk_factors:
-            logp(username, f"   ↳ Patterns détectés : {', '.join(risk_factors)}")
-
         # ── GitLeaks ──────────────────────────────────────────────
         logp(username,"🔑 Scan secrets (GitLeaks)...")
         try:
@@ -436,7 +372,7 @@ def run_pipeline(username, file_paths):
                     original_code = ""
 
                 base, ext = os.path.splitext(orig_path)
-                patched   = re.sub(r'(_patched(_\d+)*)+$', '', base) + "_patched" + ext
+                patched   = base + "_patched" + ext
                 src       = patched if os.path.exists(patched) else orig_path
                 vt        = vuln.copy(); vt["file"] = orig_path
 
@@ -490,9 +426,19 @@ def run_pipeline(username, file_paths):
                     logp(username, f"❌ [{i}] Erreur : {e}")
                 return None
 
-        # Workers adaptatifs selon le volume
-        n = len(all_vulns)
-        MAX_WORKERS = 1 if n > 50 else (2 if n > 20 else 3)
+        # Parallélisation — adapter selon taille du projet
+        # Petit projet (<20 vulns) → 3 workers
+        # Moyen projet (20-50 vulns) → 2 workers
+        # Gros projet (>50 vulns) → 1 worker séquentiel pour éviter rate limit
+        if len(all_vulns) > 50:
+            MAX_WORKERS = 1
+            logp(username, f"📋 Gros projet ({len(all_vulns)} vulns) — mode séquentiel pour éviter rate limit")
+        elif len(all_vulns) > 20:
+            MAX_WORKERS = 2
+            logp(username, f"📋 Projet moyen ({len(all_vulns)} vulns) — 2 workers")
+        else:
+            MAX_WORKERS = 3
+
         args_list   = list(enumerate(all_vulns, 1))
         results_raw = []
 
@@ -502,7 +448,8 @@ def run_pipeline(username, file_paths):
                 result = future.result()
                 if result:
                     results_raw.append((futures[future][0], result))
-                if n > 30:
+                # Pause anti rate limit pour gros projets
+                if len(all_vulns) > 30:
                     time.sleep(1)
 
         # Trier par ordre original
@@ -526,11 +473,9 @@ def run_pipeline(username, file_paths):
             "success_rate":round(succ/total*100,1) if total else 0,
             "mttr":round(metrics.session.get("mttr_seconds",0),2),
             "duration":round(metrics.session.get("total_duration",0),2),
-            "patched_files":patches,
-            "all_uploaded": file_paths
+            "patched_files":patches
         }
-        save_session_history(username, ps["metrics"])
-        _save_last_results(username, ps)
+        save_session_history(username,ps["metrics"])
         logp(username,"🎉 Pipeline terminé !")
 
         # ── Notifications automatiques ────────────────────────────
@@ -616,11 +561,12 @@ def login_page():
             return jsonify({"error":f"Compte verrouillé. Réessayez dans {remaining} min."}), 429
 
         users = load_users()
-        user_data = users.get(u)
-        pwd_ok = user_data is not None and check_password_hash(user_data['password'], p)
-        if not user_data or not user_data.get('active', True) or not pwd_ok:
+        if u not in users or not users[u].get('active', True):
             record_fail(ip)
-            fails = _login_attempts.get(ip, {}).get('count', 0)
+            return jsonify({"error":"Identifiants incorrects"}), 401
+        if not check_password_hash(users[u]['password'], p):
+            record_fail(ip)
+            fails = _login_attempts.get(ip,{}).get('count',0)
             remaining_att = MAX_ATTEMPTS - fails
             return jsonify({"error":f"Identifiants incorrects. {remaining_att} tentative(s) restante(s)"}), 401
 
@@ -658,7 +604,8 @@ def verify_2fa():
         if verify_totp(secret, code):
             session['2fa_ok']   = True
             session['need_2fa'] = False
-            return jsonify({"ok":True})
+            redirect_url = "/admin" if session.get('role') == 'admin' else "/dashboard"
+            return jsonify({"ok": True, "redirect": redirect_url})
         return jsonify({"error":"Code incorrect. Vérifiez votre application."}), 401
     return render_template('verify_2fa.html')
 
@@ -769,47 +716,25 @@ def admin_list_users():
 @login_required
 @admin_required
 def admin_create_user():
-    d         = request.get_json() or {}
-    u         = d.get('username', '').strip()
-    email     = d.get('email', '').strip()
-    full_name = d.get('full_name', u).strip() or u
-
-    if not u or not email:
-        return jsonify({"error": "Identifiant et email requis"}), 400
-    if '@' not in email or '.' not in email.split('@')[-1]:
-        return jsonify({"error": "Email invalide"}), 400
-
+    d = request.get_json() or {}
+    u = d.get('username','').strip()
+    p = d.get('password','')
+    if not u or not p: return jsonify({"error":"Champs requis"}), 400
+    if len(p) < 8:     return jsonify({"error":"Mot de passe trop court (8 car. min)"}), 400
     users = load_users()
-    if u in users:
-        return jsonify({"error": "Utilisateur déjà existant"}), 400
-
-    p = generate_password()
+    if u in users: return jsonify({"error":"Utilisateur déjà existant"}), 400
     users[u] = {
         "password":    generate_password_hash(p),
-        "role":        d.get('role', 'user'),
-        "full_name":   full_name,
-        "email":       email,
+        "role":        d.get('role','user'),
+        "full_name":   d.get('full_name',u),
         "created_at":  datetime.now().isoformat(),
         "totp_secret": generate_totp_secret(),
-        "totp_enabled": False,
+        "totp_enabled":False,
         "active":      True
     }
     save_users(users)
-    os.makedirs(os.path.join(DATA_DIR, u, 'uploads'), exist_ok=True)
-
-    email_sent = send_credentials_email(
-        to_email  = email,
-        full_name = full_name,
-        username  = u,
-        password  = p
-    )
-    if not email_sent:
-        return jsonify({
-            "error": f"Compte '{u}' créé mais l'envoi email a échoué. "
-                     "Configurez PATCHMIND_EMAIL dans le fichier .env."
-        }), 207
-
-    return jsonify({"ok": True})
+    os.makedirs(os.path.join(DATA_DIR,u,'uploads'),exist_ok=True)
+    return jsonify({"ok":True})
 
 @app.route('/admin/users/<username>', methods=['DELETE'])
 @login_required
@@ -883,6 +808,9 @@ def upload():
     ps=get_pipeline(u)
     ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{}})
 
+    def _run(files):
+        threading.Thread(target=run_pipeline,args=(u,files),daemon=True).start()
+
     if ext=='.rar':
         def _rar():
             try:
@@ -936,23 +864,20 @@ def status(): return jsonify(get_pipeline(current_user()))
 @app.route('/files')
 @login_required
 def list_files():
-    user_dir = os.path.join(DATA_DIR, current_user())
-    files = []
-    for root, dirs, fnames in os.walk(user_dir):
-        dirs[:] = [d for d in dirs if d not in ['__pycache__']]
-        for fname in fnames:
-            if '_patched' not in fname: continue
-            if '_temp_check' in fname:  continue
-            fp = os.path.join(root, fname)
-            if not os.path.isfile(fp): continue
-            st = os.stat(fp)
-            files.append({
-                "name":        fname,
-                "path":        fp,
-                "size":        round(st.st_size / 1024, 1),
-                "patched_at":  datetime.fromtimestamp(st.st_mtime).strftime("%d/%m/%Y %H:%M"),
-            })
-    files.sort(key=lambda x: x["patched_at"], reverse=True)
+    uld=get_user_upload_dir(current_user()); files=[]
+    for fname in os.listdir(uld):
+        fp=os.path.join(uld,fname)
+        if not os.path.isfile(fp): continue
+        if '_patched' in fname or '_extracted' in fname: continue
+        _bn, _bext = os.path.splitext(fname)
+        pname = _bn + '_patched' + _bext
+        ppath=os.path.join(uld,pname); st=os.stat(fp)
+        files.append({"name":fname,"path":fp,
+            "size":round(st.st_size/1024,1),
+            "uploaded_at":datetime.fromtimestamp(st.st_mtime).strftime("%d/%m/%Y %H:%M"),
+            "has_patch":os.path.exists(ppath),
+            "patched_path":ppath if os.path.exists(ppath) else ""})
+    files.sort(key=lambda x:x["uploaded_at"],reverse=True)
     return jsonify(files)
 
 @app.route('/history')
@@ -964,11 +889,11 @@ def history():
 @app.route('/download')
 @login_required
 def download():
-    p = request.args.get('file', '')
-    user_dir = os.path.realpath(os.path.join(DATA_DIR, current_user()))
-    if p and os.path.exists(p) and os.path.realpath(p).startswith(user_dir):
-        return send_file(p, as_attachment=True)
-    return jsonify({"error": "Fichier non trouvé"}), 404
+    p=request.args.get('file','')
+    uld=get_user_upload_dir(current_user())
+    if p and os.path.exists(p) and os.path.realpath(p).startswith(os.path.realpath(uld)):
+        return send_file(p,as_attachment=True)
+    return jsonify({"error":"Fichier non trouvé"}),404
 
 @app.route('/download-all')
 @login_required
@@ -1069,8 +994,6 @@ def load_requests():
 
 def save_requests(reqs):
     _write_json(REQUESTS_FILE, reqs)
-
-import secrets, string
 
 def generate_password(length=12):
     chars = string.ascii_letters + string.digits + '!@#$'
@@ -1203,7 +1126,7 @@ def admin_approve_request(req_id):
         return jsonify({"error": "Demande introuvable"}), 404
 
     # Générer username depuis email
-    username = re.sub(r'[^a-z0-9_]', '_', req['email'].split('@')[0].lower())[:32]
+    username = req['email'].split('@')[0].lower().replace('.', '_').replace('-', '_')
     users    = load_users()
 
     # Éviter doublon username
@@ -1245,9 +1168,8 @@ def admin_approve_request(req_id):
     return jsonify({
         "ok":        True,
         "username":  username,
-        "password":  password,
         "email_sent": email_sent,
-        "message":  f"Compte créé : {username} / {password}"
+        "message":  f"Compte créé : {username}" + ("" if email_sent else f" — mot de passe : {password}")
     })
 
 @app.route('/admin/requests/<req_id>/reject', methods=['POST'])

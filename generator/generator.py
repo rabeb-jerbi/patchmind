@@ -17,10 +17,10 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # ── Rotation de modèles gratuits ─────────────────────────────────────────────
 MODELS = [
-    "llama-3.3-70b-versatile",
-    "llama-3.1-8b-instant",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-    "qwen/qwen-3-32b",
+    "llama-3.3-70b-versatile",        # Principal — production stable
+    "llama-3.1-8b-instant",           # Rapide — fallback rate limit
+    "meta-llama/llama-4-scout-17b-16e-instruct",  # Llama 4 Scout — preview
+    "qwen/qwen-3-32b",                # Qwen 3 — bon alternatif
 ]
 _model_index = [0]  # Index courant (liste pour mutabilité)
 
@@ -189,13 +189,17 @@ LANGUAGE_RULES = {
 
 # ── Génération ────────────────────────────────────────────────────────────────
 
-def generate_patch(vuln):
+def generate_patch(vuln, _attempt=0):
     """
     Génère un patch avec 3 niveaux :
     1. Cache → instantané, 0 appel LLM
     2. RAG   → exemples similaires
     3. LLM   → Groq Llama 3.3 (si pas en cache)
     """
+    MAX_GLOBAL_RETRIES = 3
+    if _attempt >= MAX_GLOBAL_RETRIES:
+        print(f"❌ Abandon après {MAX_GLOBAL_RETRIES} tentatives globales.")
+        return ""
     print(f"🤖 Génération patch pour : {vuln['cwe']}")
 
     try:
@@ -262,7 +266,7 @@ def generate_patch(vuln):
 4. Retourne UNIQUEMENT le code corrigé complet, sans explication
 """
 
-    for attempt in range(len(MODELS) * 2):  # Essayer tous les modèles x2
+    for _ in range(len(MODELS) * 2):  # Essayer tous les modèles x2
         model = _get_next_model()
         try:
             response = client.chat.completions.create(
@@ -271,20 +275,22 @@ def generate_patch(vuln):
                 temperature=0.1
             )
             fixed_code = response.choices[0].message.content
-            fixed_code = fixed_code.replace(f"```{lang}", "").replace("```python", "").replace("```", "").strip()
+            # Supprimer les balises markdown quel que soit le langage
+            fixed_code = re.sub(r"^```[a-zA-Z0-9+#]*\n?", "", fixed_code.strip())
+            fixed_code = re.sub(r"\n?```$", "", fixed_code).strip()
             return fixed_code
 
         except Exception as e:
             if "429" in str(e) or "rate_limit" in str(e).lower():
                 print(f"⏳ Rate limit sur {model} — rotation modèle...")
                 _rotate_model()
-                time.sleep(5)  # Petite pause avant de changer de modèle
+                time.sleep(5)
             else:
                 raise e
 
     print("❌ Tous les modèles en rate limit — attente 60s...")
     time.sleep(60)
-    return generate_patch(vuln)  # Retry final
+    return generate_patch(vuln, _attempt + 1)
 
 
 if __name__ == "__main__":

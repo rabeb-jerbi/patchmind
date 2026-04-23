@@ -1,7 +1,6 @@
 import subprocess
 import json
 import os
-import re
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -29,21 +28,22 @@ def run_semgrep(file_path):
     return data.get("results", [])
 
 
-def _clean_base(base):
-    """Supprime tous les suffixes _patched en cascade (ex: foo_patched_patched → foo)."""
-    return re.sub(r'(_patched(_\d+)*)+$', '', base)
-
-
 def _get_patched_path(original_file):
     """Génère le chemin du fichier patché selon l'extension réelle."""
     base, ext = os.path.splitext(original_file)
-    return _clean_base(base) + "_patched" + ext
+    # Retirer _patched si déjà présent pour obtenir le base propre
+    if base.endswith("_patched"):
+        base = base[:-len("_patched")]
+    return base + "_patched" + ext
 
 
 def _get_temp_path(original_file):
     """Génère le chemin du fichier temporaire selon l'extension réelle."""
     base, ext = os.path.splitext(original_file)
-    return _clean_base(base) + "_temp_check" + ext
+    # Retirer _patched si présent
+    if base.endswith("_patched"):
+        base = base[:-len("_patched")]
+    return base + "_temp_check" + ext
 
 
 def validate_patch(original_file, fixed_code, original_vuln):
@@ -51,9 +51,12 @@ def validate_patch(original_file, fixed_code, original_vuln):
 
     print(f"\n🔍 Validation du patch...")
 
-    # Chemin du fichier source original (sans _patched, même en cascade)
+    # Chemin du fichier source original (sans _patched)
     base, ext = os.path.splitext(original_file)
-    source_file = _clean_base(base) + ext
+    if base.endswith("_patched"):
+        source_file = base[:-len("_patched")] + ext
+    else:
+        source_file = original_file
 
     # Fichier temporaire pour le re-scan (même extension)
     temp_file = _get_temp_path(source_file)
