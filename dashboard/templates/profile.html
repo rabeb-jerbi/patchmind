@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Mon profil</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/patchmind.css">
+<style>
+:root{--bg:#F4F6F9;--surface:#FFFFFF;--surface-2:#F0F2F6;--border:#E2E6ED;--border-2:#C8D0DB;--green:#4F46E5;--green-mid:#4338CA;--green-light:#EEF2FF;--text:#0F172A;--text-2:#475569;--text-3:#94A3B8;--danger:#DC2626;--danger-bg:#FEF2F2;--warn:#D97706;--warn-bg:#FFFBEB;--success:#16A34A;--success-bg:#F0FDF4;--accent:#0EA5E9;--accent-light:#E0F2FE;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--radius:10px;--radius-sm:6px;--sidebar-w:252px;}
+body.dark{--bg:#0C0F14;--surface:#141920;--surface-2:#1C2330;--border:#252E3D;--border-2:#2E3A4E;--green:#818CF8;--green-mid:#6366F1;--green-light:#1E1B4B;--text:#F1F5F9;--text-2:#94A3B8;--text-3:#475569;--danger:#F87171;--danger-bg:#2D1515;--warn:#FBBF24;--warn-bg:#2D1F08;--success:#4ADE80;--success-bg:#052E16;--accent:#38BDF8;--accent-light:#0C2D3F;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;transition:background .25s,color .25s;-webkit-font-smoothing:antialiased;}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:#111827;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,255,255,.07) 0%,transparent 60%),repeating-linear-gradient(135deg,transparent,transparent 20px,rgba(255,255,255,.015) 20px,rgba(255,255,255,.015) 21px);pointer-events:none;}
+.sidebar-logo{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,.1);position:relative;}
+.logo-lockup{display:flex;align-items:center;gap:10px;}
+.logo-icon-wrap{width:34px;height:34px;background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon-wrap svg{color:#fff;}
+.logo-text-wrap{display:flex;flex-direction:column;}
+.logo-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;}
+.logo-wordmark{font-family:var(--sans);font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px;line-height:1;}
+.sidebar-user{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,.3);overflow:hidden;}
+.user-info{min-width:0;}
+.user-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;}
+.nav-group-label{padding:16px 20px 6px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px 9px 16px;margin:2px 10px;border-radius:6px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;border:1px solid transparent;text-decoration:none;position:relative;}
+.nav-item svg{flex-shrink:0;opacity:.8;}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.15);font-weight:600;}
+.nav-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:#818CF8;border-radius:0 2px 2px 0;}
+.nav-badge{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.15);color:#fff;}
+.nav-item.nav-danger{color:rgba(255,150,150,.8);}
+.nav-item.nav-danger:hover{background:rgba(220,38,38,.2);color:#fca5a5;}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.sys-status{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 2px rgba(74,222,128,.25);animation:sb-pulse 2s infinite;}
+@keyframes sb-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.theme-btn{width:32px;height:32px;border-radius:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.6);transition:all .15s;}
+.theme-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+.main{margin-left:var(--sidebar-w);flex:1;padding:40px;}
+.page-header{margin-bottom:32px;}
+.page-title{font-size:24px;font-weight:800;color:var(--text);}
+.page-subtitle{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-top:4px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px;}
+.card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;}
+
+/* AVATAR */
+.avatar-section{display:flex;align-items:center;gap:24px;margin-bottom:24px;}
+.avatar-img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);background:var(--panel);}
+.avatar-placeholder{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#0c2a1a,#1a3a2a);border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:var(--accent);font-family:var(--sans);}
+.avatar-upload-btn{padding:8px 16px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text-dim);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all 0.2s;}
+.avatar-upload-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+
+/* FORM */
+.field{margin-bottom:16px;}
+.field label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;}
+.field input,.field select{width:100%;background:var(--panel);border:1px solid var(--border2);border-radius:6px;padding:11px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field select option{background:var(--surface);}
+.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-primary{background:var(--accent);color:#060910;}
+.btn-primary:hover{background:#00e077;box-shadow:0 0 16px rgba(0,255,136,0.3);}
+.btn-danger{background:rgba(255,71,87,0.15);color:var(--danger);border:1px solid rgba(255,71,87,0.3);}
+
+/* MESSAGES */
+.msg{padding:10px 14px;border-radius:6px;font-family:var(--mono);font-size:12px;margin-top:12px;display:none;}
+.msg-ok{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--accent);}
+.msg-err{background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);color:var(--danger);}
+
+/* SECTION PASSWORD */
+.pw-section{margin-top:8px;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="/dashboard" style="text-decoration:none;">
+      <div class="logo-lockup">
+        <div class="logo-icon-wrap">{{ icon('cpu', 18) }}</div>
+        <div class="logo-text-wrap">
+          <div class="logo-eyebrow">v2.0 · SAST</div>
+          <div class="logo-wordmark">PatchMind</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="navAvatar"></div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarUsername">—</div>
+      <div class="user-role" id="sidebarRole">—</div>
+    </div>
+  </div>
+  <div class="nav-group-label">Projets</div>
+  <a href="/projects" class="nav-item">{{ icon('folder', 15) }} <span>Mes projets</span></a>
+  <div class="nav-group-label">Principal</div>
+  <a href="/dashboard" class="nav-item">{{ icon('home', 15) }} <span>Tableau de bord</span></a>
+  <a href="/dashboard" class="nav-item">{{ icon('zap', 15) }} <span>Analyse</span></a>
+  <a href="/dashboard" class="nav-item">{{ icon('file-code', 15) }} <span>Mes fichiers</span></a>
+  <div class="nav-group-label">Données</div>
+  <a href="/dashboard" class="nav-item">{{ icon('bar-chart', 15) }} <span>Métriques</span></a>
+  <a href="/dashboard" class="nav-item">{{ icon('history', 15) }} <span>Historique</span></a>
+  <div class="nav-group-label">Compte</div>
+  <a href="/profile" class="nav-item active">{{ icon('user', 15) }} <span>Mon profil</span></a>
+  <a href="/setup-2fa" class="nav-item">{{ icon('lock', 15) }} <span>Configurer 2FA</span></a>
+  <a href="/admin" class="nav-item" id="adminLink" style="display:none;">{{ icon('settings', 15) }} <span>Admin Panel</span> <span class="nav-badge" style="font-size:9px;">ADMIN</span></a>
+  <a href="/logout" class="nav-item nav-danger">{{ icon('log-out', 15) }} <span>Déconnexion</span></a>
+  <div class="sidebar-footer">
+    <div class="sys-status"><span class="status-dot"></span> Système actif</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="theme-btn" onclick="toggleTheme()" id="themeToggleBtn">{{ icon('moon', 14) }}</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Mon profil</div>
+      <div class="page-subtitle">Gérez vos informations personnelles et préférences</div>
+    </div>
+  </div>
+
+  <!-- AVATAR + INFOS GÉNÉRALES -->
+  <div class="card">
+    <div class="card-title">Informations personnelles</div>
+    <div class="avatar-section">
+      <div id="avatarDisplay">
+        <div class="avatar-placeholder" id="avatarInitials">?</div>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:4px;" id="profileName">…</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-bottom:12px;" id="profileUsername">@…</div>
+        <input type="file" id="avatarInput" accept=".jpg,.jpeg,.png,.webp" style="display:none;" onchange="uploadAvatar(this)">
+        <button class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()">📷 Changer la photo</button>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:6px;">JPG/PNG/WebP · max 2 MB · 128×128px</div>
+      </div>
+    </div>
+
+    <div class="fields-grid">
+      <div class="field"><label>Nom complet</label><input type="text" id="fullName" placeholder="Jean Dupont"></div>
+      <div class="field"><label>Email</label><input type="email" id="email" placeholder="jean@example.com"></div>
+      <div class="field"><label>Entreprise</label><input type="text" id="company" placeholder="Acme Corp"></div>
+      <div class="field"><label>Langue des rapports</label>
+        <select id="lang">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveProfile()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Enregistrer</button>
+    <div class="msg msg-ok" id="profileOk">Profil mis à jour !</div>
+    <div class="msg msg-err" id="profileErr"></div>
+  </div>
+
+  <!-- CHANGER MOT DE PASSE -->
+  <div class="card">
+    <div class="card-title">Sécurité — Changer le mot de passe</div>
+    <div class="pw-section">
+      <div class="fields-grid">
+        <div class="field"><label>Mot de passe actuel</label><input type="password" id="oldPw" placeholder="••••••••"></div>
+        <div></div>
+        <div class="field"><label>Nouveau mot de passe</label><input type="password" id="newPw" placeholder="Au moins 8 caractères"></div>
+        <div class="field"><label>Confirmer</label><input type="password" id="newPw2" placeholder="Répétez le mot de passe"></div>
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Changer le mot de passe</button>
+      <div class="msg msg-ok" id="pwOk">Mot de passe modifié !</div>
+      <div class="msg msg-err" id="pwErr"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── THEME ──
+const _SVG_MOON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const _SVG_SUN='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+function _updateThemeIcon(isDark){const btn=document.getElementById('themeToggleBtn');if(btn){btn.innerHTML=isDark?_SVG_SUN:_SVG_MOON;btn.title=isDark?'Mode clair':'Mode sombre';}}
+function toggleTheme(){const dark=document.body.classList.toggle('dark');localStorage.setItem('theme',dark?'dark':'light');_updateThemeIcon(dark);}
+if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark');document.addEventListener('DOMContentLoaded',()=>_updateThemeIcon(true));}
+
+// ── LOAD PROFILE ──
+let _profile = {};
+fetch('/me').then(r=>r.json()).then(d=>{
+  _profile = d;
+  document.getElementById('sidebarUsername').textContent=d.full_name||d.username;
+  document.getElementById('sidebarRole').textContent=d.role;
+  if(d.role==='admin'&&document.getElementById('adminLink'))document.getElementById('adminLink').style.display='flex';
+  const av=document.getElementById('navAvatar');
+  if(d.has_avatar){av.innerHTML=`<img src="/avatar/${d.username}?t=${Date.now()}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;}
+  else{const ini=(d.full_name||d.username).split(' ').map(x=>x[0]).join('').toUpperCase().substring(0,2);av.textContent=ini;}
+  document.getElementById('profileName').textContent  = d.full_name || d.username;
+  document.getElementById('profileUsername').textContent = '@' + d.username;
+  document.getElementById('fullName').value  = d.full_name || '';
+  document.getElementById('email').value     = d.email     || '';
+  document.getElementById('company').value   = d.company   || '';
+  document.getElementById('lang').value      = d.lang      || 'fr';
+  // Avatar
+  if (d.has_avatar) {
+    const img = document.createElement('img');
+    img.src = '/avatar/' + d.username + '?t=' + Date.now();
+    img.className = 'avatar-img'; img.alt = 'Avatar';
+    document.getElementById('avatarDisplay').innerHTML = '';
+    document.getElementById('avatarDisplay').appendChild(img);
+  } else {
+    const initials = (d.full_name || d.username).split(' ').map(x=>x[0]).join('').toUpperCase().substring(0,2);
+    document.getElementById('avatarInitials').textContent = initials;
+  }
+});
+
+// ── SAVE PROFILE ──
+function saveProfile() {
+  const data = {
+    full_name:     document.getElementById('fullName').value.trim(),
+    email:         document.getElementById('email').value.trim(),
+    company:       document.getElementById('company').value.trim(),
+    lang:          document.getElementById('lang').value,
+  };
+  fetch('/profile', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) { show('profileOk'); hide('profileErr'); document.getElementById('profileName').textContent = data.full_name; }
+      else { document.getElementById('profileErr').textContent='⚠ '+d.error; show('profileErr'); hide('profileOk'); }
+    });
+}
+
+// ── AVATAR UPLOAD ──
+function uploadAvatar(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { alert('Fichier trop volumineux (max 2 MB)'); return; }
+  const fd = new FormData(); fd.append('avatar', file);
+  fetch('/profile/avatar', {method:'POST', body:fd})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) {
+        const img = document.createElement('img');
+        img.src = '/avatar/' + _profile.username + '?t=' + Date.now();
+        img.className = 'avatar-img'; img.alt = 'Avatar';
+        document.getElementById('avatarDisplay').innerHTML = '';
+        document.getElementById('avatarDisplay').appendChild(img);
+      } else { alert(d.error||'Erreur upload'); }
+    });
+}
+
+// ── CHANGE PASSWORD ──
+function changePassword() {
+  const old_pw = document.getElementById('oldPw').value;
+  const new_pw = document.getElementById('newPw').value;
+  const new_pw2= document.getElementById('newPw2').value;
+  if (!old_pw || !new_pw) { document.getElementById('pwErr').textContent='⚠ Remplissez tous les champs'; show('pwErr'); return; }
+  if (new_pw !== new_pw2)  { document.getElementById('pwErr').textContent='⚠ Les mots de passe ne correspondent pas'; show('pwErr'); return; }
+  if (new_pw.length < 8)   { document.getElementById('pwErr').textContent='⚠ Mot de passe trop court (8 car. min)'; show('pwErr'); return; }
+  fetch('/profile/password', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({old_password:old_pw, new_password:new_pw})})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) { show('pwOk'); hide('pwErr'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; document.getElementById('newPw2').value=''; }
+      else { document.getElementById('pwErr').textContent='⚠ '+d.error; show('pwErr'); hide('pwOk'); }
+    });
+}
+
+// ── BROWSER NOTIF ──
+function show(id) { document.getElementById(id).style.display='block'; }
+function hide(id) { document.getElementById(id).style.display='none'; }
+</script>
+</body>
+</html>

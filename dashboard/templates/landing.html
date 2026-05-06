@@ -1,887 +1,735 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PatchMind — Automated Security Platform</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Clash+Display:wght@400;500;600;700&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg:       #F0EDE8;
-  --bg2:      #E8E3DC;
-  --surface:  #FFFFFF;
-  --ink:      #1A1612;
-  --ink2:     #3D3530;
-  --ink3:     #7A6E66;
-  --accent:   #1A3A2A;
-  --accent2:  #2D5A3D;
-  --lime:     #8FCC5A;
-  --lime2:    #B8E07A;
-  --rust:     #C84B2F;
-  --border:   #D4CFC8;
-  --border2:  #C4BDB4;
-  --mono:     'DM Mono', monospace;
-  --display:  'Bricolage Grotesque', sans-serif;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PatchMind — Analyse de sécurité automatisée</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior: smooth; }
+    :root {
+      --bg: #0D1117;
+      --surface: #161B22;
+      --surface-2: #1C2230;
+      --border: #30363D;
+      --border-2: #3D444D;
+      --brand: #6366F1;
+      --brand-dark: #4F46E5;
+      --brand-light: rgba(99,102,241,0.12);
+      --green: #22C55E;
+      --text: #E6EDF3;
+      --muted: #8B949E;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
 
-body {
-  font-family: var(--display);
-  background: var(--bg);
-  color: var(--ink);
-  overflow-x: hidden;
-}
+    html { scroll-behavior: smooth; }
 
-/* ── GRAIN OVERLAY ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 9999; opacity: 0.6;
-}
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
 
-/* ── NAV ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 48px;
-  background: rgba(240,237,232,0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-}
+    /* ══ NAV ══ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,17,23,0.9);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
 
-.nav-logo {
-  font-family: var(--display);
-  font-size: 22px; font-weight: 700;
-  color: var(--ink); letter-spacing: -0.5px;
-}
-.nav-logo span { color: var(--accent2); }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .logo-mark svg { color: #fff; }
+    .logo-wordmark { font-weight: 700; font-size: 17px; color: var(--text); letter-spacing: -0.3px; }
 
-.nav-links {
-  display: flex; align-items: center; gap: 32px;
-  list-style: none;
-}
-.nav-links a {
-  font-size: 14px; font-weight: 500; color: var(--ink3);
-  text-decoration: none; transition: color 0.2s;
-}
-.nav-links a:hover { color: var(--ink); }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 6px 13px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
 
-.nav-ctas { display: flex; gap: 12px; align-items: center; }
+    .nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
-.btn-nav-login {
-  padding: 9px 20px;
-  background: transparent;
-  border: 1.5px solid var(--border2);
-  border-radius: 8px;
-  font-family: var(--display);
-  font-size: 13px; font-weight: 600;
-  color: var(--ink2); cursor: pointer;
-  text-decoration: none; transition: all 0.2s;
-}
-.btn-nav-login:hover { border-color: var(--ink2); color: var(--ink); }
+    .btn-access {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--text); text-decoration: none;
+      font-size: 14px; font-weight: 500; padding: 7px 16px; border-radius: 8px;
+      border: 1px solid var(--border); transition: all 0.15s; white-space: nowrap;
+    }
+    .btn-access:hover { border-color: var(--brand); background: var(--brand-light); }
 
-.btn-nav-cta {
-  padding: 9px 20px;
-  background: var(--accent);
-  border: none; border-radius: 8px;
-  font-family: var(--display);
-  font-size: 13px; font-weight: 600;
-  color: #fff; cursor: pointer;
-  text-decoration: none; transition: all 0.2s;
-}
-.btn-nav-cta:hover { background: var(--accent2); }
+    .btn-login {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--brand); color: #fff; text-decoration: none;
+      font-size: 14px; font-weight: 600; padding: 7px 18px; border-radius: 8px;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-login:hover { background: var(--brand-dark); }
 
-/* ── HERO ── */
-.hero {
-  min-height: 100vh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center;
-  padding: 120px 24px 80px;
-  position: relative; overflow: hidden;
-}
+    /* ══ HERO ══ */
+    .hero {
+      min-height: calc(100vh - 62px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 80px 24px 64px;
+      position: relative; overflow: hidden;
+    }
 
-/* Decorative circles */
-.hero-deco {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.deco-1 {
-  width: 600px; height: 600px;
-  background: radial-gradient(circle, rgba(143,204,90,0.12) 0%, transparent 70%);
-  top: -100px; right: -100px;
-  animation: float1 8s ease-in-out infinite;
-}
-.deco-2 {
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(26,58,42,0.08) 0%, transparent 70%);
-  bottom: 0; left: -80px;
-  animation: float2 10s ease-in-out infinite;
-}
-@keyframes float1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-20px,20px)} }
-@keyframes float2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(15px,-15px)} }
+    .hero::before {
+      content: '';
+      position: absolute; top: -160px; left: 50%;
+      transform: translateX(-50%);
+      width: 900px; height: 900px;
+      background: radial-gradient(circle, rgba(99,102,241,0.14) 0%, transparent 65%);
+      pointer-events: none;
+    }
 
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  font-family: var(--mono);
-  font-size: 11px; color: var(--ink3);
-  margin-bottom: 32px;
-  animation: fadeUp 0.6s ease both;
-}
-.hero-badge .dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--lime); box-shadow: 0 0 6px var(--lime2);
-  animation: pulse 2s infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 100px; padding: 5px 16px;
+      font-size: 12px; font-weight: 600; color: #a5b4fc;
+      letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 30px;
+    }
+    .eyebrow-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--brand);
+      animation: blink 2.2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
 
-.hero-title {
-  font-size: clamp(52px, 8vw, 96px);
-  font-weight: 700; line-height: 1.0;
-  letter-spacing: -2px;
-  color: var(--ink);
-  margin-bottom: 24px;
-  animation: fadeUp 0.6s 0.1s ease both;
-}
-.hero-title .hl {
-  color: var(--accent2);
-  position: relative;
-}
-.hero-title .hl::after {
-  content: '';
-  position: absolute; left: 0; bottom: 4px; right: 0;
-  height: 3px;
-  background: var(--lime);
-  border-radius: 2px;
-}
+    .hero h1 {
+      font-size: clamp(44px, 7vw, 76px); font-weight: 800;
+      line-height: 1.04; letter-spacing: -2.5px;
+      color: var(--text); max-width: 780px; margin-bottom: 22px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(92deg, #818CF8 0%, #a5b4fc 40%, #c4b5fd 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
 
-.hero-sub {
-  font-size: 18px; font-weight: 400;
-  color: var(--ink3); max-width: 560px;
-  line-height: 1.65; margin-bottom: 40px;
-  animation: fadeUp 0.6s 0.2s ease both;
-}
+    .hero-sub {
+      font-size: 17px; line-height: 1.7; color: var(--muted);
+      max-width: 560px; margin-bottom: 40px;
+    }
 
-.hero-ctas {
-  display: flex; gap: 14px; flex-wrap: wrap;
-  justify-content: center;
-  animation: fadeUp 0.6s 0.3s ease both;
-}
+    .hero-ctas {
+      display: flex; align-items: center; gap: 12px;
+      flex-wrap: wrap; justify-content: center; margin-bottom: 56px;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--brand); color: #fff; text-decoration: none;
+      font-size: 15px; font-weight: 600; padding: 12px 26px;
+      border-radius: 10px; transition: all 0.15s; border: none; cursor: pointer;
+    }
+    .btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,.3); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--text); text-decoration: none;
+      font-size: 15px; font-weight: 600; padding: 12px 26px;
+      border-radius: 10px; border: 1px solid var(--border); transition: all 0.15s; cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: var(--brand); background: var(--brand-light); transform: translateY(-1px); }
 
-.btn-primary {
-  padding: 14px 32px;
-  background: var(--accent);
-  border: none; border-radius: 10px;
-  font-family: var(--display);
-  font-size: 15px; font-weight: 700;
-  color: #fff; cursor: pointer;
-  text-decoration: none; transition: all 0.25s;
-  box-shadow: 0 4px 20px rgba(26,58,42,0.2);
-}
-.btn-primary:hover {
-  background: var(--accent2);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(26,58,42,0.3);
-}
+    /* Hero stats bar */
+    .hero-stats {
+      display: flex; align-items: stretch; gap: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .stat-item {
+      padding: 18px 32px; text-align: center; position: relative; flex: 1;
+    }
+    .stat-item + .stat-item::before {
+      content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: var(--border);
+    }
+    .stat-value { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--text); display: block; }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; display: block; }
 
-.btn-secondary {
-  padding: 14px 32px;
-  background: var(--surface);
-  border: 1.5px solid var(--border2);
-  border-radius: 10px;
-  font-family: var(--display);
-  font-size: 15px; font-weight: 600;
-  color: var(--ink2); cursor: pointer;
-  text-decoration: none; transition: all 0.25s;
-}
-.btn-secondary:hover {
-  border-color: var(--ink2);
-  transform: translateY(-2px);
-}
+    /* ══ TECH STRIP ══ */
+    .tech-strip {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      overflow: hidden;
+    }
+    .tech-strip-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; gap: 40px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .tech-strip-label {
+      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .tech-tools {
+      display: flex; align-items: center; gap: 24px; flex-wrap: wrap; justify-content: center;
+    }
+    .tech-tool {
+      display: flex; align-items: center; gap: 7px;
+      font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--muted);
+      transition: color 0.15s;
+    }
+    .tech-tool:hover { color: var(--text); }
+    .tech-tool svg { opacity: 0.6; }
 
-/* HERO STATS */
-.hero-stats {
-  display: flex; gap: 48px;
-  margin-top: 60px;
-  padding-top: 40px;
-  border-top: 1px solid var(--border);
-  animation: fadeUp 0.6s 0.4s ease both;
-}
-.stat { text-align: center; }
-.stat-val {
-  font-size: 32px; font-weight: 700;
-  color: var(--ink); letter-spacing: -1px;
-}
-.stat-val span { color: var(--accent2); }
-.stat-lbl {
-  font-family: var(--mono);
-  font-size: 11px; color: var(--ink3);
-  margin-top: 4px; letter-spacing: 0.5px;
-}
+    /* ══ SECTIONS ══ */
+    section { padding: 96px 24px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block; font-family: var(--mono); font-size: 11px;
+      font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--brand); margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: clamp(26px, 4vw, 40px); font-weight: 800;
+      letter-spacing: -1.2px; line-height: 1.12; color: var(--text); margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 16px; color: var(--muted); max-width: 520px; line-height: 1.65;
+    }
 
-/* DASHBOARD PREVIEW */
-.preview-wrap {
-  margin-top: 80px;
-  position: relative;
-  animation: fadeUp 0.8s 0.5s ease both;
-}
-.preview-frame {
-  background: #1A1612;
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 40px 100px rgba(26,22,18,0.25), 0 0 0 1px var(--border);
-  max-width: 900px;
-  margin: 0 auto;
-}
-.preview-bar {
-  display: flex; align-items: center; gap: 6px;
-  margin-bottom: 10px;
-}
-.preview-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-}
-.pd-red   { background: #FF5F57; }
-.pd-yellow{ background: #FFBD2E; }
-.pd-green { background: #28C840; }
-.preview-url {
-  flex: 1; background: rgba(255,255,255,0.06);
-  border-radius: 4px; padding: 4px 12px;
-  font-family: var(--mono); font-size: 11px;
-  color: rgba(255,255,255,0.35); text-align: center;
-}
-.preview-screen {
-  background: #111822;
-  border-radius: 8px;
-  padding: 24px;
-  min-height: 280px;
-  display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 16px;
-}
-.ps-sidebar {
-  background: #0c1118;
-  border-radius: 6px;
-  padding: 16px;
-}
-.ps-logo { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 16px; }
-.ps-logo span { color: #8FCC5A; }
-.ps-item {
-  padding: 7px 10px; border-radius: 5px;
-  font-family: var(--mono); font-size: 10px;
-  color: rgba(255,255,255,0.4); margin-bottom: 4px;
-}
-.ps-item.active { background: rgba(143,204,90,0.12); color: #8FCC5A; }
-.ps-main { display: flex; flex-direction: column; gap: 12px; }
-.ps-stat-row {
-  display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
-}
-.ps-stat {
-  background: #0c1118; border-radius: 5px;
-  padding: 10px; text-align: center;
-}
-.ps-val { font-family: var(--mono); font-size: 18px; color: #8FCC5A; font-weight: 700; }
-.ps-lbl { font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 3px; }
-.ps-card {
-  background: #0c1118; border-radius: 5px; padding: 12px;
-}
-.ps-card-title { font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 2px; margin-bottom: 8px; }
-.ps-vuln {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 8px; border-radius: 4px;
-  margin-bottom: 4px;
-  border-left: 3px solid #8FCC5A;
-  background: rgba(143,204,90,0.05);
-}
-.ps-vuln.bad { border-left-color: #ff4757; background: rgba(255,71,87,0.05); }
-.ps-vtag { font-family: var(--mono); font-size: 10px; color: #00c4ff; flex: 1; }
-.ps-vbadge {
-  font-family: var(--mono); font-size: 9px;
-  padding: 2px 6px; border-radius: 3px;
-  background: rgba(143,204,90,0.15); color: #8FCC5A;
-}
-.ps-vbadge.bad { background: rgba(255,71,87,0.15); color: #ff4757; }
+    /* ══ HOW IT WORKS ══ */
+    #how { background: var(--bg); border-top: 1px solid var(--border); }
 
-/* ── SECTIONS ── */
-section { padding: 100px 48px; }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+      background: var(--border); border-radius: var(--radius); overflow: hidden;
+      margin-top: 56px;
+    }
+    .step-card {
+      background: var(--surface); padding: 36px 32px;
+      transition: background 0.2s;
+    }
+    .step-card:hover { background: var(--surface-2); }
+    .step-num {
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      color: var(--brand); letter-spacing: 1.5px; text-transform: uppercase;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+    }
+    .step-num::after {
+      content: ''; flex: 1; height: 1px; background: rgba(99,102,241,0.2);
+    }
+    .step-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--brand-light); border: 1px solid rgba(99,102,241,0.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand); margin-bottom: 20px;
+    }
+    .step-card h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+    .step-card p  { font-size: 14px; color: var(--muted); line-height: 1.65; margin-bottom: 18px; }
+    .tool-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tool-pill {
+      font-family: var(--mono); font-size: 11px; font-weight: 600;
+      color: #a5b4fc; background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2); border-radius: 5px; padding: 3px 10px;
+    }
 
-.section-tag {
-  font-family: var(--mono);
-  font-size: 11px; color: var(--accent2);
-  letter-spacing: 2px; text-transform: uppercase;
-  margin-bottom: 12px;
-}
-.section-title {
-  font-size: clamp(32px, 4vw, 52px);
-  font-weight: 700; letter-spacing: -1.5px;
-  color: var(--ink); line-height: 1.1;
-  margin-bottom: 16px;
-}
-.section-sub {
-  font-size: 17px; color: var(--ink3);
-  max-width: 540px; line-height: 1.65;
-}
+    /* ══ FEATURES ══ */
+    #features { background: var(--bg); border-top: 1px solid var(--border); }
 
-/* ── HOW IT WORKS ── */
-.how-section {
-  background: var(--surface);
-  border-radius: 24px;
-  margin: 0 32px;
-  padding: 80px 64px;
-}
+    .features-header { margin-bottom: 56px; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    .feat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 26px;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .feat-card::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--brand), transparent);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .feat-card:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-3px); }
+    .feat-card:hover::after { opacity: 1; }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: var(--brand-light); border: 1px solid rgba(99,102,241,0.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--brand); margin-bottom: 18px;
+    }
+    .feat-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .feat-card p  { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
+    .feat-badge {
+      display: inline-block; font-size: 10px; font-weight: 700; font-family: var(--mono);
+      color: var(--brand); background: var(--brand-light); border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 4px; padding: 2px 8px; margin-top: 14px;
+    }
 
-.steps-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  margin-top: 56px;
-  position: relative;
-}
-.steps-grid::before {
-  content: '';
-  position: absolute;
-  top: 28px; left: 14%; right: 14%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border), var(--border), var(--border), transparent);
-  background-size: 25% 100%;
-}
+    /* ══ METRICS ══ */
+    #metrics {
+      background: linear-gradient(180deg, var(--bg) 0%, #080c12 100%);
+      border-top: 1px solid var(--border);
+    }
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 48px;
+    }
+    .metric-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-bottom: 3px solid var(--brand);
+      border-radius: var(--radius); padding: 28px 24px; transition: transform 0.2s;
+    }
+    .metric-card:hover { transform: translateY(-3px); }
+    .metric-value {
+      font-family: var(--mono); font-size: 40px; font-weight: 700;
+      color: var(--text); display: block; line-height: 1; margin-bottom: 10px;
+    }
+    .metric-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .metric-note  { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 6px; opacity: 0.7; }
 
-.step-item { text-align: center; padding: 0 16px; position: relative; }
-.step-num {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono);
-  font-size: 16px; font-weight: 600;
-  color: var(--ink); margin: 0 auto 20px;
-  position: relative; z-index: 1;
-  transition: all 0.3s;
-}
-.step-item:hover .step-num {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  transform: scale(1.1);
-}
-.step-icon { font-size: 20px; }
-.step-title {
-  font-size: 15px; font-weight: 700;
-  color: var(--ink); margin-bottom: 8px;
-}
-.step-desc {
-  font-size: 13px; color: var(--ink3); line-height: 1.6;
-  font-family: var(--mono);
-}
+    /* ══ PROJECTS ══ */
+    #projets { background: var(--bg); border-top: 1px solid var(--border); }
 
-/* ── FEATURES ── */
-.features-section { max-width: 1200px; margin: 0 auto; }
+    .projets-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 56px;
+    }
+    .projets-col {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 36px 32px;
+    }
+    .projets-col-head {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .col-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--brand-light); border: 1px solid rgba(99,102,241,0.25);
+      display: flex; align-items: center; justify-content: center; color: var(--brand); flex-shrink: 0;
+    }
+    .projets-col h3 { font-size: 18px; font-weight: 700; color: var(--text); }
+    .projets-col > p {
+      font-size: 14px; color: var(--muted); line-height: 1.65; margin-bottom: 24px;
+    }
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+    .feature-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--muted); line-height: 1.5;
+    }
+    .check-ic { flex-shrink: 0; color: var(--brand); margin-top: 2px; }
+    .lang-pills { display: flex; flex-wrap: wrap; gap: 7px; }
+    .lang-pill {
+      font-family: var(--mono); font-size: 12px; font-weight: 500;
+      color: var(--text); background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 6px; padding: 5px 13px;
+      transition: all 0.15s;
+    }
+    .lang-pill:hover { border-color: var(--brand); background: var(--brand-light); }
+    .lang-pill.hi { border-color: rgba(99,102,241,0.35); color: #a5b4fc; background: var(--brand-light); }
+    .pills-label {
+      font-family: var(--mono); font-size: 10px; color: var(--brand);
+      letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; font-weight: 600;
+    }
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-top: 56px;
-}
+    /* ══ ACCESS ══ */
+    #access { background: var(--bg); border-top: 1px solid var(--border); }
+    .access-inner { max-width: 500px; margin: 0 auto; }
+    .access-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 48px 44px; margin-top: 48px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group textarea {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm); color: var(--text); font-family: var(--sans);
+      font-size: 14px; padding: 10px 14px; transition: border-color 0.15s; outline: none; resize: vertical;
+    }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+    .form-group textarea { min-height: 90px; }
+    .btn-submit {
+      width: 100%; background: var(--brand); color: #fff; border: none;
+      border-radius: 10px; font-family: var(--sans); font-size: 15px; font-weight: 600;
+      padding: 13px; cursor: pointer; transition: all 0.15s; margin-top: 8px;
+    }
+    .btn-submit:hover { background: var(--brand-dark); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .form-success { display: none; text-align: center; padding: 32px 0; }
+    .success-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; color: var(--green);
+    }
+    .form-success h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .form-success p  { font-size: 14px; color: var(--muted); }
 
-.feature-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  transition: all 0.3s;
-  cursor: default;
-  position: relative;
-  overflow: hidden;
-}
-.feature-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--lime), var(--accent2));
-  transform: scaleX(0); transform-origin: left;
-  transition: transform 0.3s;
-}
-.feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-.feature-card:hover::before { transform: scaleX(1); }
+    /* ══ FOOTER ══ */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border); padding: 32px 28px;
+    }
+    .footer-inner {
+      max-width: 1100px; margin: 0 auto; display: flex;
+      align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    }
+    .footer-links { display: flex; gap: 20px; list-style: none; }
+    .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 13px; color: var(--muted); }
 
-.feature-icon {
-  width: 48px; height: 48px;
-  background: var(--bg);
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; margin-bottom: 20px;
-}
-.feature-title {
-  font-size: 17px; font-weight: 700;
-  color: var(--ink); margin-bottom: 10px;
-}
-.feature-desc {
-  font-family: var(--mono);
-  font-size: 12px; color: var(--ink3); line-height: 1.7;
-}
-.feature-tag {
-  display: inline-block;
-  margin-top: 16px;
-  padding: 3px 10px;
-  background: rgba(143,204,90,0.1);
-  border: 1px solid rgba(143,204,90,0.2);
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 10px; color: var(--accent2);
-}
+    /* ══ REVEAL ══ */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.visible { opacity: 1; transform: none; }
 
-/* ── LANGUAGES ── */
-.langs-section {
-  background: var(--accent);
-  border-radius: 24px;
-  margin: 0 32px;
-  padding: 60px 64px;
-  color: #fff;
-}
-.langs-title {
-  font-size: 28px; font-weight: 700;
-  margin-bottom: 32px; color: #fff;
-}
-.langs-grid {
-  display: flex; flex-wrap: wrap; gap: 12px;
-}
-.lang-pill {
-  padding: 8px 18px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 100px;
-  font-family: var(--mono);
-  font-size: 13px; color: rgba(255,255,255,0.85);
-  transition: all 0.2s;
-}
-.lang-pill:hover {
-  background: rgba(143,204,90,0.2);
-  border-color: var(--lime);
-  color: var(--lime2);
-}
-
-/* ── REQUEST FORM ── */
-.request-section {
-  max-width: 1200px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 80px; align-items: center;
-}
-
-.request-left { }
-.request-left .section-title { max-width: 420px; }
-
-.testimonial {
-  margin-top: 40px;
-  padding: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  border-left: 3px solid var(--lime);
-}
-.testimonial-text {
-  font-size: 15px; color: var(--ink2);
-  line-height: 1.7; margin-bottom: 16px;
-  font-style: italic;
-}
-.testimonial-author {
-  display: flex; align-items: center; gap: 12px;
-}
-.t-avatar {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; color: #fff; font-weight: 700;
-}
-.t-name { font-size: 13px; font-weight: 700; color: var(--ink); }
-.t-role { font-family: var(--mono); font-size: 11px; color: var(--ink3); }
-
-.request-form-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-}
-.form-title {
-  font-size: 22px; font-weight: 700;
-  color: var(--ink); margin-bottom: 6px;
-}
-.form-subtitle {
-  font-family: var(--mono);
-  font-size: 12px; color: var(--ink3);
-  margin-bottom: 28px;
-}
-
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.field { margin-bottom: 14px; }
-.field.full { grid-column: 1/-1; }
-.field label {
-  display: block;
-  font-family: var(--mono);
-  font-size: 10px; letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--ink3); margin-bottom: 7px;
-}
-.field input, .field textarea {
-  width: 100%;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 11px 14px;
-  color: var(--ink);
-  font-family: var(--mono);
-  font-size: 13px; outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.field input:focus, .field textarea:focus {
-  border-color: var(--accent2);
-  box-shadow: 0 0 0 3px rgba(45,90,61,0.1);
-}
-.field input::placeholder, .field textarea::placeholder { color: var(--ink3); }
-.field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
-
-.btn-submit {
-  width: 100%; padding: 14px;
-  background: var(--accent);
-  border: none; border-radius: 10px;
-  font-family: var(--display);
-  font-size: 15px; font-weight: 700;
-  color: #fff; cursor: pointer;
-  transition: all 0.25s; margin-top: 6px;
-}
-.btn-submit:hover {
-  background: var(--accent2);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(26,58,42,0.25);
-}
-.btn-submit:disabled {
-  background: var(--border2); cursor: not-allowed;
-  transform: none; box-shadow: none;
-}
-.form-msg {
-  margin-top: 12px; padding: 10px 14px;
-  border-radius: 8px; font-family: var(--mono);
-  font-size: 12px; display: none;
-}
-.form-msg.error {
-  background: rgba(200,75,47,0.08);
-  border: 1px solid rgba(200,75,47,0.2);
-  color: var(--rust);
-}
-.form-msg.success {
-  background: rgba(143,204,90,0.1);
-  border: 1px solid rgba(143,204,90,0.25);
-  color: var(--accent2);
-}
-
-/* ── FOOTER ── */
-footer {
-  background: var(--ink);
-  color: rgba(255,255,255,0.6);
-  padding: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap; gap: 20px;
-}
-.footer-logo {
-  font-size: 20px; font-weight: 700; color: #fff;
-}
-.footer-logo span { color: var(--lime); }
-.footer-links {
-  display: flex; gap: 24px; list-style: none;
-}
-.footer-links a {
-  font-family: var(--mono); font-size: 12px;
-  color: rgba(255,255,255,0.4);
-  text-decoration: none; transition: color 0.2s;
-}
-.footer-links a:hover { color: rgba(255,255,255,0.8); }
-.footer-copy {
-  font-family: var(--mono); font-size: 11px;
-}
-
-/* ── ANIMATIONS ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.reveal {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
-
-/* ── SUCCESS STATE ── */
-.success-state {
-  display: none; text-align: center; padding: 24px 0;
-}
-.success-icon { font-size: 52px; margin-bottom: 16px; }
-.success-title { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
-.success-desc { font-family: var(--mono); font-size: 13px; color: var(--ink3); line-height: 1.7; }
-</style>
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 900px) {
+      .steps-grid     { grid-template-columns: 1fr; gap: 1px; }
+      .features-grid  { grid-template-columns: 1fr 1fr; }
+      .metrics-grid   { grid-template-columns: 1fr 1fr; }
+      .projets-grid   { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav-links      { display: none; }
+      .hero-stats     { flex-direction: column; width: 100%; max-width: 320px; }
+      .stat-item + .stat-item::before { display: none; border-top: 1px solid var(--border); }
+      .features-grid  { grid-template-columns: 1fr; }
+      .metrics-grid   { grid-template-columns: 1fr 1fr; }
+      .access-card    { padding: 32px 24px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ════ NAV ════ -->
+<!-- ═══ NAV ═══ -->
 <nav>
-  <div class="nav-logo">Patch<span>Mind</span></div>
+  <a href="/" class="nav-logo">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+        <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+        <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+        <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+        <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+      </svg>
+    </div>
+    <span class="logo-wordmark">PatchMind</span>
+  </a>
+
   <ul class="nav-links">
     <li><a href="#how">Comment ça marche</a></li>
     <li><a href="#features">Fonctionnalités</a></li>
-    <li><a href="#access">Accès</a></li>
+    <li><a href="#projets">Projets</a></li>
+    <li><a href="#metrics">Métriques</a></li>
   </ul>
-  <div class="nav-ctas">
-    <a href="/login" class="btn-nav-login">Se connecter</a>
-    <a href="#access" class="btn-nav-cta">Demander un accès</a>
+
+  <div class="nav-right">
+    <a href="#access" class="btn-access">Demander un accès</a>
+    <a href="/login" class="btn-login">Se connecter →</a>
   </div>
 </nav>
 
-<!-- ════ HERO ════ -->
+<!-- ═══ HERO ═══ -->
 <section class="hero">
-  <div class="hero-deco deco-1"></div>
-  <div class="hero-deco deco-2"></div>
-
-  <div class="hero-badge">
-    <span class="dot"></span>
-    Plateforme SAST — Bêta ouverte 2026
+  <div class="hero-eyebrow">
+    <span class="eyebrow-dot"></span>
+    Plateforme SAST/DAST · Beta 2026
   </div>
 
-  <h1 class="hero-title">
-    Détectez et corrigez<br>
-    les failles <span class="hl">automatiquement</span>
-  </h1>
+  <h1>La sécurité applicative,<br/><span class="grad">automatisée de bout en bout.</span></h1>
 
   <p class="hero-sub">
-    PatchMind analyse votre code source, détecte les vulnérabilités critiques et génère des patches validés par IA — en quelques secondes.
+    PatchMind scanne votre code, détecte chaque vulnérabilité critique et génère des correctifs validés par IA — en quelques secondes, sans configuration.
   </p>
 
   <div class="hero-ctas">
-    <a href="#access" class="btn-primary">Demander un accès gratuit</a>
-    <a href="#how" class="btn-secondary">Voir comment ça marche →</a>
+    <a href="/login" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+      </svg>
+      Accéder à la plateforme
+    </a>
+    <a href="#how" class="btn-ghost">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="10 15 12 17 14 15"/><line x1="12" y1="7" x2="12" y2="17"/>
+      </svg>
+      Voir comment ça marche
+    </a>
   </div>
 
   <div class="hero-stats">
-    <div class="stat">
-      <div class="stat-val">99<span>%</span></div>
-      <div class="stat-lbl">SUCCESS RATE</div>
+    <div class="stat-item">
+      <span class="stat-value">969+</span>
+      <span class="stat-label">Patterns CWE</span>
     </div>
-    <div class="stat">
-      <div class="stat-val">15<span>s</span></div>
-      <div class="stat-lbl">MTTR MOYEN</div>
+    <div class="stat-item">
+      <span class="stat-value">~14s</span>
+      <span class="stat-label">MTTR moyen</span>
     </div>
-    <div class="stat">
-      <div class="stat-val">969<span>+</span></div>
-      <div class="stat-lbl">CWE COUVERTS</div>
+    <div class="stat-item">
+      <span class="stat-value">10+</span>
+      <span class="stat-label">Langages</span>
     </div>
-    <div class="stat">
-      <div class="stat-val">10<span>+</span></div>
-      <div class="stat-lbl">LANGAGES</div>
-    </div>
-  </div>
-
-  <!-- DASHBOARD PREVIEW -->
-  <div class="preview-wrap">
-    <div class="preview-frame">
-      <div class="preview-bar">
-        <div class="preview-dot pd-red"></div>
-        <div class="preview-dot pd-yellow"></div>
-        <div class="preview-dot pd-green"></div>
-        <div class="preview-url">localhost:5000 — PatchMind Dashboard</div>
-      </div>
-      <div class="preview-screen">
-        <div class="ps-sidebar">
-          <div class="ps-logo">Patch<span>Mind</span></div>
-          <div class="ps-item active">⚡ Analyse</div>
-          <div class="ps-item">🗂 Mes fichiers</div>
-          <div class="ps-item">📊 Métriques</div>
-          <div class="ps-item">🕐 Historique</div>
-        </div>
-        <div class="ps-main">
-          <div class="ps-stat-row">
-            <div class="ps-stat"><div class="ps-val">5</div><div class="ps-lbl">VULNS</div></div>
-            <div class="ps-stat"><div class="ps-val" style="color:#00c4ff">4</div><div class="ps-lbl">VALIDÉS</div></div>
-            <div class="ps-stat"><div class="ps-val" style="color:#ffaa00">80%</div><div class="ps-lbl">SUCCESS</div></div>
-            <div class="ps-stat"><div class="ps-val" style="color:#ff4757">14s</div><div class="ps-lbl">MTTR</div></div>
-          </div>
-          <div class="ps-card">
-            <div class="ps-card-title">VULNÉRABILITÉS DÉTECTÉES</div>
-            <div class="ps-vuln"><span class="ps-vtag">CWE-89</span><span style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.3)">app.py · ligne 14</span><span class="ps-vbadge">VALIDÉ</span></div>
-            <div class="ps-vuln"><span class="ps-vtag">CWE-79</span><span style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.3)">api.py · ligne 21</span><span class="ps-vbadge">VALIDÉ</span></div>
-            <div class="ps-vuln bad"><span class="ps-vtag">CWE-22</span><span style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.3)">utils.py · ligne 8</span><span class="ps-vbadge bad">REJETÉ</span></div>
-            <div class="ps-vuln"><span class="ps-vtag">CWE-327</span><span style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.3)">auth.py · ligne 33</span><span class="ps-vbadge">VALIDÉ</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="stat-item">
+      <span class="stat-value">&gt;80%</span>
+      <span class="stat-label">Taux de succès</span>
     </div>
   </div>
 </section>
 
-<!-- ════ HOW IT WORKS ════ -->
+<!-- ═══ TECH STRIP ═══ -->
+<div class="tech-strip">
+  <div class="tech-strip-inner">
+    <span class="tech-strip-label">Propulsé par</span>
+    <div class="tech-tools">
+      <span class="tech-tool">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Semgrep
+      </span>
+      <span class="tech-tool">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        OWASP ZAP
+      </span>
+      <span class="tech-tool">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        GitLeaks
+      </span>
+      <span class="tech-tool">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Snyk / OSV
+      </span>
+      <span class="tech-tool">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        CVSS Scoring
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HOW IT WORKS ═══ -->
 <section id="how">
-  <div class="how-section reveal">
-    <div class="section-tag">Process</div>
-    <h2 class="section-title">De la détection au patch<br>en 4 étapes</h2>
-    <div class="steps-grid">
-      <div class="step-item">
-        <div class="step-num"><span class="step-icon">📂</span></div>
-        <div class="step-title">Upload</div>
-        <div class="step-desc">Déposez vos fichiers sources, un ZIP, un repo GitHub ou un lien</div>
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center; margin-bottom:0;">
+      <span class="section-tag">Processus</span>
+      <h2 class="section-title">De la soumission au correctif<br/>en trois étapes.</h2>
+      <p class="section-sub" style="margin: 0 auto 0;">Un pipeline automatisé qui analyse, classe et corrige sans intervention manuelle.</p>
+    </div>
+
+    <div class="steps-grid reveal">
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 01</div>
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+        </div>
+        <h3>Soumettez votre code</h3>
+        <p>Connectez un dépôt GitHub public, importez une archive ZIP/RAR ou déposez vos fichiers directement. Aucune installation requise côté client.</p>
+        <div class="tool-pills">
+          <span class="tool-pill">GitHub</span>
+          <span class="tool-pill">ZIP / RAR</span>
+          <span class="tool-pill">Upload direct</span>
+          <span class="tool-pill">10+ langages</span>
+        </div>
       </div>
-      <div class="step-item">
-        <div class="step-num"><span class="step-icon">🔍</span></div>
-        <div class="step-title">Scan SAST</div>
-        <div class="step-desc">Semgrep analyse votre code et détecte les vulnérabilités CWE/CVE</div>
+
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 02</div>
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3>Analyse multi-moteurs</h3>
+        <p>Semgrep, GitLeaks, Snyk et OWASP ZAP scrutent votre code en parallèle. Chaque résultat est enrichi avec le CWE, la sévérité CVSS et une explication contextuelle.</p>
+        <div class="tool-pills">
+          <span class="tool-pill">Semgrep SAST</span>
+          <span class="tool-pill">GitLeaks</span>
+          <span class="tool-pill">OWASP ZAP</span>
+          <span class="tool-pill">Snyk / OSV</span>
+        </div>
       </div>
-      <div class="step-item">
-        <div class="step-num"><span class="step-icon">🤖</span></div>
-        <div class="step-title">Patch IA</div>
-        <div class="step-desc">Notre LLM génère un patch contextualisé pour chaque vulnérabilité</div>
-      </div>
-      <div class="step-item">
-        <div class="step-num"><span class="step-icon">✅</span></div>
-        <div class="step-title">Validation</div>
-        <div class="step-desc">Le patch est re-scanné et validé avant d'être mis à disposition</div>
+
+      <div class="step-card">
+        <div class="step-num">ÉTAPE 03</div>
+        <div class="step-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <h3>Patch IA &amp; rapport</h3>
+        <p>Chaque vulnérabilité reçoit un correctif généré par consensus multi-LLM, accompagné d'une explication claire, d'un score de confiance et exportable en PDF professionnel.</p>
+        <div class="tool-pills">
+          <span class="tool-pill">Consensus LLM</span>
+          <span class="tool-pill">Export PDF</span>
+          <span class="tool-pill">Score confiance</span>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════ FEATURES ════ -->
+<!-- ═══ FEATURES ═══ -->
 <section id="features">
-  <div class="features-section">
-    <div class="reveal">
-      <div class="section-tag">Fonctionnalités</div>
-      <h2 class="section-title">Tout ce qu'il faut<br>pour sécuriser votre code</h2>
+  <div class="section-inner">
+    <div class="features-header reveal" style="text-align:center;">
+      <span class="section-tag">Fonctionnalités</span>
+      <h2 class="section-title">Tout ce dont votre équipe<br/>a besoin pour sécuriser son code.</h2>
+      <p class="section-sub" style="margin: 0 auto;">Des outils professionnels intégrés dans un seul workflow, sans friction.</p>
     </div>
+
     <div class="features-grid">
-      <div class="feature-card reveal">
-        <div class="feature-icon">🛡</div>
-        <div class="feature-title">Détection multi-CWE</div>
-        <div class="feature-desc">969 types de vulnérabilités couverts — SQL Injection, XSS, Path Traversal, SSRF, et bien plus.</div>
-        <span class="feature-tag">969 CWE</span>
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>SAST multi-moteurs</h3>
+        <p>Semgrep et GitLeaks analysent le code source pour détecter injections SQL, XSS, CSRF, secrets exposés et 969+ vulnérabilités CWE classées par sévérité.</p>
+        <span class="feat-badge">SAST</span>
       </div>
-      <div class="feature-card reveal" style="transition-delay:0.1s">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-title">Patches en temps réel</div>
-        <div class="feature-desc">MTTR moyen de 14 secondes. Le pipeline de génération fonctionne en parallèle avec les logs en direct.</div>
-        <span class="feature-tag">~14s MTTR</span>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+          </svg>
+        </div>
+        <h3>Analyse DAST dynamique</h3>
+        <p>OWASP ZAP détecte les vulnérabilités d'exécution : CSRF, redirections ouvertes, SSRF, injections de commandes OS — sans nécessiter d'URL externe déployée.</p>
+        <span class="feat-badge">DAST</span>
       </div>
-      <div class="feature-card reveal" style="transition-delay:0.2s">
-        <div class="feature-icon">📊</div>
-        <div class="feature-title">Dashboard pro</div>
-        <div class="feature-desc">Métriques historiques, success rate, MTTR, rapport PDF automatique après chaque analyse.</div>
-        <span class="feature-tag">PDF Report</span>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <h3>Patches IA par consensus</h3>
+        <p>Plusieurs modèles LLM collaborent pour produire le correctif optimal. Chaque patch inclut diff Git, explication technique et niveau de confiance calculé.</p>
+        <span class="feat-badge">AI PATCH</span>
       </div>
-      <div class="feature-card reveal" style="transition-delay:0.3s">
-        <div class="feature-icon">🔐</div>
-        <div class="feature-title">Sécurité renforcée</div>
-        <div class="feature-desc">Authentification 2FA TOTP, protection brute-force, sessions sécurisées, données isolées par utilisateur.</div>
-        <span class="feature-tag">2FA + TOTP</span>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <h3>Rapports PDF professionnels</h3>
+        <p>Exportez un rapport complet avec liste des CVE/CWE, correctifs recommandés, métriques d'analyse et score global — prêt pour audit ou revue de code.</p>
+        <span class="feat-badge">PDF EXPORT</span>
       </div>
-      <div class="feature-card reveal" style="transition-delay:0.4s">
-        <div class="feature-icon">🌐</div>
-        <div class="feature-title">Multi-sources</div>
-        <div class="feature-desc">Analysez des fichiers individuels, des archives ZIP/RAR ou directement un repository GitHub public.</div>
-        <span class="feature-tag">GitHub · ZIP · RAR</span>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h3>Sécurité renforcée</h3>
+        <p>Authentification 2FA TOTP, rôles RBAC granulaires (viewer, analyst, dev, admin), audit log complet et monitoring temps réel des sessions actives.</p>
+        <span class="feat-badge">2FA · RBAC</span>
       </div>
-      <div class="feature-card reveal" style="transition-delay:0.5s">
-        <div class="feature-icon">👥</div>
-        <div class="feature-title">Gestion d'équipe</div>
-        <div class="feature-desc">Panel admin pour gérer les utilisateurs, voir l'activité globale et approuver les demandes d'accès.</div>
-        <span class="feature-tag">Admin Panel</span>
+
+      <div class="feat-card reveal">
+        <div class="feat-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h3>Gestion d'équipe &amp; projets</h3>
+        <p>Organisez les analyses par projet, invitez des collaborateurs, définissez les permissions par rôle et supervisez l'activité depuis un panneau centralisé.</p>
+        <span class="feat-badge">TEAM</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════ LANGUAGES ════ -->
-<section style="padding: 0 32px 80px;">
-  <div class="langs-section reveal">
-    <div class="langs-title">10+ langages supportés</div>
-    <div class="langs-grid">
-      <span class="lang-pill">🐍 Python</span>
-      <span class="lang-pill">⚡ JavaScript</span>
-      <span class="lang-pill">⚛️ TypeScript</span>
-      <span class="lang-pill">☕ Java</span>
-      <span class="lang-pill">🐘 PHP</span>
-      <span class="lang-pill">🐹 Go</span>
-      <span class="lang-pill">💎 Ruby</span>
-      <span class="lang-pill">⚙️ C / C++</span>
-      <span class="lang-pill">🦀 Rust</span>
-      <span class="lang-pill">📱 Kotlin</span>
-      <span class="lang-pill">🍎 Swift</span>
+<!-- ═══ PROJETS ═══ -->
+<section id="projets">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center; margin-bottom:56px;">
+      <span class="section-tag">Organisation</span>
+      <h2 class="section-title">Gérez chaque base de code<br/>avec traçabilité totale.</h2>
+      <p class="section-sub" style="margin: 0 auto;">Plusieurs projets en parallèle, un historique complet et des métriques par équipe.</p>
     </div>
-  </div>
-</section>
 
-<!-- ════ REQUEST ACCESS ════ -->
-<section id="access">
-  <div class="request-section">
-    <div class="request-left reveal">
-      <div class="section-tag">Bêta ouverte</div>
-      <h2 class="section-title">Rejoignez la bêta PatchMind</h2>
-      <p class="section-sub">Accès gratuit pendant la période bêta. Notre équipe examine chaque demande sous 24h.</p>
-      <div class="testimonial" style="margin-top:32px;">
-        <div class="testimonial-text">"PatchMind a détecté et corrigé une injection SQL critique en 12 secondes. C'est bluffant."</div>
-        <div class="testimonial-author">
-          <div class="t-avatar">R</div>
+    <div class="projets-grid">
+      <div class="projets-col reveal">
+        <div class="projets-col-head">
+          <div class="col-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h3>Gestion de projets</h3>
+        </div>
+        <p>Organisez chaque base de code dans un projet nommé. Réutilisez les scans précédents, maintenez un historique complet et évitez les analyses redondantes.</p>
+        <ul class="feature-list">
+          <li><span class="check-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Nommez, archivez et retrouvez chaque session</li>
+          <li><span class="check-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Réutilisez les scans Semgrep et GitLeaks en cache</li>
+          <li><span class="check-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Historique complet des vulnérabilités par projet</li>
+          <li><span class="check-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Export PDF professionnel avec métriques et correctifs</li>
+          <li><span class="check-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span> Outils personnalisés intégrables dans le pipeline</li>
+        </ul>
+      </div>
+
+      <div class="projets-col reveal">
+        <div class="projets-col-head">
+          <div class="col-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <h3>Sources &amp; langages</h3>
+        </div>
+        <p>Analysez depuis GitHub, archives compressées ou fichiers uploadés. PatchMind couvre tous les langages modernes et formats de dépôts courants.</p>
+        <div style="display:flex;flex-direction:column;gap:18px;margin-top:20px;">
           <div>
-            <div class="t-name">Rabeb W.</div>
-            <div class="t-role">Fondatrice · PatchMind</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="reveal" style="transition-delay:0.2s">
-      <div class="request-form-card">
-        <div id="formState">
-          <div class="form-title">Demander un accès</div>
-          <div class="form-subtitle">Réponse garantie sous 24h · Accès bêta gratuit</div>
-          <div class="form-row">
-            <div class="field">
-              <label>Nom complet *</label>
-              <input type="text" id="full_name" placeholder="Jean Dupont">
-            </div>
-            <div class="field">
-              <label>Email professionnel *</label>
-              <input type="email" id="email" placeholder="jean@company.com">
-            </div>
-            <div class="field">
-              <label>Entreprise *</label>
-              <input type="text" id="company" placeholder="Ma Startup">
-            </div>
-            <div class="field">
-              <label>Taille d'équipe</label>
-              <input type="text" id="team_size" placeholder="1–10 devs">
-            </div>
-            <div class="field full">
-              <label>Cas d'usage *</label>
-              <textarea id="use_case" placeholder="Comment comptez-vous utiliser PatchMind ? (ex: audit de sécurité, intégration CI/CD…)"></textarea>
+            <div class="pills-label">Langages supportés</div>
+            <div class="lang-pills">
+              <span class="lang-pill">Python</span><span class="lang-pill">JavaScript</span>
+              <span class="lang-pill">TypeScript</span><span class="lang-pill">Java</span>
+              <span class="lang-pill">PHP</span><span class="lang-pill">Go</span>
+              <span class="lang-pill">Ruby</span><span class="lang-pill">C/C++</span>
+              <span class="lang-pill">Rust</span><span class="lang-pill">Kotlin</span>
             </div>
           </div>
-          <button class="btn-submit" id="submitBtn" onclick="submitRequest()">
-            Envoyer ma demande →
-          </button>
-          <div class="form-msg error" id="errMsg"></div>
-        </div>
-
-        <div class="success-state" id="successState">
-          <div class="success-icon">✅</div>
-          <div class="success-title">Demande envoyée !</div>
-          <div class="success-desc">
-            Votre demande a été reçue.<br>
-            Notre équipe vous contactera sous <strong>24h</strong>.<br><br>
-            Vous recevrez vos identifiants par email dès approbation.
+          <div>
+            <div class="pills-label">Formats d'entrée</div>
+            <div class="lang-pills">
+              <span class="lang-pill hi">GitHub Repos</span>
+              <span class="lang-pill hi">ZIP / RAR</span>
+              <span class="lang-pill hi">Fichiers directs</span>
+            </div>
           </div>
         </div>
       </div>
@@ -889,80 +737,146 @@ footer {
   </div>
 </section>
 
-<!-- ════ FOOTER ════ -->
+<!-- ═══ METRICS ═══ -->
+<section id="metrics">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center;">
+      <span class="section-tag">Métriques</span>
+      <h2 class="section-title">Des résultats mesurables<br/>dès la première analyse.</h2>
+      <p class="section-sub" style="margin: 0 auto;">Chiffres agrégés sur l'ensemble de la plateforme — aucune donnée utilisateur exposée.</p>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card reveal">
+        <span class="metric-value">969+</span>
+        <div class="metric-label">Patterns CWE couverts</div>
+        <div class="metric-note">Base de signatures Semgrep + règles propriétaires</div>
+      </div>
+      <div class="metric-card reveal">
+        <span class="metric-value">&gt;80%</span>
+        <div class="metric-label">Taux de patch validé</div>
+        <div class="metric-note">Correctifs IA acceptés sur l'ensemble des analyses</div>
+      </div>
+      <div class="metric-card reveal">
+        <span class="metric-value">~14s</span>
+        <div class="metric-label">MTTR moyen</div>
+        <div class="metric-note">Mean Time To Remediation par vulnérabilité</div>
+      </div>
+      <div class="metric-card reveal">
+        <span class="metric-value">10+</span>
+        <div class="metric-label">Langages supportés</div>
+        <div class="metric-note">Python, JS, Java, Go, PHP, Ruby, C/C++…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ACCESS FORM ═══ -->
+<section id="access">
+  <div class="section-inner">
+    <div class="access-inner">
+      <div style="text-align:center;" class="reveal">
+        <span class="section-tag">Accès</span>
+        <h2 class="section-title">Rejoindre la beta</h2>
+        <p class="section-sub" style="margin: 0 auto;">Accédez à PatchMind et sécurisez votre code dès aujourd'hui. Réponse sous 24h.</p>
+      </div>
+
+      <div class="access-card reveal">
+        <div id="access-form-wrap">
+          <div class="form-group">
+            <label for="a-nom">Nom complet</label>
+            <input type="text" id="a-nom" placeholder="Jean Dupont" />
+          </div>
+          <div class="form-group">
+            <label for="a-email">Email professionnel</label>
+            <input type="email" id="a-email" placeholder="jean@entreprise.com" />
+          </div>
+          <div class="form-group">
+            <label for="a-company">Entreprise</label>
+            <input type="text" id="a-company" placeholder="Acme Corp" />
+          </div>
+          <div class="form-group">
+            <label for="a-usecase">Cas d'usage</label>
+            <textarea id="a-usecase" placeholder="Décrivez votre besoin en sécurité applicative…"></textarea>
+          </div>
+          <button class="btn-submit" id="access-submit" onclick="submitAccess()">Envoyer la demande →</button>
+        </div>
+
+        <div class="form-success" id="access-success">
+          <div class="success-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h3>Demande envoyée !</h3>
+          <p>Nous vous contacterons dans les 24h pour finaliser votre accès à PatchMind.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
 <footer>
-  <div class="footer-logo">Patch<span>Mind</span></div>
-  <ul class="footer-links">
-    <li><a href="#how">Comment ça marche</a></li>
-    <li><a href="#features">Fonctionnalités</a></li>
-    <li><a href="/login">Connexion</a></li>
-  </ul>
-  <div class="footer-copy">© 2026 PatchMind · Automated Security Platform</div>
+  <div class="footer-inner">
+    <a href="/" class="nav-logo">
+      <div class="logo-mark" style="width:28px;height:28px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+          <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
+          <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+          <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
+          <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
+        </svg>
+      </div>
+      <span class="logo-wordmark" style="font-size:15px;">PatchMind</span>
+    </a>
+
+    <ul class="footer-links">
+      <li><a href="#how">Comment ça marche</a></li>
+      <li><a href="#features">Fonctionnalités</a></li>
+      <li><a href="#projets">Projets</a></li>
+      <li><a href="#access">Accès</a></li>
+    </ul>
+
+    <span class="footer-copy">&copy; 2026 PatchMind — Tous droits réservés.</span>
+  </div>
 </footer>
 
 <script>
-// ── SCROLL REVEAL ──
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('visible'); }
-  });
-}, { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-// ── FORM ──
-function submitRequest() {
-  const full_name = document.getElementById('full_name').value.trim();
-  const email     = document.getElementById('email').value.trim();
-  const company   = document.getElementById('company').value.trim();
-  const use_case  = document.getElementById('use_case').value.trim();
-  const btn = document.getElementById('submitBtn');
-  const err = document.getElementById('errMsg');
-
-  err.style.display = 'none';
-  if (!full_name || !email || !company || !use_case) {
-    err.textContent = '⚠ Veuillez remplir tous les champs obligatoires (*)';
-    err.style.display = 'block'; return;
-  }
-  if (!email.includes('@')) {
-    err.textContent = '⚠ Email invalide'; err.style.display='block'; return;
+  // ── Scroll reveal ────────────────────────────────────────────────
+  function initReveal() {
+    const els = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => io.observe(el));
   }
 
-  btn.disabled = true; btn.textContent = '⏳ Envoi en cours…';
-
-  fetch('/request-access', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({full_name, email, company, use_case})
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (d.ok) {
-      document.getElementById('formState').style.display   = 'none';
-      document.getElementById('successState').style.display = 'block';
-    } else {
-      err.textContent = '⚠ ' + (d.error || 'Erreur inconnue');
-      err.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Envoyer ma demande →';
+  // ── Access form ───────────────────────────────────────────────────
+  async function submitAccess() {
+    const btn     = document.getElementById('access-submit');
+    const nom     = document.getElementById('a-nom').value.trim();
+    const email   = document.getElementById('a-email').value.trim();
+    const company = document.getElementById('a-company').value.trim();
+    const usecase = document.getElementById('a-usecase').value.trim();
+    if (!nom || !email) { alert('Veuillez renseigner au minimum votre nom et votre email.'); return; }
+    btn.disabled = true; btn.textContent = 'Envoi en cours…';
+    try {
+      await fetch('/request-access', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ full_name: nom, email, company, use_case: usecase })
+      });
+      document.getElementById('access-form-wrap').style.display = 'none';
+      document.getElementById('access-success').style.display   = 'block';
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Envoyer la demande →';
+      alert('Erreur réseau. Veuillez réessayer.');
     }
-  })
-  .catch(() => {
-    err.textContent = '⚠ Erreur serveur'; err.style.display='block';
-    btn.disabled=false; btn.textContent='Envoyer ma demande →';
-  });
-}
+  }
 
-document.addEventListener('keydown', e => {
-  if (e.key==='Enter' && e.target.tagName!=='TEXTAREA') submitRequest();
-});
-
-// ── SMOOTH NAV ──
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const t = document.querySelector(a.getAttribute('href'));
-    if (t) t.scrollIntoView({behavior:'smooth', block:'start'});
-  });
-});
+  // ── Init ─────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => { initReveal(); });
 </script>
 </body>
 </html>

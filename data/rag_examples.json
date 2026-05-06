@@ -1783,6 +1783,13 @@
       "vulnerable": "from lxml import etree\ntree = etree.parse(xml_file)",
       "fixed": "from lxml import etree\nparser = etree.XMLParser(resolve_entities=False, no_network=True)\ntree = etree.parse(xml_file, parser)",
       "cwe": "CWE-611"
+    },
+    {
+      "cwe": "CWE-611",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-24",
+      "vulnerable": "import java.io.*;\nimport java.net.*;\nimport java.sql.*;\nimport java.security.*;\nimport javax.xml.parsers.*;\nimport org.w3c.dom.*;\nimport javax.servlet.http.*;\n\npublic class VulnerableWebApp extends HttpServlet {\n\n    // CWE-798: Hardcoded credentials\n    private static final String DB_URL = \"jdbc:mysql://localhost/db\";\n    private static final String DB_USER = \"root\";\n    private static final String DB_PASS = \"admin123\";  // CWE-798\n    private static final String SECRET = \"jwt-secret-key\";  // ",
+      "fixed": "import java.io.*;\nimport java.net.*;\nimport java.sql.*;\nimport java.security.*;\nimport javax.xml.parsers.*;\nimport org.w3c.dom.*;\nimport javax.servlet.http.*;\n\npublic class VulnerableWebApp extends HttpServlet {\n\n    // CWE-798: Hardcoded credentials\n    private static final String DB_URL = \"jdbc:mysql://localhost/db\";\n    private static final String DB_USER = \"root\";\n    private static final String DB_PASS = \"admin123\";  // CWE-798\n    private static final String SECRET = \"jwt-secret-key\";  // "
     }
   ],
   "CWE-918": [
@@ -2222,6 +2229,13 @@
       "description": "Auto-saved validated fix — 2026-04-14",
       "vulnerable": "\"\"\"Test crypto vulnerabilities - Python\"\"\"\nimport hashlib\nimport random\nimport os\nfrom Crypto.Cipher import DES, ARC4\nfrom Crypto.PublicKey import RSA\n\n# CWE-327: DES encryption (broken)\ndef encrypt_data(data):\n    key = b'12345678'  # CWE-798\n    cipher = DES.new(key, DES.MODE_ECB)  # CWE-327\n    return cipher.encrypt(data)\n\n# CWE-327: RC4 stream cipher (broken)\ndef encrypt_rc4(data):\n    key = b'secretkey'  # CWE-798\n    cipher = ARC4.new(key)  # CWE-327\n    return cipher.encrypt(data)\n\n# CWE-",
       "fixed": "\"\"\"Test crypto vulnerabilities - Python\"\"\"\nimport hashlib\nimport random\nimport os\nfrom Crypto.Cipher import DES, ARC4\nfrom Crypto.PublicKey import RSA\n\n# CWE-327: DES encryption (broken)\ndef encrypt_data(data):\n    key = b'12345678'  # CWE-798\n    cipher = DES.new(key, DES.MODE_ECB)  # CWE-327\n    return cipher.encrypt(data)\n\n# CWE-327: RC4 stream cipher (broken)\ndef encrypt_rc4(data):\n    key = b'secretkey'  # CWE-798\n    cipher = ARC4.new(key)  # CWE-327\n    return cipher.encrypt(data)\n\n# CWE-"
+    },
+    {
+      "cwe": "CWE-326",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-04-24",
+      "vulnerable": "import java.io.*;\nimport java.net.*;\nimport java.sql.*;\nimport java.security.*;\nimport javax.xml.parsers.*;\nimport org.w3c.dom.*;\nimport javax.servlet.http.*;\n\npublic class VulnerableWebApp extends HttpServlet {\n\n    // CWE-798: Hardcoded credentials\n    private static final String DB_URL = \"jdbc:mysql://localhost/db\";\n    private static final String DB_USER = \"root\";\n    private static final String DB_PASS = \"admin123\";  // CWE-798\n    private static final String SECRET = \"jwt-secret-key\";  // ",
+      "fixed": "import java.io.*;\nimport java.net.*;\nimport java.sql.*;\nimport java.security.*;\nimport javax.xml.parsers.*;\nimport org.w3c.dom.*;\nimport javax.servlet.http.*;\n\npublic class VulnerableWebApp extends HttpServlet {\n\n    // CWE-798: Hardcoded credentials\n    private static final String DB_URL = \"jdbc:mysql://localhost/db\";\n    private static final String DB_USER = \"root\";\n    private static final String DB_PASS = \"admin123\";  // CWE-798\n    private static final String SECRET = \"jwt-secret-key\";  // "
     }
   ],
   "CWE-200": [
@@ -2476,7 +2490,8 @@
       "description": "Mongoose search injection vulnerability",
       "vulnerable": "if (Array.isArray(match)) {\n      for (const item of match) {\n        if (item != null && item.$where) {\n          throw new MongooseError('Cannot use $where filter with populate() match');\n        }\n      }\n    } else if (match != null && match.$where != null) {\n      throw new MongooseError('Cannot use $where filter with populate() match');",
       "fixed": "throwOn$where(match);\n    throwOn$where(match);\n\n/**\n * Throw an error if there are any $where keys\n */\n\nfunction throwOn$where(match) {"
-    },
+  ,
+,
     {
       "cwe": "CWE-94",
       "source": "osv+github",
@@ -2603,7 +2618,7 @@
       "cwe": "CWE-915",
       "source": "validated",
       "description": "Auto-saved validated fix — 2026-04-14",
-      "vulnerable": "\"\"\"Test auth vulnerabilities - Python\"\"\"\nimport hashlib\nimport random\nimport sqlite3\nimport os\nimport yaml\nimport requests\nfrom flask import Flask, request, session, redirect\n\napp = Flask(__name__)\napp.secret_key = \"hardcoded_secret_key_123\"  # CWE-798\n\n# CWE-916: Weak password hash (no salt)\ndef store_password(username, password):\n    hashed = hashlib.sha256(password.encode()).hexdigest()\n    db = sqlite3.connect(\"users.db\")\n    db.execute(f\"INSERT INTO users VALUES ('{username}', '{hashed}')\")",
+      "vulnerable"\""\"\"\"Test auth vulnerabilities - Python\"\"\"\nimport hashlib\nimport random\nimport sqlite3\nimport os\nimport yaml\nimport requests\nfrom flask import Flask, request, session, redirect\n\napp = Flask(__name__)\napp.secret_key = \"hardcoded_secret_key_123\"  # CWE-798\n\n# CWE-916: Weak password hash (no salt)\ndef store_password(username, password):\n    hashed = hashlib.sha256(password.encode()).hexdigest()\n    db = sqlite3.connect(\"users.db\")\n    db.execute(f\"INSERT INTO users VALUES ('{username}', '{hashed}')\")",
       "fixed": "\"\"\"Test auth vulnerabilities - Python\"\"\"\nimport hashlib\nimport random\nimport sqlite3\nimport os\nimport yaml\nimport requests\nfrom flask import Flask, request, session, redirect\n\napp = Flask(__name__)\napp.secret_key = \"hardcoded_secret_key_123\"  # CWE-798\n\n# CWE-916: Weak password hash (no salt)\ndef store_password(username, password):\n    hashed = hashlib.sha256(password.encode()).hexdigest()\n    db = sqlite3.connect(\"users.db\")\n    cursor = db.cursor()\n    cursor.execute(\"INSERT INTO users VALUES "
     },
     {
@@ -2647,7 +2662,7 @@
       "cwe": "CWE-704",
       "source": "validated",
       "description": "Auto-saved validated fix — 2026-04-15",
-      "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
+      "vulnerable"\""\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
     }
   ],
@@ -2697,7 +2712,7 @@
       "cwe": "CWE-470",
       "source": "validated",
       "description": "Auto-saved validated fix — 2026-04-15",
-      "vulnerable": "package org.owasp.webgoat.lessons;\n\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.io.OutputStreamWriter;\nimport java.lang.reflect.Method;\nimport java.net.URL;\nimport java.net.URLConnection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport java.util.ArrayList;\nimport java.util.Calendar;\nimport java.util.List;\nimport java.util.StringTokenizer;\nimport org.apache.ecs.Element;\nimport org.apache.ecs.Ele",
+      "vulnerable"pa"package org.owasp.webgoat.lessons;\n\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.io.OutputStreamWriter;\nimport java.lang.reflect.Method;\nimport java.net.URL;\nimport java.net.URLConnection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport java.util.ArrayList;\nimport java.util.Calendar;\nimport java.util.List;\nimport java.util.StringTokenizer;\nimport org.apache.ecs.Element;\nimport org.apache.ecs.Ele",
       "fixed": "package org.owasp.webgoat.lessons;\n\nimport java.io.BufferedReader;\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.io.OutputStreamWriter;\nimport java.io.PrintWriter;\nimport java.lang.reflect.Method;\nimport java.net.URL;\nimport java.net.URLConnection;\nimport java.sql.PreparedStatement;\nimport java.sql.ResultSet;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.List;\nimport java.util.StringTokenizer;\nimport org.apache.ecs.Element;"
     }
   ],

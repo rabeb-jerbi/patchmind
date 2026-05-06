@@ -4,89 +4,211 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PatchMind — Configurer 2FA</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/patchmind.css">
 <style>
-:root{--bg:#060910;--surface:#0c1118;--panel:#111822;--border:#1a2535;--border2:#243040;--accent:#00ff88;--accent2:#00c4ff;--danger:#ff4757;--text:#cdd9e5;--muted:#3a5068;--text-dim:#5c7a96;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,255,136,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
-.wrap{position:relative;z-index:1;width:100%;max-width:520px;animation:fadeUp 0.4s ease both;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.brand{text-align:center;margin-bottom:24px;}
-.brand-name{font-size:26px;font-weight:800;color:#fff;}
-.brand-name span{color:var(--accent);}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px;box-shadow:0 0 40px rgba(0,0,0,0.4);}
-.step{display:none;} .step.active{display:block;}
-.step-header{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
-.step-header::before{content:'';display:inline-block;width:3px;height:14px;background:var(--accent);border-radius:2px;}
-h3{font-size:18px;font-weight:700;margin-bottom:12px;}
-p{font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:16px;}
-.qr-wrap{text-align:center;margin:20px 0;padding:20px;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
-.qr-wrap img{border-radius:8px;max-width:180px;}
-.secret-box{font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--accent);background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:6px;padding:10px 16px;text-align:center;margin-top:12px;word-break:break-all;}
+:root{--bg:#F4F6F9;--surface:#FFFFFF;--surface-2:#F0F2F6;--border:#E2E6ED;--border-2:#C8D0DB;--green:#4F46E5;--green-mid:#4338CA;--green-light:#EEF2FF;--accent:#0EA5E9;--accent-light:#E0F2FE;--danger:#DC2626;--danger-bg:#FEF2F2;--success:#16A34A;--success-bg:#F0FDF4;--text:#0F172A;--text-2:#475569;--text-3:#94A3B8;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.07);--sidebar-w:252px;}
+body.dark{--bg:#0C0F14;--surface:#141920;--surface-2:#1C2330;--border:#252E3D;--border-2:#2E3A4E;--green:#818CF8;--green-mid:#6366F1;--green-light:#1E1B4B;--accent:#38BDF8;--accent-light:#0C2D3F;--danger:#F87171;--danger-bg:#2D1515;--success:#4ADE80;--success-bg:#052E16;--text:#F1F5F9;--text-2:#94A3B8;--text-3:#475569;--shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;transition:background .25s,color .25s;-webkit-font-smoothing:antialiased;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:#111827;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,255,255,.07) 0%,transparent 60%),repeating-linear-gradient(135deg,transparent,transparent 20px,rgba(255,255,255,.015) 20px,rgba(255,255,255,.015) 21px);pointer-events:none;}
+.sidebar-logo{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,.1);position:relative;}
+.logo-lockup{display:flex;align-items:center;gap:10px;}
+.logo-icon-wrap{width:34px;height:34px;background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon-wrap svg{color:#fff;}
+.logo-text-wrap{display:flex;flex-direction:column;}
+.logo-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;}
+.logo-wordmark{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px;line-height:1;}
+.sidebar-user{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,.3);overflow:hidden;}
+.user-info{min-width:0;}
+.user-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;}
+.nav-group-label{padding:16px 20px 6px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px 9px 16px;margin:2px 10px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;border:1px solid transparent;text-decoration:none;position:relative;}
+.nav-item svg{flex-shrink:0;opacity:.8;}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+.nav-item:hover svg{opacity:1;}
+.nav-item.active{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.15);font-weight:600;}
+.nav-item.active svg{opacity:1;}
+.nav-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:#818CF8;border-radius:0 2px 2px 0;}
+.nav-item.nav-danger{color:rgba(255,150,150,.8);}
+.nav-item.nav-danger:hover{background:rgba(220,38,38,.2);color:#fca5a5;}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.sys-status{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 2px rgba(74,222,128,.25);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.theme-btn{width:32px;height:32px;border-radius:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.6);transition:all .15s;}
+.theme-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+/* ══ MAIN ══ */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow);}
+.topbar-breadcrumb{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--text-3);flex:1;}
+.topbar-breadcrumb a{color:var(--green);text-decoration:none;}
+.topbar-breadcrumb a:hover{text-decoration:underline;}
+.content{padding:28px;flex:1;max-width:680px;}
+
+/* ══ PAGE HEADER ══ */
+.page-header{margin-bottom:28px;}
+.page-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.3px;}
+.page-sub{font-family:var(--mono);font-size:12px;color:var(--text-3);margin-top:5px;}
+
+/* ══ STEPPER ══ */
+.stepper{display:flex;align-items:center;gap:0;margin-bottom:32px;}
+.step-item{display:flex;align-items:center;gap:8px;flex:1;}
+.step-item:last-child{flex:none;}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0;transition:all .25s;}
+.step-num.done{background:var(--success);color:#fff;}
+.step-num.active{background:var(--green);color:#fff;box-shadow:0 0 0 3px rgba(79,70,229,.2);}
+.step-num.pending{background:var(--surface-2);color:var(--text-3);border:1px solid var(--border);}
+.step-label{font-family:var(--mono);font-size:10px;letter-spacing:.5px;text-transform:uppercase;}
+.step-label.active{color:var(--green);font-weight:700;}
+.step-label.done{color:var(--success);}
+.step-label.pending{color:var(--text-3);}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 8px;}
+.step-line.done{background:var(--success);}
+
+/* ══ CARD ══ */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px;}
+.card-section-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-section-label::before{content:'';display:inline-block;width:3px;height:14px;background:var(--green);border-radius:2px;}
+
+/* ══ APP TILES ══ */
+.app-tiles{display:flex;gap:10px;margin:16px 0;}
+.app-tile{padding:9px 18px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--mono);font-size:12px;color:var(--text-2);}
+
+/* ══ QR BOX ══ */
+.qr-box{text-align:center;padding:24px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);margin:16px 0;}
+.qr-box img{border-radius:8px;max-width:180px;}
+.secret-display{font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--green);background:rgba(79,70,229,.06);border:1px solid rgba(79,70,229,.2);border-radius:var(--radius-sm);padding:10px 16px;text-align:center;margin-top:12px;word-break:break-all;}
+
+/* ══ CODE INPUTS ══ */
 .code-inputs{display:flex;gap:8px;justify-content:center;margin:20px 0;}
-.code-inputs input{width:44px;height:54px;text-align:center;background:var(--surface);border:2px solid var(--border);border-radius:8px;color:var(--accent);font-family:var(--mono);font-size:20px;font-weight:700;outline:none;transition:border-color 0.2s;}
-.code-inputs input:focus{border-color:var(--accent);}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:8px;font-family:var(--sans);font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all 0.2s;}
-.btn-primary{background:var(--accent);color:#060910;width:100%;}
-.btn-primary:hover{background:#00e077;box-shadow:0 0 16px rgba(0,255,136,0.3);}
-.btn-primary:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;}
-.btn-outline{background:transparent;color:var(--text-dim);border:1px solid var(--border2);margin-top:10px;width:100%;justify-content:center;}
-.btn-outline:hover{border-color:var(--border);color:var(--text);}
-.err{margin-top:12px;padding:10px 14px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--danger);display:none;}
-.ok-msg{margin-top:12px;padding:10px 14px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:6px;font-family:var(--mono);font-size:12px;color:var(--accent);display:none;text-align:center;}
-.steps-nav{display:flex;gap:6px;margin-bottom:24px;justify-content:center;}
-.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background 0.3s;}
-.step-dot.active{background:var(--accent);}
-.app-logos{display:flex;gap:12px;justify-content:center;margin:16px 0;}
-.app-logo{padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-family:var(--mono);font-size:11px;color:var(--text-dim);}
+.code-inputs input{width:46px;height:56px;text-align:center;background:var(--surface-2);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--green);font-family:var(--mono);font-size:22px;font-weight:700;outline:none;transition:border-color .2s;}
+.code-inputs input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+
+/* ══ BUTTONS ══ */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--radius-sm);font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;text-decoration:none;font-family:var(--sans);}
+.btn svg{flex-shrink:0;}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green);width:100%;justify-content:center;margin-top:8px;}
+.btn-primary:hover{background:var(--green-mid);box-shadow:0 4px 12px rgba(79,70,229,.25);}
+.btn-primary:disabled{background:var(--border);color:var(--text-3);cursor:not-allowed;box-shadow:none;}
+.btn-outline{background:transparent;color:var(--text-2);border-color:var(--border-2);width:100%;justify-content:center;margin-top:8px;}
+.btn-outline:hover{border-color:var(--green);color:var(--green);background:var(--green-light);}
+
+/* ══ MESSAGES ══ */
+.msg-err{margin-top:12px;padding:10px 14px;background:var(--danger-bg);border:1px solid rgba(220,38,38,.2);border-radius:var(--radius-sm);font-family:var(--mono);font-size:12px;color:var(--danger);display:none;}
+.msg-ok{margin-top:12px;padding:10px 14px;background:var(--success-bg);border:1px solid rgba(22,163,74,.2);border-radius:var(--radius-sm);font-family:var(--mono);font-size:12px;color:var(--success);display:none;text-align:center;}
+.info-text{font-family:var(--mono);font-size:12px;color:var(--text-3);line-height:1.7;margin-bottom:12px;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="brand">
-    <div class="brand-name">Patch<span>Mind</span></div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="{{ dashboard_url }}" style="text-decoration:none;">
+      <div class="logo-lockup">
+        <div class="logo-icon-wrap">{{ icon('cpu', 18) }}</div>
+        <div class="logo-text-wrap">
+          <div class="logo-eyebrow">v2.0 · SAST</div>
+          <div class="logo-wordmark">PatchMind</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="navAvatar"></div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarUsername">—</div>
+      <div class="user-role" id="sidebarRole">—</div>
+    </div>
+  </div>
+  <div class="nav-group-label">Principal</div>
+  <a href="{{ dashboard_url }}" class="nav-item">{{ icon('home', 15) }} <span>Tableau de bord</span></a>
+  <a href="{{ dashboard_url }}" class="nav-item">{{ icon('zap', 15) }} <span>Analyse</span></a>
+  <div class="nav-group-label">Données</div>
+  <a href="{{ dashboard_url }}" class="nav-item">{{ icon('bar-chart', 15) }} <span>Métriques</span></a>
+  <a href="{{ dashboard_url }}" class="nav-item">{{ icon('history', 15) }} <span>Historique</span></a>
+  <div class="nav-group-label">Compte</div>
+  <a href="/profile" class="nav-item">{{ icon('user', 15) }} <span>Mon profil</span></a>
+  <a href="/setup-2fa" class="nav-item active">{{ icon('lock', 15) }} <span>Configurer 2FA</span></a>
+  <a href="/admin" class="nav-item" id="adminLink" style="display:none;">{{ icon('settings', 15) }} <span>Admin Panel</span></a>
+  <a href="/logout" class="nav-item nav-danger">{{ icon('log-out', 15) }} <span>Déconnexion</span></a>
+  <div class="sidebar-footer">
+    <div class="sys-status"><span class="status-dot"></span> Système actif</div>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeToggleBtn">{{ icon('moon', 14) }}</button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <a href="{{ dashboard_url }}">{{ icon('home', 12) }}</a>
+      <span style="opacity:.5;">›</span>
+      <span style="color:var(--text-2);font-weight:600;">Double authentification</span>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="steps-nav">
-      <div class="step-dot active" id="dot0"></div>
-      <div class="step-dot" id="dot1"></div>
-      <div class="step-dot" id="dot2"></div>
+  <div class="content">
+    <div class="page-header">
+      <div class="page-title">Configurer la double authentification</div>
+      <div class="page-sub">Sécurisez votre compte avec une application d'authentification TOTP</div>
     </div>
 
-    <!-- STEP 1: Intro -->
-    <div class="step active" id="step0">
-      <div class="step-header">Étape 1 / 3</div>
-      <h3>🔐 Activer la double authentification</h3>
-      <p>La 2FA protège votre compte même si votre mot de passe est compromis. Vous aurez besoin d'une application d'authentification :</p>
-      <div class="app-logos">
-        <div class="app-logo">📱 Google Authenticator</div>
-        <div class="app-logo">🔑 Authy</div>
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step-item">
+        <div class="step-num active" id="snum0">1</div>
+        <span class="step-label active" id="slbl0">Installation</span>
       </div>
-      <p>Téléchargez l'une de ces apps sur votre téléphone avant de continuer.</p>
-      <button class="btn btn-primary" onclick="generateQR()">→ Continuer</button>
-      <a href="/" class="btn btn-outline">← Retour au dashboard</a>
+      <div class="step-line" id="sline0"></div>
+      <div class="step-item">
+        <div class="step-num pending" id="snum1">2</div>
+        <span class="step-label pending" id="slbl1">QR Code</span>
+      </div>
+      <div class="step-line" id="sline1"></div>
+      <div class="step-item">
+        <div class="step-num pending" id="snum2">3</div>
+        <span class="step-label pending" id="slbl2">Vérification</span>
+      </div>
     </div>
 
-    <!-- STEP 2: QR Code -->
-    <div class="step" id="step1">
-      <div class="step-header">Étape 2 / 3</div>
-      <h3>📱 Scanner le QR code</h3>
-      <p>Ouvrez votre application d'authentification et scannez ce QR code. Si vous ne pouvez pas scanner, entrez la clé manuellement.</p>
-      <div class="qr-wrap">
-        <div id="qrLoading" style="font-family:var(--mono);font-size:12px;color:var(--muted);padding:20px;">⏳ Génération…</div>
+    <!-- STEP 1 -->
+    <div class="card" id="step0">
+      <div class="card-section-label">Étape 1 / 3 — Application requise</div>
+      <p class="info-text">La 2FA protège votre compte même si votre mot de passe est compromis. Vous aurez besoin d'une application d'authentification :</p>
+      <div class="app-tiles">
+        <div class="app-tile">Google Authenticator</div>
+        <div class="app-tile">Authy</div>
+        <div class="app-tile">Microsoft Authenticator</div>
+      </div>
+      <p class="info-text">Téléchargez l'une de ces apps sur votre téléphone avant de continuer.</p>
+      <button class="btn btn-primary" onclick="generateQR()">{{ icon('arrow-right', 14) }} Continuer</button>
+      <a href="{{ dashboard_url }}" class="btn btn-outline">{{ icon('arrow-left', 14) }} Retour au tableau de bord</a>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="card" id="step1" style="display:none;">
+      <div class="card-section-label">Étape 2 / 3 — Scanner le QR code</div>
+      <p class="info-text">Ouvrez votre application d'authentification et scannez ce QR code. Si vous ne pouvez pas scanner, entrez la clé manuellement.</p>
+      <div class="qr-box">
+        <div id="qrLoading" style="font-family:var(--mono);font-size:12px;color:var(--text-3);padding:20px;">Génération en cours…</div>
         <img id="qrImg" style="display:none;" alt="QR Code 2FA">
-        <div class="secret-box" id="secretBox" style="display:none;"></div>
+        <div class="secret-display" id="secretBox" style="display:none;"></div>
       </div>
-      <button class="btn btn-primary" onclick="goStep(2)">→ J'ai scanné le QR code</button>
+      <button class="btn btn-primary" onclick="goStep(2)">{{ icon('check', 14) }} J'ai scanné le QR code</button>
     </div>
 
-    <!-- STEP 3: Verify -->
-    <div class="step" id="step2">
-      <div class="step-header">Étape 3 / 3</div>
-      <h3>✅ Vérifier le code</h3>
-      <p>Entrez le code à 6 chiffres affiché dans votre application pour confirmer la configuration.</p>
+    <!-- STEP 3 -->
+    <div class="card" id="step2" style="display:none;">
+      <div class="card-section-label">Étape 3 / 3 — Vérifier le code</div>
+      <p class="info-text">Entrez le code à 6 chiffres affiché dans votre application pour confirmer la configuration.</p>
       <div class="code-inputs" id="codeInputs">
         <input type="text" maxlength="1" inputmode="numeric" id="d0">
         <input type="text" maxlength="1" inputmode="numeric" id="d1">
@@ -95,87 +217,108 @@ p{font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.7;m
         <input type="text" maxlength="1" inputmode="numeric" id="d4">
         <input type="text" maxlength="1" inputmode="numeric" id="d5">
       </div>
-      <button class="btn btn-primary" id="enableBtn" onclick="enable2FA()" disabled>🔐 Activer la 2FA</button>
-      <div class="err" id="errMsg"></div>
-      <div class="ok-msg" id="okMsg"></div>
-      <button class="btn btn-outline" onclick="goStep(1)">← Retour</button>
+      <button class="btn btn-primary" id="enableBtn" onclick="enable2FA()" disabled>{{ icon('shield', 14) }} Activer la 2FA</button>
+      <div class="msg-err" id="errMsg"></div>
+      <div class="msg-ok" id="okMsg"></div>
+      <button class="btn btn-outline" onclick="goStep(1)" style="margin-top:6px;">{{ icon('arrow-left', 14) }} Retour</button>
     </div>
   </div>
 </div>
 
 <script>
-let currentStep = 0;
+/* ══ THEME ══ */
+const _SVG_MOON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const _SVG_SUN='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+function _updateThemeIcon(isDark){const b=document.getElementById('themeToggleBtn');if(b){b.innerHTML=isDark?_SVG_SUN:_SVG_MOON;}}
+function toggleTheme(){const dark=document.body.classList.toggle('dark');localStorage.setItem('theme',dark?'dark':'light');_updateThemeIcon(dark);}
+if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark');document.addEventListener('DOMContentLoaded',()=>_updateThemeIcon(true));}
 
-function goStep(n) {
-  document.getElementById('step'+currentStep).classList.remove('active');
-  document.getElementById('dot'+currentStep).classList.remove('active');
-  currentStep = n;
-  document.getElementById('step'+n).classList.add('active');
-  document.getElementById('dot'+n).classList.add('active');
-  if (n === 2) { document.getElementById('d0').focus(); }
+/* ══ USER ══ */
+fetch('/me').then(r=>r.json()).then(d=>{
+  document.getElementById('sidebarUsername').textContent=(d.full_name||d.username).split(' ').slice(0,2).join(' ');
+  document.getElementById('sidebarRole').textContent=d.role||'user';
+  if(d.role==='admin'&&document.getElementById('adminLink'))document.getElementById('adminLink').style.display='flex';
+  const av=document.getElementById('navAvatar');
+  if(d.has_avatar){av.innerHTML=`<img src="/avatar/${d.username}?t=${Date.now()}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;}
+  else{av.textContent=(d.full_name||d.username).split(' ').map(x=>x[0]).join('').toUpperCase().substring(0,2);}
+}).catch(()=>{window.location.href='/login';});
+
+/* ══ STEPPER ══ */
+let currentStep=0;
+
+function goStep(n){
+  document.getElementById('step'+currentStep).style.display='none';
+  // Update old step num
+  document.getElementById('snum'+currentStep).className='step-num done';
+  document.getElementById('slbl'+currentStep).className='step-label done';
+  document.getElementById('snum'+currentStep).innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  if(n>0){document.getElementById('sline'+(n-1)).className='step-line done';}
+  currentStep=n;
+  document.getElementById('step'+n).style.display='';
+  document.getElementById('snum'+n).className='step-num active';
+  document.getElementById('slbl'+n).className='step-label active';
+  if(n===2){document.getElementById('d0').focus();}
 }
 
-function generateQR() {
+function generateQR(){
   goStep(1);
-  fetch('/api/2fa/generate', {method:'POST'})
+  fetch('/api/2fa/generate',{method:'POST'})
     .then(r=>r.json())
-    .then(d => {
-      if (d.error) { alert(d.error); return; }
-      document.getElementById('qrLoading').style.display = 'none';
-      const img = document.getElementById('qrImg');
-      img.src = 'data:image/png;base64,' + d.qr;
-      img.style.display = 'block';
-      document.getElementById('secretBox').textContent = d.secret;
-      document.getElementById('secretBox').style.display = 'block';
+    .then(d=>{
+      if(d.error){alert(d.error);return;}
+      document.getElementById('qrLoading').style.display='none';
+      const img=document.getElementById('qrImg');
+      img.src='data:image/png;base64,'+d.qr;
+      img.style.display='block';
+      document.getElementById('secretBox').textContent=d.secret;
+      document.getElementById('secretBox').style.display='block';
     });
 }
 
-// Code inputs
-const inputs = Array.from(document.querySelectorAll('#codeInputs input'));
-inputs.forEach((inp,i) => {
-  inp.addEventListener('input', e => {
-    const v = e.target.value.replace(/\D/g,'');
-    e.target.value = v;
-    if (v && i<5) inputs[i+1].focus();
-    document.getElementById('enableBtn').disabled = inputs.map(x=>x.value).join('').length !== 6;
+/* ══ CODE INPUTS ══ */
+const inputs=Array.from(document.querySelectorAll('#codeInputs input'));
+inputs.forEach((inp,i)=>{
+  inp.addEventListener('input',e=>{
+    const v=e.target.value.replace(/\D/g,'');
+    e.target.value=v;
+    if(v&&i<5)inputs[i+1].focus();
+    document.getElementById('enableBtn').disabled=inputs.map(x=>x.value).join('').length!==6;
   });
-  inp.addEventListener('keydown', e => {
-    if (e.key==='Backspace' && !inp.value && i>0) inputs[i-1].focus();
-    if (e.key==='Enter') enable2FA();
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Backspace'&&!inp.value&&i>0)inputs[i-1].focus();
+    if(e.key==='Enter')enable2FA();
   });
-  inp.addEventListener('paste', e => {
+  inp.addEventListener('paste',e=>{
     e.preventDefault();
-    const txt = e.clipboardData.getData('text').replace(/\D/g,'').substring(0,6);
-    txt.split('').forEach((c,j)=>{ if(inputs[j]) inputs[j].value=c; });
-    document.getElementById('enableBtn').disabled = txt.length !== 6;
-    checkReady();
+    const txt=e.clipboardData.getData('text').replace(/\D/g,'').substring(0,6);
+    txt.split('').forEach((c,j)=>{if(inputs[j])inputs[j].value=c;});
+    document.getElementById('enableBtn').disabled=txt.length!==6;
   });
 });
 
-function enable2FA() {
-  const code = inputs.map(i=>i.value).join('');
-  const btn = document.getElementById('enableBtn');
-  const err = document.getElementById('errMsg');
-  const ok  = document.getElementById('okMsg');
-  btn.disabled = true; btn.textContent = '⏳ Activation…';
-  err.style.display = 'none'; ok.style.display = 'none';
-
-  fetch('/api/2fa/enable', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({code})
+function enable2FA(){
+  const code=inputs.map(i=>i.value).join('');
+  const btn=document.getElementById('enableBtn');
+  const err=document.getElementById('errMsg');
+  const ok=document.getElementById('okMsg');
+  btn.disabled=true;btn.textContent='Activation…';
+  err.style.display='none';ok.style.display='none';
+  fetch('/api/2fa/enable',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({code})
   }).then(r=>r.json()).then(d=>{
-    if (d.ok) {
-      ok.textContent = '🎉 ' + d.message;
-      ok.style.display = 'block';
-      btn.textContent = '✅ Activé !';
-      setTimeout(()=>{ window.location.href='/'; }, 1500);
-    } else {
-      err.textContent = '⚠ ' + d.error;
-      err.style.display = 'block';
-      inputs.forEach(i=>{ i.value=''; });
+    if(d.ok){
+      ok.textContent='2FA activée avec succès !';
+      ok.style.display='block';
+      btn.textContent='Activé !';
+      setTimeout(()=>{window.location.href='{{ dashboard_url }}';},1500);
+    }else{
+      err.textContent=d.error||'Code incorrect';
+      err.style.display='block';
+      inputs.forEach(i=>{i.value='';});
       inputs[0].focus();
-      btn.disabled = false;
-      btn.textContent = '🔐 Activer la 2FA';
+      btn.disabled=false;
+      btn.textContent='Activer la 2FA';
     }
   });
 }

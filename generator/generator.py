@@ -293,6 +293,88 @@ def generate_patch(vuln, _attempt=0):
     return generate_patch(vuln, _attempt + 1)
 
 
+TEST_FRAMEWORK = {
+    "python":     "pytest",
+    "javascript": "jest",
+    "typescript": "jest",
+    "java":       "junit",
+    "kotlin":     "junit",
+    "php":        "phpunit",
+    "go":         "go test",
+    "ruby":       "rspec",
+    "rust":       "cargo test",
+    "swift":      "xctest",
+    "default":    "pytest",
+}
+
+TOOL_HINTS = {
+    "python":     "bandit, safety, semgrep",
+    "javascript": "eslint-plugin-security, retire.js, npm audit",
+    "java":       "SpotBugs, OWASP Dependency-Check, Checkmarx",
+    "php":        "RIPS, phpstan, psalm",
+    "go":         "gosec, nancy, govulncheck",
+    "ruby":       "brakeman, bundler-audit",
+    "rust":       "cargo-audit, cargo-geiger",
+    "default":    "OWASP ZAP, Snyk, SonarQube",
+}
+
+def generate_suggestions(vuln, fixed_code):
+    """
+    Second LLM call — returns {tools: [...], test_code: str}.
+    Falls back to {} on any error to avoid blocking the pipeline.
+    """
+    lang      = vuln.get("language", "python")
+    cwe       = vuln["cwe"].split(":")[0].strip()
+    framework = TEST_FRAMEWORK.get(lang, TEST_FRAMEWORK["default"])
+    hints     = TOOL_HINTS.get(lang, TOOL_HINTS["default"])
+
+    prompt = f"""You are a security expert. Given this patched vulnerability, return ONLY valid JSON.
+
+Vulnerability: {cwe} in {lang} at line {vuln.get('line',0)}
+Fixed code snippet (first 300 chars): {fixed_code[:300]}
+Already used scanners: Semgrep, GitLeaks, Snyk/OSV
+Known tools for {lang}: {hints}
+Test framework: {framework}
+
+Return ONLY this JSON (no markdown, no explanation):
+{{
+  "tools": [
+    {{"name": "ToolName", "description": "One sentence what it does", "url": "https://...", "install_cmd": "pip install toolname", "run_cmd": "toolname scan ."}}
+  ],
+  "test_code": "// {framework} test that verifies the {cwe} vulnerability is fixed\\n..."
+}}
+
+Rules:
+- Suggest 2-3 tools NOT already listed above that are relevant for {cwe} in {lang}
+- install_cmd: the exact shell command to install the tool (pip install / npm install)
+- run_cmd: a safe read-only scan command (no destructive options)
+- test_code must be a real {framework} unit test for this specific vulnerability
+- Return ONLY JSON, no preamble
+"""
+    for _ in range(len(MODELS)):
+        model = _get_next_model()
+        try:
+            resp = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                max_tokens=800,
+            )
+            raw = resp.choices[0].message.content.strip()
+            raw = re.sub(r"^```[a-zA-Z0-9]*\n?", "", raw)
+            raw = re.sub(r"\n?```$", "", raw).strip()
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        except Exception as e:
+            if "429" in str(e) or "rate_limit" in str(e).lower():
+                _rotate_model()
+                time.sleep(3)
+            else:
+                return {}
+    return {}
+
+
 if __name__ == "__main__":
     print("📊 Stats cache :", get_cache_stats())
     vuln = {

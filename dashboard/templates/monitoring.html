@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/patchmind.css">
+<style>
+:root{--bg:#0C0F14;--surface:#141920;--surface-2:#1C2330;--border:#252E3D;--border-2:#2E3A4E;--green:#818CF8;--text:#F1F5F9;--text-2:#94A3B8;--text-3:#475569;--text-dim:#475569;--muted:#475569;--danger:#F87171;--warn:#FBBF24;--success:#4ADE80;--accent:#38BDF8;--accent2:#38BDF8;--sans:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--radius:10px;--sidebar-w:252px;}
+body.light{--bg:#F4F6F9;--surface:#FFFFFF;--surface-2:#F0F2F6;--border:#E2E6ED;--border-2:#C8D0DB;--green:#4F46E5;--text:#0F172A;--text-2:#475569;--text-3:#94A3B8;--text-dim:#94A3B8;--muted:#94A3B8;--danger:#DC2626;--warn:#D97706;--success:#16A34A;--accent:#0EA5E9;--accent2:#0EA5E9;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;display:flex;transition:background .25s,color .25s;-webkit-font-smoothing:antialiased;}
+.sidebar{width:var(--sidebar-w);min-height:100vh;background:#111827;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden;}
+.sidebar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,255,255,.07) 0%,transparent 60%),repeating-linear-gradient(135deg,transparent,transparent 20px,rgba(255,255,255,.015) 20px,rgba(255,255,255,.015) 21px);pointer-events:none;}
+.sidebar-logo{padding:28px 24px 22px;border-bottom:1px solid rgba(255,255,255,.1);position:relative;}
+.logo-lockup{display:flex;align-items:center;gap:10px;}
+.logo-icon-wrap{width:34px;height:34px;background:linear-gradient(135deg,#6366F1 0%,#4F46E5 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-icon-wrap svg{color:#fff;}
+.logo-text-wrap{display:flex;flex-direction:column;}
+.logo-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:2px;}
+.logo-wordmark{font-family:var(--sans);font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px;line-height:1;}
+.sidebar-user{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,.3);overflow:hidden;}
+.user-info{min-width:0;}
+.user-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px;}
+.nav-group-label{padding:16px 20px 6px;font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px 9px 16px;margin:2px 10px;border-radius:6px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;border:1px solid transparent;text-decoration:none;position:relative;}
+.nav-item svg{flex-shrink:0;opacity:.8;}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.15);font-weight:600;}
+.nav-item.active::before{content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:#818CF8;border-radius:0 2px 2px 0;}
+.nav-item.nav-danger{color:rgba(255,150,150,.8);}
+.nav-item.nav-danger:hover{background:rgba(220,38,38,.2);color:#fca5a5;}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.sys-status{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 2px rgba(74,222,128,.25);animation:sb-pulse 2s infinite;}
+@keyframes sb-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.theme-btn{width:32px;height:32px;border-radius:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.6);transition:all .15s;}
+.theme-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+.main{margin-left:var(--sidebar-w);flex:1;padding:40px;}
+.page-title{font-size:24px;font-weight:800;margin-bottom:4px;}
+.page-sub{font-family:var(--mono);font-size:12px;color:var(--text-dim);margin-bottom:32px;}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:28px;}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.metric-label{font-family:var(--mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.metric-value{font-size:28px;font-weight:800;}
+.metric-sub{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:4px;}
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;}
+.status-ok{background:rgba(0,255,136,0.1);color:var(--accent);border:1px solid rgba(0,255,136,0.25);}
+.status-off{background:rgba(92,122,150,0.15);color:var(--muted);border:1px solid var(--border);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px;}
+.card-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;}
+.kv-row:last-child{border-bottom:none;}
+.kv-key{color:var(--text-dim);}
+.kv-val{color:var(--text);font-weight:600;}
+.refresh-btn{background:transparent;border:1px solid var(--border2);border-radius:5px;padding:6px 14px;font-family:var(--mono);font-size:11px;color:var(--accent2);cursor:pointer;transition:all 0.2s;}
+.refresh-btn:hover{background:rgba(0,196,255,0.08);}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="/admin" style="text-decoration:none;">
+      <div class="logo-lockup">
+        <div class="logo-icon-wrap">{{ icon('cpu', 18) }}</div>
+        <div class="logo-text-wrap">
+          <div class="logo-eyebrow">v2.0 · ADMIN</div>
+          <div class="logo-wordmark">PatchMind</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="navAvatar"></div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarUsername">—</div>
+      <div class="user-role" id="sidebarRole">admin</div>
+    </div>
+  </div>
+  <div class="nav-group-label">Admin</div>
+  <a href="/admin" class="nav-item">{{ icon('settings', 15) }} <span>Tableau de bord</span></a>
+  <a href="/admin/audit" class="nav-item">{{ icon('terminal', 15) }} <span>Audit Log</span></a>
+  <a href="/admin/monitoring" class="nav-item active">{{ icon('bar-chart', 15) }} <span>Monitoring</span></a>
+  <div class="nav-group-label">Navigation</div>
+  <a href="/dashboard" class="nav-item">{{ icon('home', 15) }} <span>Dashboard</span></a>
+  <a href="/logout" class="nav-item nav-danger">{{ icon('log-out', 15) }} <span>Déconnexion</span></a>
+  <div class="sidebar-footer">
+    <div class="sys-status"><span class="status-dot"></span> Système actif</div>
+    <div style="display:flex;gap:6px;align-items:center;">
+      <button class="theme-btn" onclick="toggleTheme()" id="themeToggleBtn">{{ icon('moon', 14) }}</button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <div class="page-title" style="display:flex;align-items:center;gap:10px;">{{ icon('bar-chart-2', 20) }} Monitoring</div>
+  </div>
+  <div class="page-sub">État du système en temps réel · <span id="lastUpdated">—</span> <button class="refresh-btn" onclick="loadMetrics()" style="margin-left:10px;display:inline-flex;align-items:center;gap:5px;">{{ icon('refresh-cw', 11) }} Actualiser</button></div>
+
+  <div class="metrics-grid" id="metricsGrid">
+    <div class="metric-card"><div class="metric-label">Pipelines actifs</div><div class="metric-value" id="m-active" style="color:var(--accent2);">…</div></div>
+    <div class="metric-card"><div class="metric-label">Utilisateurs</div><div class="metric-value" id="m-users" style="color:var(--accent);">…</div></div>
+    <div class="metric-card"><div class="metric-label">Analyses totales</div><div class="metric-value" id="m-analyses" style="color:var(--warn);">…</div></div>
+    <div class="metric-card"><div class="metric-label">Taux de fallback LLM</div><div class="metric-value" id="m-fallback" style="color:var(--danger);">…</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="card">
+      <div class="card-title">{{ icon('zap', 14) }} Cache patches</div>
+      <div id="cacheInfo"><div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">{{ icon('share-2', 14) }} Multi-LLM Consensus</div>
+      <div id="consensusInfo"><div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const _SVG_MOON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const _SVG_SUN='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+function _updateThemeIcon(isLight){const btn=document.getElementById('themeToggleBtn');if(btn){btn.innerHTML=isLight?_SVG_MOON:_SVG_SUN;}}
+function toggleTheme(){const light=document.body.classList.toggle('light');localStorage.setItem('theme',light?'light':'dark');_updateThemeIcon(light);}
+if(localStorage.getItem('theme')==='light'){document.body.classList.add('light');document.addEventListener('DOMContentLoaded',()=>_updateThemeIcon(true));}else{document.addEventListener('DOMContentLoaded',()=>_updateThemeIcon(false));}
+fetch('/me').then(r=>r.json()).then(d=>{
+  document.getElementById('sidebarUsername').textContent=d.full_name||d.username;
+  const av=document.getElementById('navAvatar');
+  if(d.has_avatar){av.innerHTML=`<img src="/avatar/${d.username}?t=${Date.now()}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;}
+  else{const ini=(d.full_name||d.username).split(' ').map(x=>x[0]).join('').toUpperCase().substring(0,2);av.textContent=ini;}
+});
+
+function loadMetrics(){
+  fetch('/admin/monitoring/api').then(r=>r.json()).then(d=>{
+    document.getElementById('m-active').textContent   = d.active_pipelines ?? '0';
+    document.getElementById('m-users').textContent    = d.total_users ?? '0';
+    document.getElementById('m-analyses').textContent = d.total_analyses ?? '0';
+    document.getElementById('m-fallback').textContent = (d.fallback_rate ?? 0) + '%';
+    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('fr-FR');
+
+    // Cache
+    const c = d.cache || {};
+    document.getElementById('cacheInfo').innerHTML = `
+      <div class="kv-row"><span class="kv-key">Entrées</span><span class="kv-val">${c.total_entries??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Appels LLM économisés</span><span class="kv-val">${c.llm_calls_saved??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Temps économisé</span><span class="kv-val">${c.time_saved_sec??0}s</span></div>
+      <div class="kv-row"><span class="kv-key">Total hits</span><span class="kv-val">${c.total_hits??0}</span></div>
+    `;
+
+    // Consensus
+    document.getElementById('consensusInfo').innerHTML = `
+      <div class="kv-row"><span class="kv-key">Module actif</span><span class="kv-val"><span class="status-badge ${d.consensus_ok?'status-ok':'status-off'}">${d.consensus_ok?'✓ Actif':'✗ Inactif'}</span></span></div>
+      <div class="kv-row"><span class="kv-key">RBAC actif</span><span class="kv-val"><span class="status-badge ${d.rbac_ok?'status-ok':'status-off'}">${d.rbac_ok?'✓ Actif':'✗ Inactif'}</span></span></div>
+      <div class="kv-row"><span class="kv-key">Consensus analysés</span><span class="kv-val">${d.consensus_entries??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Taux de fallback</span><span class="kv-val" style="color:${(d.fallback_rate??0)>30?'var(--danger)':'var(--accent)'};">${d.fallback_rate??0}%</span></div>
+    `;
+  });
+}
+
+loadMetrics();
+setInterval(loadMetrics, 30000);
+</script>
+</body>
+</html>

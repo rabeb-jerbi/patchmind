@@ -1,10 +1,91 @@
-﻿venv/
-__pycache__/
+﻿# ─────────────────────────────────────────
+
+# Python
+
+# ─────────────────────────────────────────
+
+venv/
+**pycache**/
 *.pyc
+*.pyo
+*.pyd
+
+# ─────────────────────────────────────────
+
+# Environment variables / secrets
+
+# ─────────────────────────────────────────
+
 .env
-data/users/
-data/patch_cache.json
+
+# ─────────────────────────────────────────
+
+# Generated data / runtime files
+
+# ─────────────────────────────────────────
+
+data/users.json
+data/requests.json
+data/projects.json
 data/metrics.json
+data/audit_log.json
+data/consensus_log.json
+data/patch_cache.json
+
+# Analysis outputs
+
+data/analyses/
+
+# ─────────────────────────────────────────
+
+# Uploads / extracted archives
+
+# ─────────────────────────────────────────
+
+uploads/
+outputs/
+
+# User-generated files
+
+dashboard/static/avatars/
+
+# ─────────────────────────────────────────
+
+# Archives / temporary files
+
+# ─────────────────────────────────────────
+
 *.zip
 *.rar
-uploads/
+*.7z
+*.tar
+*.gz
+
+# ─────────────────────────────────────────
+
+# Logs
+
+# ─────────────────────────────────────────
+
+*.log
+
+# ─────────────────────────────────────────
+
+# IDE / OS
+
+# ─────────────────────────────────────────
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ─────────────────────────────────────────
+
+# Testing / temp
+
+# ─────────────────────────────────────────
+
+tmp/
+temp/
+.cache/

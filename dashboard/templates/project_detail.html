@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Projet</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/patchmind.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════════
+   PATCHMIND — Project Detail
+   Aligned with dashboard design language
+   ══════════════════════════════════════════ */
+
+:root {
+  --bg:          #F4F6F9;
+  --surface:     #FFFFFF;
+  --surface-2:   #F0F2F6;
+  --border:      #E2E6ED;
+  --border-2:    #C8D0DB;
+  --green:       #4F46E5;
+  --green-mid:   #4338CA;
+  --green-light: #EEF2FF;
+  --green-xlight:#F5F3FF;
+  --accent:      #0EA5E9;
+  --accent-light:#E0F2FE;
+  --danger:      #DC2626;
+  --danger-bg:   #FEF2F2;
+  --warn:        #D97706;
+  --warn-bg:     #FFFBEB;
+  --success:     #16A34A;
+  --success-bg:  #F0FDF4;
+  --purple:      #7C3AED;
+  --purple-bg:   #F5F3FF;
+  --text:        #0F172A;
+  --text-2:      #475569;
+  --text-3:      #94A3B8;
+  --text-4:      #CBD5E1;
+  --sans:        'Inter', sans-serif;
+  --mono:        'JetBrains Mono', monospace;
+  --radius:      10px;
+  --radius-sm:   6px;
+  --shadow:      0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:   0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+  --shadow-lg:   0 12px 32px rgba(0,0,0,.1), 0 4px 8px rgba(0,0,0,.06);
+  --sidebar-w:   252px;
+}
+
+body.dark {
+  --bg:          #0C0F14;
+  --surface:     #141920;
+  --surface-2:   #1C2330;
+  --border:      #252E3D;
+  --border-2:    #2E3A4E;
+  --green:       #818CF8;
+  --green-mid:   #6366F1;
+  --green-light: #1E1B4B;
+  --green-xlight:#1A1525;
+  --accent:      #38BDF8;
+  --accent-light:#0C2D3F;
+  --danger:      #F87171;
+  --danger-bg:   #2D1515;
+  --warn:        #FBBF24;
+  --warn-bg:     #2D1F08;
+  --success:     #4ADE80;
+  --success-bg:  #052E16;
+  --purple:      #A78BFA;
+  --purple-bg:   #1E1030;
+  --text:        #F1F5F9;
+  --text-2:      #94A3B8;
+  --text-3:      #475569;
+  --text-4:      #2E3A4E;
+  --shadow:      0 1px 3px rgba(0,0,0,.3);
+  --shadow-md:   0 4px 12px rgba(0,0,0,.4);
+  --shadow-lg:   0 12px 32px rgba(0,0,0,.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+  transition: background .25s, color .25s;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  background: #111827;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+.sidebar::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(255,255,255,.07) 0%, transparent 60%),
+    repeating-linear-gradient(135deg, transparent, transparent 20px, rgba(255,255,255,.015) 20px, rgba(255,255,255,.015) 21px);
+  pointer-events: none;
+}
+.sidebar-logo { padding: 28px 24px 22px; border-bottom: 1px solid rgba(255,255,255,.1); position: relative; }
+.logo-lockup { display: flex; align-items: center; gap: 10px; }
+.logo-icon-wrap {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-icon-wrap svg { color: #fff; }
+.logo-text-wrap { display: flex; flex-direction: column; }
+.logo-eyebrow { font-family: var(--mono); font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 2px; }
+.logo-wordmark { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.3px; line-height: 1; }
+.sidebar-user { padding: 16px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 700; color: #fff;
+  flex-shrink: 0; border: 1.5px solid rgba(255,255,255,.3); overflow: hidden;
+}
+.user-info { min-width: 0; }
+.user-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: 1px; }
+.nav-group-label { padding: 16px 20px 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.35); }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 12px 9px 16px; margin: 2px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px; font-weight: 500;
+  color: rgba(255,255,255,.7);
+  cursor: pointer; transition: all .15s;
+  border: 1px solid transparent; text-decoration: none; position: relative;
+}
+.nav-item svg { flex-shrink: 0; opacity: .8; }
+.nav-item:hover { background: rgba(255,255,255,.1); color: #fff; }
+.nav-item:hover svg { opacity: 1; }
+.nav-item.active { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.15); font-weight: 600; }
+.nav-item.active svg { opacity: 1; }
+.nav-item.active::before {
+  content: ''; position: absolute;
+  left: -10px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: #818CF8; border-radius: 0 2px 2px 0;
+}
+.nav-badge { margin-left: auto; font-family: var(--mono); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: rgba(255,255,255,.15); color: #fff; }
+.nav-item.nav-danger { color: rgba(255,150,150,.8); }
+.nav-item.nav-danger:hover { background: rgba(220,38,38,.2); color: #fca5a5; }
+.sidebar-footer {
+  margin-top: auto; padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sys-status { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.5); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 0 2px rgba(74,222,128,.25); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.theme-btn { width: 32px; height: 32px; border-radius: 6px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,.6); transition: all .15s; }
+.theme-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ══ TOPBAR ══ */
+.topbar {
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 12px;
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow);
+}
+.topbar-breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 12px; color: var(--text-3);
+  flex: 1;
+}
+.topbar-breadcrumb a { color: var(--green); text-decoration: none; }
+.topbar-breadcrumb a:hover { text-decoration: underline; }
+.topbar-breadcrumb .sep { opacity: .5; }
+.topbar-breadcrumb .current { color: var(--text-2); font-weight: 600; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+/* ══ CONTENT ══ */
+.content { padding: 28px; flex: 1; }
+
+/* ══ PAGE HEADER ══ */
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+.page-header-left {}
+.page-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; line-height: 1.2; }
+.page-sub { font-family: var(--mono); font-size: 12px; color: var(--text-3); margin-top: 5px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.tag {
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px;
+  border-radius: 4px; background: var(--surface-2);
+  border: 1px solid var(--border); color: var(--text-3);
+}
+.page-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+/* ══ KPI ROW ══ */
+.kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  position: relative; overflow: hidden;
+  transition: box-shadow .15s, transform .15s;
+}
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kpi-card::after {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+}
+.kpi-card.k-indigo::after  { background: linear-gradient(90deg, var(--green), var(--green-mid)); }
+.kpi-card.k-blue::after    { background: linear-gradient(90deg, var(--accent), #60a5fa); }
+.kpi-card.k-danger::after  { background: linear-gradient(90deg, var(--danger), #f87171); }
+.kpi-card.k-success::after { background: linear-gradient(90deg, var(--success), #34d399); }
+.kpi-label { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.kpi-val { font-size: 30px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 6px; font-family: var(--mono); }
+.kpi-val.c-indigo  { color: var(--green); }
+.kpi-val.c-blue    { color: var(--accent); }
+.kpi-val.c-danger  { color: var(--danger); }
+.kpi-val.c-success { color: var(--success); }
+.kpi-sub { font-size: 11.5px; color: var(--text-3); }
+
+/* ══ CARDS ══ */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.card-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+.card-title-accent { width: 4px; height: 16px; background: var(--green); border-radius: 2px; flex-shrink: 0; }
+.card-body { padding: 20px; }
+
+/* ══ SECTION LABEL ══ */
+.section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; }
+
+/* ══ CHART ══ */
+.chart-wrap { position: relative; height: 240px; }
+
+/* ══ ANALYSES TABLE ══ */
+.analyses-table { width: 100%; border-collapse: collapse; }
+.analyses-table th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text-3); padding: 10px 16px; text-align: left;
+  border-bottom: 1px solid var(--border); background: var(--surface-2); font-weight: 600;
+}
+.analyses-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.analyses-table tr:last-child td { border-bottom: none; }
+.analyses-table tbody tr { transition: background .12s; }
+.analyses-table tbody tr:hover td { background: var(--surface-2); }
+
+/* ══ BADGES & PILLS ══ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .3px; white-space: nowrap;
+}
+.badge-ok     { background: var(--success-bg); color: var(--success); }
+.badge-bad    { background: var(--danger-bg);  color: var(--danger);  }
+.badge-warn   { background: var(--warn-bg);    color: var(--warn);    }
+.badge-info   { background: var(--accent-light); color: var(--accent); }
+.badge-purple { background: var(--purple-bg);  color: var(--purple);  }
+.badge-indigo { background: var(--green-light); color: var(--green);  }
+
+.rate-pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-family: var(--mono); font-size: 11px; font-weight: 700; }
+.rate-good { background: var(--success-bg); color: var(--success); }
+.rate-bad  { background: var(--danger-bg);  color: var(--danger);  }
+
+/* ══ MEMBER CHIPS ══ */
+.member-chip {
+  font-family: var(--mono); font-size: 11px;
+  padding: 4px 13px; border-radius: 20px;
+  background: var(--green-light); border: 1px solid rgba(99,102,241,.2);
+  color: var(--green); display: inline-block; margin: 3px;
+}
+
+/* ══ KV ROWS ══ */
+.kv-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.kv-row:last-child { border-bottom: none; }
+.kv-key { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.kv-val { font-size: 13px; font-weight: 600; color: var(--text); }
+
+/* ══ TWO-COL GRID ══ */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* ══ EMPTY STATE ══ */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-icon { width: 52px; height: 52px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; color: var(--text-3); }
+.empty-title { font-size: 14px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+.empty-sub { font-family: var(--mono); font-size: 12px; color: var(--text-3); line-height: 1.6; }
+
+/* ══ FILES TABLE ══ */
+.files-table { width: 100%; border-collapse: collapse; }
+.files-table th { font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface-2); font-weight: 600; }
+.files-table td { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.files-table tr:last-child td { border-bottom: none; }
+.files-table tbody tr:hover td { background: var(--surface-2); }
+
+/* ══ PAGER ══ */
+.pager { display: flex; gap: 6px; justify-content: center; padding: 16px 20px; border-top: 1px solid var(--border); }
+.pager-btn {
+  padding: 5px 13px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-3); font-family: var(--mono); font-size: 11px;
+  cursor: pointer; transition: all .15s;
+}
+.pager-btn:hover { border-color: var(--green); color: var(--green); }
+.pager-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* ══ BUTTONS ══ */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius-sm);
+  font-size: 13.5px; font-weight: 600;
+  cursor: pointer; border: 1px solid transparent;
+  transition: all .15s; text-decoration: none;
+  font-family: var(--sans); white-space: nowrap;
+}
+.btn svg { flex-shrink: 0; }
+.btn-primary { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-primary:hover { background: var(--green-mid); box-shadow: 0 4px 12px rgba(79,70,229,.25); transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--text-2); border-color: var(--border-2); }
+.btn-outline:hover { border-color: var(--green); color: var(--green); background: var(--green-xlight); }
+.btn-ghost { background: transparent; color: var(--text-3); border-color: transparent; }
+.btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn-danger-soft { background: var(--danger-bg); color: var(--danger); border-color: rgba(220,38,38,.2); }
+.btn-danger-soft:hover { background: rgba(220,38,38,.12); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ══ MODAL ══ */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--surface); border: 1px solid var(--border-2); border-radius: 14px; width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); padding: 28px 32px; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 9px; }
+.modal-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-3); transition: all .15s; }
+.modal-close:hover { color: var(--danger); border-color: var(--danger); }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); margin-bottom: 7px; font-weight: 600; }
+.field input { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 13px; color: var(--text); font-family: var(--mono); font-size: 13px; outline: none; transition: border-color .15s; }
+.field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+.modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a href="/dashboard" style="text-decoration:none;">
+      <div class="logo-lockup">
+        <div class="logo-icon-wrap">{{ icon('cpu', 18) }}</div>
+        <div class="logo-text-wrap">
+          <div class="logo-eyebrow">v2.0 · SAST</div>
+          <div class="logo-wordmark">PatchMind</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="navAvatar"></div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarUsername">—</div>
+      <div class="user-role" id="sidebarRole">—</div>
+    </div>
+  </div>
+  <div class="nav-group-label">Projets</div>
+  <a href="/projects" class="nav-item active">{{ icon('folder', 15) }} <span>Mes projets</span></a>
+  <div class="nav-group-label">Principal</div>
+  <a href="/dashboard" class="nav-item">{{ icon('home', 15) }} <span>Tableau de bord</span></a>
+  <a href="/dashboard" class="nav-item">{{ icon('zap', 15) }} <span>Analyse</span></a>
+  <div class="nav-group-label">Données</div>
+  <a href="/dashboard" class="nav-item">{{ icon('bar-chart', 15) }} <span>Métriques</span></a>
+  <a href="/dashboard" class="nav-item">{{ icon('history', 15) }} <span>Historique</span></a>
+  <div class="nav-group-label">Compte</div>
+  <a href="/profile" class="nav-item">{{ icon('user', 15) }} <span>Mon profil</span></a>
+  <a href="/setup-2fa" class="nav-item">{{ icon('lock', 15) }} <span>Configurer 2FA</span></a>
+  <a href="/admin" class="nav-item" id="adminLink" style="display:none;">{{ icon('settings', 15) }} <span>Admin Panel</span> <span class="nav-badge" style="font-size:9px;">ADMIN</span></a>
+  <a href="/logout" class="nav-item nav-danger">{{ icon('log-out', 15) }} <span>Déconnexion</span></a>
+  <div class="sidebar-footer">
+    <div class="sys-status"><span class="status-dot"></span> Système actif</div>
+    <button class="theme-btn" onclick="toggleTheme()" id="themeToggleBtn">{{ icon('moon', 14) }}</button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <a href="/projects">{{ icon('folder', 12) }}</a>
+      <a href="/projects">Projets</a>
+      <span class="sep">›</span>
+      <span class="current" id="breadcrumbName">…</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="/dashboard" class="btn btn-primary btn-sm" id="newAnalysisBtn">
+        {{ icon('zap', 13) }} Nouvelle analyse
+      </a>
+      <button class="btn btn-danger-soft btn-sm" onclick="deleteProject()">
+        {{ icon('trash-2', 13) }} Supprimer
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title" id="projTitle">…</div>
+        <div class="page-sub" id="projDesc">…</div>
+        <div class="tag-list" id="projTags"></div>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card k-indigo">
+        <div class="kpi-label">{{ icon('activity', 11) }} Analyses</div>
+        <div class="kpi-val c-indigo" id="s-analyses">—</div>
+        <div class="kpi-sub">sessions enregistrées</div>
+      </div>
+      <div class="kpi-card k-danger">
+        <div class="kpi-label">{{ icon('alert-triangle', 11) }} Vulnérabilités</div>
+        <div class="kpi-val c-danger" id="s-vulns">—</div>
+        <div class="kpi-sub">détectées au total</div>
+      </div>
+      <div class="kpi-card k-success">
+        <div class="kpi-label">{{ icon('shield', 11) }} Patches validés</div>
+        <div class="kpi-val c-success" id="s-patches">—</div>
+        <div class="kpi-sub">correctifs générés</div>
+      </div>
+      <div class="kpi-card k-blue">
+        <div class="kpi-label">{{ icon('percent', 11) }} Taux de succès</div>
+        <div class="kpi-val c-blue" id="s-rate">—</div>
+        <div class="kpi-sub">moyenne des analyses</div>
+      </div>
+    </div>
+
+    <!-- Trend chart -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="card-title-accent"></span>
+          Évolution des vulnérabilités
+        </div>
+        <span id="chartSubtitle" style="font-family:var(--mono);font-size:11px;color:var(--text-3);"></span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Analyses history -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="card-title-accent"></span>
+          Historique des analyses
+        </div>
+        <span id="analysisPager" style="font-family:var(--mono);font-size:11px;color:var(--text-3);"></span>
+      </div>
+      <div id="analysesTable"></div>
+      <div id="pagerBtns"></div>
+    </div>
+
+    <!-- Files listing -->
+    <div class="card" id="filesCard" style="display:none;">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="card-title-accent" style="background:var(--accent);"></span>
+          Fichiers analysés
+        </div>
+        <span id="filesSubtitle" style="font-family:var(--mono);font-size:11px;color:var(--text-3);"></span>
+      </div>
+      <div id="filesList"></div>
+    </div>
+
+    <!-- Members + Project info -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-title-accent"></span>
+            Membres
+          </div>
+        </div>
+        <div class="card-body" id="membersSection"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-title-accent" style="background:var(--accent);"></span>
+            Informations du projet
+          </div>
+        </div>
+        <div class="card-body" id="projInfo"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Modal: link analysis -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">{{ icon('link', 15) }} Associer une analyse</div>
+      <button class="modal-close" onclick="closeLinkModal()">{{ icon('x', 14) }}</button>
+    </div>
+    <p style="font-family:var(--mono);font-size:12px;color:var(--text-3);margin-bottom:16px;">
+      Entrez l'identifiant d'une analyse existante à associer à ce projet.
+    </p>
+    <div class="field">
+      <label>ID de l'analyse</label>
+      <input type="text" id="linkAnalysisId" placeholder="analysis_20250115_143022">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeLinkModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="linkAnalysis()">{{ icon('check', 14) }} Associer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PROJECT_ID = location.pathname.split('/').pop();
+let _project  = {};
+let _analyses = [];
+let _page     = 0;
+const PAGE_SIZE = 10;
+let _trendChart = null;
+
+/* ══ THEME ══ */
+const _SVG_MOON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const _SVG_SUN  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+function _updateThemeIcon(isDark) {
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) { btn.innerHTML = isDark ? _SVG_SUN : _SVG_MOON; btn.title = isDark ? 'Mode clair' : 'Mode sombre'; }
+}
+function toggleTheme() {
+  const dark = document.body.classList.toggle('dark');
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+  _updateThemeIcon(dark);
+  rebuildTrend();
+}
+if (localStorage.getItem('theme') === 'dark') {
+  document.body.classList.add('dark');
+  document.addEventListener('DOMContentLoaded', () => _updateThemeIcon(true));
+}
+
+/* ══ USER ══ */
+fetch('/me').then(r => r.json()).then(d => {
+  const first = (d.full_name || d.username).split(' ').slice(0, 2).join(' ');
+  document.getElementById('sidebarUsername').textContent = first;
+  document.getElementById('sidebarRole').textContent     = d.role;
+  if (d.role === 'admin' && document.getElementById('adminLink'))
+    document.getElementById('adminLink').style.display = 'flex';
+  const av = document.getElementById('navAvatar');
+  if (d.has_avatar) {
+    av.innerHTML = `<img src="/avatar/${d.username}?t=${Date.now()}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+  } else {
+    const ini = (d.full_name || d.username).split(' ').map(x => x[0]).join('').toUpperCase().substring(0, 2);
+    av.textContent = ini;
+  }
+}).catch(() => { window.location.href = '/login'; });
+
+/* ══ LOAD PROJECT ══ */
+function loadProject() {
+  fetch(`/projects/api/${PROJECT_ID}`).then(r => r.json()).then(data => {
+    if (data.error) { alert(data.error); window.location = '/projects'; return; }
+    _project  = data.project;
+    _analyses = data.analyses || [];
+
+    document.getElementById('breadcrumbName').textContent     = _project.name;
+    document.getElementById('projTitle').textContent          = _project.name;
+    document.getElementById('projDesc').textContent           = _project.description || 'Aucune description';
+    document.getElementById('projTags').innerHTML             = (_project.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+    document.getElementById('newAnalysisBtn').href            = `/dashboard?project=${PROJECT_ID}`;
+    document.title = `PatchMind — ${_project.name}`;
+
+    const totalVulns   = _analyses.reduce((s, a) => s + (a.total_vulns || 0), 0);
+    const totalPatches = _analyses.reduce((s, a) => s + (a.patches_validated || 0), 0);
+    const avgRate      = _analyses.length
+      ? (_analyses.reduce((s, a) => s + (a.success_rate || 0), 0) / _analyses.length).toFixed(1)
+      : 0;
+
+    document.getElementById('s-analyses').textContent = _analyses.length || '0';
+    document.getElementById('s-vulns').textContent    = totalVulns || '0';
+    document.getElementById('s-patches').textContent  = totalPatches || '0';
+    document.getElementById('s-rate').textContent     = avgRate + '%';
+
+    const members = _project.members || [];
+    document.getElementById('membersSection').innerHTML = members.length
+      ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${members.map(m => `<span class="member-chip">@${esc(m)}</span>`).join('')}</div>`
+      : '<div class="empty-state" style="padding:24px 0;"><div class="empty-sub">Aucun membre ajouté à ce projet.</div></div>';
+
+    document.getElementById('projInfo').innerHTML = `
+      <div class="kv-row"><span class="kv-key">Département</span><span class="kv-val">${esc(_project.department || '—')}</span></div>
+      <div class="kv-row"><span class="kv-key">Propriétaire</span><span class="kv-val">@${esc(_project.owner || '—')}</span></div>
+      <div class="kv-row"><span class="kv-key">Créé le</span><span class="kv-val">${(_project.created_at || '').substring(0, 10) || '—'}</span></div>
+      <div class="kv-row"><span class="kv-key">Analyses</span><span class="kv-val">${_analyses.length}</span></div>
+      <div class="kv-row"><span class="kv-key">Statut</span><span class="kv-val" style="color:var(--success);">● Actif</span></div>
+    `;
+
+    renderAnalyses();
+    renderFiles();
+    buildTrendChart();
+  });
+}
+
+/* ══ ANALYSES TABLE ══ */
+function renderAnalyses() {
+  const start = _page * PAGE_SIZE;
+  const slice = _analyses.slice(start, start + PAGE_SIZE);
+  document.getElementById('analysisPager').textContent = `${_analyses.length} analyse(s)`;
+
+  if (!_analyses.length) {
+    document.getElementById('analysesTable').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+        </div>
+        <div class="empty-title">Aucune analyse associée</div>
+        <div class="empty-sub">Lancez une analyse depuis le dashboard<br>et associez-la à ce projet.</div>
+      </div>`;
+    document.getElementById('pagerBtns').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('analysesTable').innerHTML = `
+    <table class="analyses-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Vulnérabilités</th>
+          <th>Patches</th>
+          <th>Taux succès</th>
+          <th>MTTR</th>
+          <th>Durée</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${slice.map(a => {
+          const rate    = a.success_rate ?? null;
+          const rateOk  = rate !== null && rate >= 80;
+          return `
+          <tr>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${(a.timestamp || '').substring(0, 16)}</td>
+            <td>
+              <span style="font-family:var(--mono);font-weight:700;color:var(--danger);">${a.total_vulns ?? '—'}</span>
+            </td>
+            <td>
+              <span style="font-family:var(--mono);font-weight:700;color:var(--success);">${a.patches_validated ?? '—'}</span>
+            </td>
+            <td>
+              <span class="rate-pill ${rate === null ? '' : rateOk ? 'rate-good' : 'rate-bad'}">${rate !== null ? rate + '%' : '—'}</span>
+            </td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${a.mttr_seconds != null ? a.mttr_seconds + 's' : '—'}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${a.total_duration != null ? a.total_duration + 's' : '—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  const pages = Math.ceil(_analyses.length / PAGE_SIZE);
+  if (pages > 1) {
+    document.getElementById('pagerBtns').innerHTML =
+      `<div class="pager">${Array.from({length: pages}, (_, i) =>
+        `<button onclick="_page=${i};renderAnalyses();" class="pager-btn${i === _page ? ' active' : ''}">${i + 1}</button>`
+      ).join('')}</div>`;
+  } else {
+    document.getElementById('pagerBtns').innerHTML = '';
+  }
+}
+
+/* ══ FILES LISTING ══ */
+function renderFiles() {
+  // Aggregate unique files across all analyses
+  const fileMap = {};
+  _analyses.forEach(a => {
+    const ts = (a.timestamp || '').substring(0, 16);
+    (a.files_analyzed || []).forEach(f => {
+      if (!fileMap[f.name]) fileMap[f.name] = { name: f.name, totalVulns: 0, sessions: 0, lastSeen: '' };
+      fileMap[f.name].totalVulns += f.vulns || 0;
+      fileMap[f.name].sessions   += 1;
+      if (ts > fileMap[f.name].lastSeen) fileMap[f.name].lastSeen = ts;
+    });
+  });
+
+  const files = Object.values(fileMap);
+  const card  = document.getElementById('filesCard');
+  const list  = document.getElementById('filesList');
+  const sub   = document.getElementById('filesSubtitle');
+
+  if (!files.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  sub.textContent = `${files.length} fichier(s)`;
+
+  list.innerHTML = `
+    <table class="files-table">
+      <thead>
+        <tr>
+          <th>Fichier</th>
+          <th>Vulnérabilités</th>
+          <th>Analyses</th>
+          <th>Dernière analyse</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${files.sort((a, b) => b.totalVulns - a.totalVulns).map(f => `
+          <tr>
+            <td style="font-family:var(--mono);font-size:12px;">${esc(f.name)}</td>
+            <td><span style="font-family:var(--mono);font-weight:700;color:${f.totalVulns > 0 ? 'var(--danger)' : 'var(--success)'};">${f.totalVulns}</span></td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${f.sessions}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${f.lastSeen || '—'}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+/* ══ TREND CHART ══ */
+function buildTrendChart() {
+  const ctx    = document.getElementById('trendChart').getContext('2d');
+  const sorted = [..._analyses].sort((a, b) => (a.timestamp || '').localeCompare(b.timestamp || ''));
+  const labels  = sorted.map(a => (a.timestamp || '').substring(0, 10));
+  const vulns   = sorted.map(a => a.total_vulns || 0);
+  const patches = sorted.map(a => a.patches_validated || 0);
+
+  const isDark    = document.body.classList.contains('dark');
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const tickColor = isDark ? '#475569' : '#94A3B8';
+
+  function _countSev(a, sev) {
+    return (a.results || []).filter(r => (r.severity || '').toUpperCase().includes(sev)).length;
+  }
+  const criticals = sorted.map(a => _countSev(a, 'CRITICAL'));
+  const highs     = sorted.map(a => _countSev(a, 'HIGH'));
+  const mediums   = sorted.map(a => _countSev(a, 'MEDIUM'));
+
+  document.getElementById('chartSubtitle').textContent = sorted.length
+    ? `${sorted.length} analyse(s) · ${labels[0]} → ${labels[labels.length - 1]}`
+    : '';
+
+  if (_trendChart) _trendChart.destroy();
+  _trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Vulnérabilités totales', data: vulns,    borderColor: '#F87171', backgroundColor: 'rgba(248,113,113,0.07)', tension: 0.35, fill: true, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2 },
+        { label: 'Patches validés',        data: patches,  borderColor: '#4ADE80', backgroundColor: 'rgba(74,222,128,0.07)',  tension: 0.35, fill: true, pointRadius: 4, pointHoverRadius: 6, borderWidth: 2 },
+        { label: 'CRITICAL',  data: criticals, borderColor: '#A78BFA', backgroundColor: 'transparent', tension: 0.3, fill: false, pointRadius: 3, borderWidth: 1.5, borderDash: [5, 3] },
+        { label: 'HIGH',      data: highs,     borderColor: '#F87171', backgroundColor: 'transparent', tension: 0.3, fill: false, pointRadius: 3, borderWidth: 1.5, borderDash: [5, 3] },
+        { label: 'MEDIUM',    data: mediums,   borderColor: '#FBBF24', backgroundColor: 'transparent', tension: 0.3, fill: false, pointRadius: 3, borderWidth: 1.5, borderDash: [5, 3] },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: tickColor,
+            font: { family: 'JetBrains Mono', size: 11 },
+            boxWidth: 12, boxHeight: 2, padding: 16,
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1C2330' : '#fff',
+          borderColor: isDark ? '#252E3D' : '#E2E6ED',
+          borderWidth: 1,
+          titleColor: isDark ? '#F1F5F9' : '#0F172A',
+          bodyColor: isDark ? '#94A3B8' : '#475569',
+          titleFont: { family: 'JetBrains Mono', size: 11 },
+          bodyFont:  { family: 'JetBrains Mono', size: 11 },
+          padding: 12, cornerRadius: 8,
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 } },
+          grid:  { color: gridColor },
+        },
+        y: {
+          ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 } },
+          grid:  { color: gridColor },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+}
+
+function rebuildTrend() { if (_analyses.length) buildTrendChart(); }
+
+/* ══ DELETE PROJECT ══ */
+function deleteProject() {
+  if (!confirm(`Supprimer le projet "${_project.name}" ?\nCette action est irréversible.`)) return;
+  fetch(`/projects/api/${PROJECT_ID}`, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok) window.location = '/projects';
+      else alert(d.error || 'Erreur');
+    });
+}
+
+/* ══ LINK MODAL ══ */
+function closeLinkModal() { document.getElementById('linkModal').classList.remove('open'); }
+function linkAnalysis() {
+  const id = document.getElementById('linkAnalysisId').value.trim();
+  if (!id) return;
+  fetch(`/projects/api/${PROJECT_ID}/link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ analysis_id: id })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) { closeLinkModal(); loadProject(); }
+    else alert(d.error);
+  });
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+loadProject();
+</script>
+</body>
+</html>

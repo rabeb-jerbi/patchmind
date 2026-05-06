@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask import (Flask, render_template, request, jsonify,
                    send_file, redirect, url_for, session)
+from markupsafe import Markup
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -40,10 +41,39 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scanner.scanner          import run_scan
 from scanner.gitleaks_scanner import run_gitleaks
 from scanner.snyk_scanner     import run_snyk
+try:
+    from scanner.zap_scanner import run_zap, run_zap_on_file
+    ZAP_OK = True
+except ImportError:
+    ZAP_OK = False
+    run_zap_on_file = None
 from enricher.enricher        import get_cves_by_cwe
 from generator.generator      import generate_patch
 from validator.validator      import validate_patch
 from metrics.metrics          import PatchMindMetrics
+
+# Multi-LLM consensus (optional — falls back to single generate_patch)
+try:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from llm_consensus import consensus_patch
+    CONSENSUS_OK = True
+except ImportError:
+    CONSENSUS_OK = False
+
+# RBAC
+try:
+    from rbac import require_role, require_permission, has_permission, ROLES as RBAC_ROLES, PERMISSIONS as RBAC_PERMISSIONS
+    RBAC_OK = True
+except ImportError:
+    RBAC_OK = False
+    def require_role(*r):
+        def d(f): return f
+        return d
+    def require_permission(p):
+        def d(f): return f
+        return d
+    RBAC_ROLES = ["viewer", "analyst", "dev", "admin"]
+    RBAC_PERMISSIONS = {}
 
 # Intelligence + Intégrations (import optionnel)
 try:
@@ -69,6 +99,60 @@ EMAIL_PASSWORD = os.environ.get('PATCHMIND_EMAIL_PASSWORD', 'votre_app_password'
 EMAIL_ENABLED  = EMAIL_SENDER != 'votre.email@gmail.com'
 
 os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, 'data', 'analyses'), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, 'dashboard', 'static', 'avatars'), exist_ok=True)
+
+# ── Jinja2 icon() helper ──────────────────────────────────────────────────────
+def icon(name, size=18, cls='icon'):
+    path = os.path.join(BASE_DIR, 'dashboard', 'static', 'icons', f'{name}.svg')
+    if os.path.exists(path):
+        with open(path, encoding='utf-8') as f:
+            svg = f.read()
+        svg = svg.replace('<svg ', f'<svg class="{cls}" style="width:{size}px;height:{size}px;vertical-align:middle;flex-shrink:0;" ')
+        return Markup(svg)
+    return Markup(f'<span style="width:{size}px;height:{size}px;display:inline-block"></span>')
+
+app.jinja_env.globals['icon'] = icon
+
+AUDIT_FILE  = os.path.join(BASE_DIR, 'data', 'audit_log.json')
+AUDIT_MAX   = 10000
+
+# ── Audit log helpers ─────────────────────────────────────────────────────────
+_audit_lock = threading.Lock()
+
+def audit_log(event: str, user: str = None, details: dict = None):
+    """Append one audit entry. Rotates at AUDIT_MAX entries."""
+    entry = {
+        "ts":      datetime.now().isoformat(),
+        "event":   event,
+        "user":    user or session.get('username', 'anonymous') if True else 'anonymous',
+        "ip":      request.remote_addr if request else "",
+        "details": details or {},
+    }
+    # Safely get user from session context
+    try:
+        entry["user"] = user or session.get('username', 'anonymous')
+        entry["ip"]   = request.remote_addr or ""
+    except RuntimeError:
+        pass
+
+    with _audit_lock:
+        try:
+            os.makedirs(os.path.dirname(AUDIT_FILE), exist_ok=True)
+            data = []
+            if os.path.exists(AUDIT_FILE):
+                try:
+                    with open(AUDIT_FILE, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                except Exception:
+                    data = []
+            data.append(entry)
+            if len(data) > AUDIT_MAX:
+                data = data[-AUDIT_MAX:]
+            with open(AUDIT_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
 
 SUPPORTED_EXTENSIONS = [
     '.py','.js','.jsx','.ts','.tsx','.java','.php',
@@ -152,6 +236,10 @@ def login_required(f):
             return redirect('/login')
         if not session.get('2fa_ok') and session.get('need_2fa'):
             return redirect('/verify-2fa')
+        if session.get('must_change_pw') and request.endpoint != 'change_password':
+            if request.is_json or request.method != 'GET':
+                return jsonify({"error":"Vous devez changer votre mot de passe"}), 403
+            return redirect('/change-password')
         return f(*a,**kw)
     return dec
 
@@ -261,7 +349,8 @@ def save_session_history(username, m):
         "success_rate":      m["success_rate"],
         "mttr_seconds":      m["mttr"],
         "total_duration":    m["duration"],
-        "patched_files":     m.get("patched_files",[])
+        "patched_files":     m.get("patched_files",[]),
+        "files_analyzed":    m.get("files_analyzed",[]),
     })
     _write_json(path, data)
 
@@ -300,9 +389,142 @@ def _compute_diff(original_code, fixed_code):
     ))
     return "".join(diff[:80])  # Max 80 lignes de diff
 
-def run_pipeline(username, file_paths):
+# ── Vulnerability explanations ────────────────────────────────────────────────
+
+_VULN_EXPLANATIONS = {
+    'CWE-89':  "Un attaquant peut lire, modifier ou supprimer l'ensemble des données de votre base de données, exposant les informations clients et les données métier confidentielles.",
+    'CWE-79':  "Des personnes malveillantes peuvent prendre le contrôle de la session de vos utilisateurs, voler leurs identifiants ou les rediriger vers des sites frauduleux.",
+    'CWE-22':  "Un tiers non autorisé peut consulter des fichiers confidentiels du serveur (mots de passe, configurations, données clients) en dehors de tout périmètre autorisé.",
+    'CWE-78':  "Si exploitée, cette faille permet à un attaquant de prendre le contrôle total du serveur, d'effacer des données ou d'y installer des logiciels malveillants.",
+    'CWE-95':  "Un attaquant peut exécuter n'importe quelle instruction sur votre serveur ou dans le navigateur de vos utilisateurs, pouvant mener à une compromission complète du système.",
+    'CWE-327': "Les mots de passe et données protégées peuvent être déchiffrés en quelques heures avec des outils courants, exposant directement les comptes de vos utilisateurs.",
+    'CWE-502': "Un attaquant peut manipuler les échanges de données pour prendre le contrôle de l'application, pouvant entraîner une compromission totale du serveur.",
+    'CWE-798': "Des secrets d'accès (mots de passe, clés API) sont visibles dans le code source, donnant à quiconque y accède un accès direct à vos services et infrastructures.",
+    'CWE-434': "Des fichiers malveillants peuvent être déposés sur votre serveur via cette fonctionnalité d'upload, pouvant mener à une prise de contrôle complète de l'infrastructure.",
+    'CWE-918': "Un attaquant peut utiliser votre serveur comme relais pour atteindre vos systèmes internes ou exfiltrer des données sensibles hors du périmètre de sécurité.",
+    'CWE-611': "Des données internes (fichiers de configuration, informations sensibles) peuvent être extraites de votre serveur à l'insu de vos équipes.",
+    'CWE-352': "Un utilisateur connecté peut être manipulé pour effectuer des actions non souhaitées en son nom (modification de données, transactions, suppressions de compte).",
+    'CWE-200': "Des informations confidentielles (données clients, configuration système, traces d'erreurs) peuvent être exposées à des personnes non autorisées.",
+    'CWE-306': "Des fonctionnalités ou ressources sensibles sont accessibles sans vérification d'identité, ouvrant la porte à un accès non autorisé à l'ensemble de l'application.",
+    'CWE-732': "Des fichiers sensibles sont accessibles par des utilisateurs ou processus qui ne devraient pas y avoir accès, augmentant le risque de fuite de données.",
+    'CWE-601': "Vos utilisateurs peuvent être redirigés vers des sites malveillants imitant votre application, facilitant le vol d'identifiants ou des tentatives de fraude.",
+    'CWE-312': "Des données sensibles (identifiants, informations personnelles) sont stockées sans protection et peuvent être lues directement en cas d'accès non autorisé au système.",
+    'CWE-547': "Des paramètres de configuration codés en dur peuvent perturber le bon fonctionnement en production et révèlent des informations sur l'architecture interne de l'application.",
+}
+
+_FIX_RECOMMENDATIONS = {
+    'CWE-89':  "Faire réviser par l'équipe de développement toutes les interactions avec la base de données pour garantir qu'aucune donnée externe n'y est insérée directement.",
+    'CWE-79':  "Mettre en place un encodage systématique de toutes les données affichées à l'utilisateur afin d'empêcher l'exécution de contenu non autorisé.",
+    'CWE-22':  "Restreindre strictement l'accès aux fichiers du serveur et valider que tout chemin demandé reste dans le périmètre autorisé de l'application.",
+    'CWE-78':  "Supprimer ou isoler tous les points d'accès au système d'exploitation exposés à des données externes et faire auditer les commandes exécutées par l'application.",
+    'CWE-95':  "Interdire l'exécution dynamique de code provenant de sources non maîtrisées et faire auditer tous les traitements de données utilisateur.",
+    'CWE-327': "Mettre à jour les mécanismes de protection des mots de passe et des données sensibles vers des standards cryptographiques modernes reconnus.",
+    'CWE-502': "Remplacer les mécanismes d'échange de données non sécurisés par des formats validés et auditer tous les points d'entrée de l'application.",
+    'CWE-798': "Retirer immédiatement les identifiants du code source, révoquer les clés exposées et les centraliser dans un gestionnaire de secrets dédié.",
+    'CWE-434': "Mettre en place une validation stricte des fichiers déposés (type, taille, contenu autorisé) et les stocker hors des zones d'exécution du serveur.",
+    'CWE-918': "Limiter les communications réseau du serveur aux seules destinations explicitement approuvées et bloquer tout accès aux ressources internes non autorisées.",
+    'CWE-611': "Désactiver la prise en charge des ressources externes dans tous les composants de l'application traitant des données structurées.",
+    'CWE-352': "Ajouter des jetons de protection anti-rejeu sur l'ensemble des formulaires et actions sensibles de l'application.",
+    'CWE-200': "Masquer tous les messages d'erreur techniques en production et s'assurer qu'aucune donnée interne n'est exposée dans les réponses de l'application.",
+    'CWE-306': "Vérifier systématiquement l'identité et les droits de chaque utilisateur avant d'autoriser l'accès à toute fonctionnalité ou ressource sensible.",
+    'CWE-732': "Appliquer le principe du moindre privilège sur l'ensemble des fichiers, répertoires et ressources de l'application.",
+    'CWE-601': "Valider toutes les redirections en les limitant à une liste de destinations approuvées et rejeter toute URL externe non autorisée.",
+    'CWE-312': "Chiffrer l'ensemble des données sensibles stockées et en transit selon les standards de sécurité actuels, et sécuriser les clés de chiffrement dans un espace dédié.",
+}
+
+
+def get_vuln_explanation(vuln):
+    """Retourne une explication courte et compréhensible de la vulnérabilité."""
+    cwe = vuln.get('cwe', '').split(':')[0].strip()
+    if cwe in _VULN_EXPLANATIONS:
+        return _VULN_EXPLANATIONS[cwe]
+    vtype = vuln.get('type', '')
+    if vtype == 'SECRET':
+        rule = vuln.get('rule', vuln.get('RuleID', 'inconnu'))
+        return f"Un secret potentiel de type « {rule} » a été détecté dans le code. Les secrets codés en dur exposent des accès privilégiés si le code est partagé."
+    if vtype == 'DEPENDENCY':
+        pkg = vuln.get('package', '?')
+        ver = vuln.get('version', '?')
+        cve = vuln.get('cve', 'CVE inconnu')
+        return f"La dépendance '{pkg}' version {ver} contient une vulnérabilité connue ({cve}). Mettre à jour vers la version corrigée réduit immédiatement le risque."
+    if vtype == 'DAST':
+        return vuln.get('description', "Cette vulnérabilité web peut être exploitée par un attaquant distant pour compromettre l'application ou ses utilisateurs.")
+    if vtype == 'CUSTOM':
+        return vuln.get('explanation', vuln.get('description', "Vulnérabilité détectée par l'outil personnalisé. Consultez la documentation de l'outil pour plus de détails."))
+    return vuln.get('message', "Vulnérabilité de sécurité détectée. Consultez le détail CWE pour comprendre l'impact et appliquer le correctif recommandé.")
+
+
+def run_custom_tool(name, command, work_dir, file_paths):
+    """Exécute un outil de sécurité personnalisé et parse sa sortie."""
+    import subprocess as _sp
+    file_arg = file_paths[0] if file_paths else work_dir
+    cmd = command.replace('{file}', file_arg).replace('{dir}', work_dir).replace('{path}', file_arg)
+    results = []
+    try:
+        proc = _sp.run(cmd, shell=True, capture_output=True, text=True, timeout=120, cwd=work_dir)
+        output = (proc.stdout or '') + (proc.stderr or '')
+    except _sp.TimeoutExpired:
+        return [{"tool": name, "type": "CUSTOM", "cwe": "INFO", "severity": "INFO",
+                 "message": f"{name} : timeout après 120s", "file": "", "line": 0,
+                 "explanation": f"L'outil {name} a dépassé le délai d'exécution de 120 secondes."}]
+    except Exception as e:
+        return [{"tool": name, "type": "CUSTOM", "cwe": "INFO", "severity": "INFO",
+                 "message": f"{name} : erreur d'exécution — {e}", "file": "", "line": 0,
+                 "explanation": f"L'outil {name} n'a pas pu s'exécuter : {e}"}]
+
+    # Try JSON output first
+    try:
+        parsed = json.loads(output)
+        items = parsed if isinstance(parsed, list) else parsed.get('results', parsed.get('findings', []))
+        for item in items:
+            sev = str(item.get('severity', item.get('level', 'MEDIUM'))).upper()
+            results.append({
+                "tool": name, "type": "CUSTOM",
+                "file": str(item.get('file', item.get('path', item.get('filename', '')))),
+                "line": int(item.get('line', item.get('lineno', item.get('start_line', 0)))),
+                "cwe": str(item.get('cwe', item.get('rule_id', 'CUSTOM'))),
+                "severity": sev if sev in ('CRITICAL','HIGH','MEDIUM','LOW','INFO') else 'MEDIUM',
+                "message": str(item.get('message', item.get('msg', item.get('description', str(item)))))[:200],
+                "rule": str(item.get('rule', item.get('id', name))),
+                "explanation": str(item.get('explanation', item.get('description', f"Résultat de l'outil {name}.")))[:300],
+            })
+        return results[:50]
+    except (json.JSONDecodeError, TypeError, ValueError):
+        pass
+
+    # Plain-text fallback: one finding per line
+    _sev_re  = re.compile(r'\b(CRITICAL|HIGH|MEDIUM|LOW|INFO|ERROR|WARNING|WARN)\b', re.IGNORECASE)
+    _file_re = re.compile(r'([\w./-]+\.\w+):(\d+)')
+    for line in output.splitlines():
+        line = line.strip()
+        if not line or len(line) < 8:
+            continue
+        sev_m  = _sev_re.search(line)
+        file_m = _file_re.search(line)
+        raw_sev = sev_m.group(1).upper() if sev_m else 'MEDIUM'
+        if raw_sev == 'WARNING': raw_sev = 'MEDIUM'
+        if raw_sev == 'ERROR':   raw_sev = 'HIGH'
+        results.append({
+            "tool": name, "type": "CUSTOM",
+            "file": file_m.group(1) if file_m else "",
+            "line": int(file_m.group(2)) if file_m else 0,
+            "cwe": "CUSTOM",
+            "severity": raw_sev,
+            "message": line[:200],
+            "rule": name.lower().replace(' ', '_'),
+            "explanation": f"Résultat de l'outil {name} : {line[:150]}",
+        })
+
+    return results[:50]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+def run_pipeline(username, file_paths, scanners=None):
+    if scanners is None:
+        scanners = {"semgrep": True, "gitleaks": True, "snyk": True, "zap": False, "zap_url": ""}
     ps = get_pipeline(username)
-    ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{},"gitleaks":[],"snyk":[]})
+    ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{},"gitleaks":[],"snyk":[],"zap":[]})
     metrics = PatchMindMetrics(); all_vulns = []
 
     # Dossier racine
@@ -310,32 +532,105 @@ def run_pipeline(username, file_paths):
 
     try:
         # ── GitLeaks ──────────────────────────────────────────────
-        logp(username,"🔑 Scan secrets (GitLeaks)...")
-        try:
-            gl = run_gitleaks(root_dir)
-            ps["gitleaks"] = gl
-            logp(username, f"🔑 {len(gl)} secret(s) détecté(s)" if gl else "✅ Aucun secret détecté")
-        except Exception as e:
-            logp(username, f"⚠️ GitLeaks : {e}")
+        if scanners.get("gitleaks", True):
+            logp(username,"🔑 Scan secrets (GitLeaks)...")
+            try:
+                gl = run_gitleaks(root_dir)
+                ps["gitleaks"] = gl
+                logp(username, f"🔑 {len(gl)} secret(s) détecté(s)" if gl else "✅ Aucun secret détecté")
+            except Exception as e:
+                logp(username, f"⚠️ GitLeaks : {e}")
 
         # ── Snyk/OSV ──────────────────────────────────────────────
-        logp(username,"📦 Scan dépendances (Snyk/OSV)...")
-        try:
-            snyk = run_snyk(root_dir)
-            ps["snyk"] = snyk
-            logp(username, f"📦 {len(snyk)} dépendance(s) vulnérable(s)" if snyk else "✅ Aucune dépendance vulnérable")
-        except Exception as e:
-            logp(username, f"⚠️ Snyk : {e}")
+        if scanners.get("snyk", True):
+            logp(username,"📦 Scan dépendances (Snyk/OSV)...")
+            try:
+                snyk = run_snyk(root_dir)
+                ps["snyk"] = snyk
+                logp(username, f"📦 {len(snyk)} dépendance(s) vulnérable(s)" if snyk else "✅ Aucune dépendance vulnérable")
+            except Exception as e:
+                logp(username, f"⚠️ Snyk : {e}")
+
+        # ── ZAP DAST ──────────────────────────────────────────────
+        if scanners.get("zap", False):
+            zap_url = scanners.get("zap_url", "").strip()
+            if zap_url:
+                # Explicit URL: full ZAP network scan
+                logp(username, f"🌐 Scan DAST ZAP sur {zap_url}...")
+                try:
+                    if ZAP_OK:
+                        zap_results = run_zap(zap_url, scan_type="active")
+                    else:
+                        zap_results = []
+                        logp(username, "⚠️ ZAP non installé")
+                    ps["zap"] = zap_results
+                    logp(username, f"🌐 {len(zap_results)} vulnérabilité(s) web détectée(s)" if zap_results else "✅ Aucune vulnérabilité web détectée")
+                except Exception as e:
+                    logp(username, f"⚠️ ZAP : {e}")
+            else:
+                # No URL: analyse fichiers uploadés directement
+                logp(username, "🌐 Scan DAST ZAP sur les fichiers uploadés (analyse statique DAST)...")
+                try:
+                    if ZAP_OK and run_zap_on_file:
+                        zap_results = run_zap_on_file(root_dir)
+                    else:
+                        from scanner.zap_scanner import _regex_dast_scan
+                        zap_results = _regex_dast_scan(root_dir)
+                    ps["zap"] = zap_results
+                    logp(username, f"🌐 {len(zap_results)} vulnérabilité(s) DAST détectée(s)" if zap_results else "✅ Aucune vulnérabilité DAST détectée")
+                except Exception as e:
+                    logp(username, f"⚠️ ZAP fichier : {e}")
 
         # ── Semgrep SAST ──────────────────────────────────────────
-        for fp in file_paths:
-            logp(username,f"🔍 Scan de {os.path.basename(fp)}...")
-            vulns = run_scan(fp); seen = set()
-            for v in vulns:
-                key = (v["line"],v["cwe"].split(":")[0],v["file"])
-                if key not in seen: seen.add(key); all_vulns.append(v)
+        if scanners.get("semgrep", True):
+            for fp in file_paths:
+                logp(username,f"🔍 Scan de {os.path.basename(fp)}...")
+                vulns = run_scan(fp); seen = set()
+                for v in vulns:
+                    key = (v["line"],v["cwe"].split(":")[0],v["file"])
+                    if key not in seen: seen.add(key); all_vulns.append(v)
 
-        if not all_vulns and not ps["gitleaks"] and not ps["snyk"]:
+        # ── Outils personnalisés ───────────────────────────────────
+        custom_tools = scanners.get("custom_tools", [])
+        ps.setdefault("custom_tools", [])
+        for ct in custom_tools:
+            ct_name = (ct.get("name") or "").strip()
+            ct_cmd  = (ct.get("command") or "").strip()
+            if not ct_name or not ct_cmd:
+                continue
+            logp(username, f"🔧 Outil personnalisé : {ct_name}...")
+            try:
+                ct_results = run_custom_tool(ct_name, ct_cmd, root_dir, file_paths)
+                for r in ct_results:
+                    r["explanation"] = get_vuln_explanation(r)
+                ps["custom_tools"].extend(ct_results)
+                logp(username, f"🔧 {ct_name} : {len(ct_results)} résultat(s)")
+            except Exception as e:
+                logp(username, f"⚠️ {ct_name} : {e}")
+
+        # ── False positive filtering ───────────────────────────────
+        if all_vulns:
+            before = len(all_vulns)
+            all_vulns = [v for v in all_vulns
+                         if not is_false_positive(v.get("cwe",""), v.get("message",""))]
+            filtered = before - len(all_vulns)
+            if filtered > 0:
+                logp(username, f"🚫 {filtered} faux positif(s) confirmé(s) filtrés")
+
+        # ── Enrichissement des explications ───────────────────────
+        for v in all_vulns:
+            if not v.get("explanation"):
+                v["explanation"] = get_vuln_explanation(v)
+        for v in ps.get("gitleaks", []):
+            if not v.get("explanation"):
+                v["type"] = "SECRET"
+                v["explanation"] = get_vuln_explanation(v)
+        for v in ps.get("snyk", []):
+            if not v.get("explanation"):
+                v["type"] = "DEPENDENCY"
+                v["explanation"] = get_vuln_explanation(v)
+
+        if not all_vulns and not ps["gitleaks"] and not ps["snyk"] and not ps.get("zap") and not ps.get("custom_tools"):
             logp(username,"✅ Aucune vulnérabilité trouvée !"); ps["running"]=False; return
 
         if all_vulns:
@@ -387,7 +682,21 @@ def run_pipeline(username, file_paths):
                     logp(username, f"{'⚡ Cache' if from_cache else '🤖'} [{i}/{len(all_vulns)}] {'Patch depuis cache' if from_cache else 'Génération patch'}...")
                     metrics.start_vuln(vuln)
 
-                fixed_code = cached if cached else generate_patch(vt)
+                consensus_info = {}
+                if cached:
+                    fixed_code = cached
+                elif CONSENSUS_OK:
+                    with lock:
+                        logp(username, f"🤝 [{i}/{len(all_vulns)}] Consensus multi-LLM...")
+                    c_result   = consensus_patch(vt, code_context=original_code)
+                    fixed_code = c_result.get("fixed_code", "") or generate_patch(vt)
+                    consensus_info = c_result.get("consensus", {})
+                    with lock:
+                        badge = consensus_info.get("badge", "")
+                        if badge:
+                            logp(username, f"🤝 [{i}/{len(all_vulns)}] {badge}")
+                else:
+                    fixed_code = generate_patch(vt)
 
                 with lock:
                     logp(username, f"✅ [{i}/{len(all_vulns)}] Validation...")
@@ -399,6 +708,15 @@ def run_pipeline(username, file_paths):
 
                 # Diff visuel
                 diff = _compute_diff(original_code, fixed_code) if ok else ""
+
+                # Suggestions outils + test généré (second LLM call)
+                suggestions = {}
+                if ok and fixed_code:
+                    try:
+                        from generator.generator import generate_suggestions
+                        suggestions = generate_suggestions(vuln, fixed_code)
+                    except Exception:
+                        suggestions = {}
 
                 with lock:
                     metrics.end_vuln(ok)
@@ -420,6 +738,9 @@ def run_pipeline(username, file_paths):
                     "from_cache":   from_cache,
                     "confidence":   confidence,
                     "diff":         diff,
+                    "tools":        suggestions.get("tools", []),
+                    "test_code":    suggestions.get("test_code", ""),
+                    "consensus":    consensus_info,
                 }
             except Exception as e:
                 with lock:
@@ -468,14 +789,28 @@ def run_pipeline(username, file_paths):
             if r["success"] and p and p not in seen_p:
                 seen_p.append(p); patches.append({"name":os.path.basename(p),"path":p})
 
+        # Unique file basenames with per-file vuln counts
+        file_vuln_map = {}
+        for r in ps["results"]:
+            fn = r.get("file", "")
+            if fn:
+                file_vuln_map[fn] = file_vuln_map.get(fn, 0) + 1
+        files_analyzed = [{"name": k, "vulns": v} for k, v in file_vuln_map.items()]
+
         ps["metrics"]={
             "total":total,"validated":succ,"rejected":total-succ,
             "success_rate":round(succ/total*100,1) if total else 0,
             "mttr":round(metrics.session.get("mttr_seconds",0),2),
             "duration":round(metrics.session.get("total_duration",0),2),
-            "patched_files":patches
+            "patched_files":patches,
+            "files_analyzed": files_analyzed,
         }
         save_session_history(username,ps["metrics"])
+        audit_log("scan_complete", user=username, details={
+            "total": ps["metrics"].get("total",0),
+            "validated": ps["metrics"].get("validated",0),
+            "success_rate": ps["metrics"].get("success_rate",0),
+        })
         logp(username,"🎉 Pipeline terminé !")
 
         # ── Notifications automatiques ────────────────────────────
@@ -563,14 +898,20 @@ def login_page():
         users = load_users()
         if u not in users or not users[u].get('active', True):
             record_fail(ip)
+            audit_log("login_fail", user=u, details={"reason": "unknown_user", "ip": ip})
             return jsonify({"error":"Identifiants incorrects"}), 401
+        if users[u].get('blocked', False):
+            audit_log("login_blocked", user=u, details={"ip": ip})
+            return jsonify({"error":"Compte bloqué. Contactez votre administrateur."}), 403
         if not check_password_hash(users[u]['password'], p):
             record_fail(ip)
             fails = _login_attempts.get(ip,{}).get('count',0)
             remaining_att = MAX_ATTEMPTS - fails
+            audit_log("login_fail", user=u, details={"reason": "bad_password", "attempts_left": remaining_att, "ip": ip})
             return jsonify({"error":f"Identifiants incorrects. {remaining_att} tentative(s) restante(s)"}), 401
 
         reset_attempts(ip)
+        audit_log("login_success", user=u, details={"ip": ip, "role": users[u].get('role','user')})
         session.permanent = False  # Session expire à la fermeture du navigateur
         session['username'] = u
         session['role']     = users[u].get('role','user')
@@ -584,6 +925,10 @@ def login_page():
 
         session['need_2fa'] = False
         session['2fa_ok']   = True
+        # must_change_password → force change on first login
+        if users[u].get('must_change_password', False):
+            session['must_change_pw'] = True
+            return jsonify({"ok": True, "need_2fa": False, "redirect": "/change-password"})
         # Admin → /admin, user → /dashboard
         redirect_url = "/admin" if session['role'] == 'admin' else "/dashboard"
         return jsonify({"ok":True,"need_2fa":False,"role":session['role'],"redirect": redirect_url})
@@ -604,6 +949,9 @@ def verify_2fa():
         if verify_totp(secret, code):
             session['2fa_ok']   = True
             session['need_2fa'] = False
+            if users[u].get('must_change_password', False):
+                session['must_change_pw'] = True
+                return jsonify({"ok": True, "redirect": "/change-password"})
             redirect_url = "/admin" if session.get('role') == 'admin' else "/dashboard"
             return jsonify({"ok": True, "redirect": redirect_url})
         return jsonify({"error":"Code incorrect. Vérifiez votre application."}), 401
@@ -611,20 +959,297 @@ def verify_2fa():
 
 @app.route('/logout')
 def logout():
-    session.clear(); return redirect('/login')
+    timed_out = request.args.get('timeout') == '1'
+    audit_log("logout", details={"timeout": timed_out})
+    session.clear()
+    if timed_out:
+        return redirect('/login?msg=session_expired')
+    return redirect('/login')
+
+@app.route('/change-password', methods=['GET','POST'])
+@login_required
+def change_password():
+    u = current_user()
+    if request.method == 'POST':
+        d       = request.get_json() or {}
+        new_pw  = d.get('password','').strip()
+        if len(new_pw) < 8:
+            return jsonify({"error":"Mot de passe trop court (8 car. min)"}), 400
+        users = load_users()
+        if u not in users:
+            return jsonify({"error":"Utilisateur introuvable"}), 404
+        users[u]['password']             = generate_password_hash(new_pw)
+        users[u]['must_change_password'] = False
+        save_users(users)
+        session.pop('must_change_pw', None)
+        role = users[u].get('role','user')
+        redirect_url = "/admin" if role == 'admin' else "/dashboard"
+        return jsonify({"ok": True, "redirect": redirect_url})
+    return render_template('change_password.html')
 
 @app.route('/me')
 @login_required
 def me():
     users = load_users()
     u     = current_user()
-    has_2fa = users.get(u,{}).get('totp_enabled', False)
+    ud    = users.get(u, {})
+    avatar_path = os.path.join(BASE_DIR, 'dashboard', 'static', 'avatars', f'{u}.jpg')
     return jsonify({
-        "username": u,
-        "role":     session.get('role','user'),
-        "fullname": session.get('fullname', u),
-        "has_2fa":  has_2fa
+        "username":     u,
+        "role":         session.get('role','user'),
+        "fullname":     session.get('fullname', u),
+        "full_name":    ud.get('full_name', u),
+        "email":        ud.get('email',''),
+        "company":      ud.get('company',''),
+        "lang":         ud.get('lang','fr'),
+        "notif_email":  ud.get('notif_email', False),
+        "notif_browser":ud.get('notif_browser', False),
+        "has_2fa":      ud.get('totp_enabled', False),
+        "has_avatar":      os.path.exists(avatar_path),
+        "onboarding_done": ud.get('onboarding_done', False),
+        "permissions":  [p for p, roles in RBAC_PERMISSIONS.items()
+                         if session.get('role','user') in roles],
     })
+
+@app.route('/onboarding/done', methods=['POST'])
+@login_required
+def onboarding_done():
+    users = load_users()
+    u = current_user()
+    if u in users:
+        users[u]['onboarding_done'] = True
+        save_users(users)
+    return jsonify({"ok": True})
+
+@app.route('/generate-test', methods=['POST'])
+@login_required
+def generate_test_on_demand():
+    """Generate a unit test for a specific vulnerability on demand."""
+    d        = request.get_json() or {}
+    idx      = int(d.get('vuln_index', 0))
+    ps       = get_pipeline(current_user())
+    results  = ps.get('results', [])
+    if idx < 0 or idx >= len(results):
+        return jsonify({"test_code": "// Vulnérabilité introuvable"}), 200
+    r = results[idx]
+    vuln = {
+        'cwe':      r.get('cwe', 'Unknown'),
+        'message':  r.get('message', ''),
+        'language': r.get('language', 'python'),
+        'line':     r.get('line', 0),
+    }
+    fixed_code = r.get('fixed_code', r.get('original_code', ''))
+    try:
+        from generator.generator import generate_suggestions
+        sugg = generate_suggestions(vuln, fixed_code)
+        test_code = sugg.get('test_code', '') or '// Aucun test disponible'
+    except Exception:
+        test_code = '// Erreur de génération — vérifiez votre clé API Groq'
+    return jsonify({"test_code": test_code})
+
+# pip-installable tool names
+_PIP_TOOLS = {'bandit', 'pylint', 'safety', 'pyflakes', 'checkov', 'sqlmap'}
+# npm-installable tool names
+_NPM_TOOLS  = {'eslint'}
+# tools not installable via pip/npm — require manual setup
+_BINARY_TOOLS = {'trivy'}
+
+@app.route('/run-tool', methods=['POST'])
+@login_required
+def run_recommended_tool():
+    import subprocess, shlex
+    d    = request.get_json() or {}
+    cmd  = (d.get('cmd') or '').strip()
+    name = (d.get('tool_name') or '').strip()[:80]
+    if not cmd:
+        return jsonify({"ok": False, "error": "Commande vide"}), 400
+    allowed_prefixes = ('pip install', 'pip3 install', 'npm install', '-m pip',
+                        'bandit', 'eslint', 'pylint', 'safety', 'pyflakes',
+                        'npm audit', 'yarn audit', 'semgrep', 'trivy',
+                        'snyk test', 'gitleaks detect', 'checkov', 'sqlmap')
+    if not any(cmd.startswith(p) for p in allowed_prefixes):
+        return jsonify({"ok": False, "error": "Commande non autorisée"}), 403
+
+    def _run(c):
+        return subprocess.run(shlex.split(c), capture_output=True, text=True,
+                              timeout=120, cwd=BASE_DIR)
+
+    try:
+        result = _run(cmd)
+        out = (result.stdout or '') + (result.stderr or '')
+        return jsonify({"ok": True, "output": out[:3000], "returncode": result.returncode})
+
+    except FileNotFoundError:
+        tool_bin = shlex.split(cmd)[0].lower()
+        # ── Auto-install ──────────────────────────────────────────
+        install_log = ''
+        installed   = False
+        if tool_bin in _PIP_TOOLS:
+            try:
+                # Use sys.executable to guarantee the correct pip in any venv/conda env
+                ir = subprocess.run(
+                    [sys.executable, '-m', 'pip', 'install', '--quiet', tool_bin],
+                    capture_output=True, text=True, timeout=180
+                )
+                install_log = (ir.stdout or '') + (ir.stderr or '')
+                installed   = ir.returncode == 0
+            except Exception as ie:
+                install_log = str(ie)
+        elif tool_bin in _NPM_TOOLS:
+            try:
+                ir = subprocess.run(
+                    ['npm', 'install', '-g', tool_bin],
+                    capture_output=True, text=True, timeout=120
+                )
+                install_log = (ir.stdout or '') + (ir.stderr or '')
+                installed   = ir.returncode == 0
+            except Exception as ie:
+                install_log = str(ie)
+
+        if installed:
+            # Re-run using python -m <tool> first (works before PATH refreshes on Windows)
+            try:
+                py_cmd = f'{sys.executable} -m {tool_bin} ' + ' '.join(shlex.split(cmd)[1:])
+                result2 = subprocess.run(shlex.split(py_cmd), capture_output=True, text=True,
+                                         timeout=120, cwd=BASE_DIR)
+                out2 = (result2.stdout or '') + (result2.stderr or '')
+                return jsonify({
+                    "ok": True,
+                    "output": out2[:3000],
+                    "returncode": result2.returncode,
+                    "installed": True,
+                    "install_log": install_log[:500],
+                })
+            except Exception:
+                pass
+            # Fall back to direct PATH re-run
+            try:
+                result2 = _run(cmd)
+                out2 = (result2.stdout or '') + (result2.stderr or '')
+                return jsonify({
+                    "ok": True,
+                    "output": out2[:3000],
+                    "returncode": result2.returncode,
+                    "installed": True,
+                    "install_log": install_log[:500],
+                })
+            except FileNotFoundError:
+                pass  # fall through to manual instructions
+
+        # ── Fallback: manual instructions ─────────────────────────
+        if tool_bin in _PIP_TOOLS:
+            hint = f"pip install {tool_bin}  (ou: python -m pip install {tool_bin})"
+        elif tool_bin in _NPM_TOOLS:
+            hint = f"npm install -g {tool_bin}"
+        elif tool_bin in _BINARY_TOOLS:
+            hint = f"Téléchargez {tool_bin} depuis https://github.com/aquasecurity/trivy/releases"
+        else:
+            hint = f"Installez '{tool_bin}' selon sa documentation officielle"
+
+        msg = f"'{tool_bin}' introuvable dans le PATH."
+        if install_log:
+            msg += f" Installation échouée : {install_log[:200]}"
+        msg += f" Commande manuelle : {hint}"
+        return jsonify({"ok": False, "error": msg, "install_hint": hint}), 200
+
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "error": "Timeout (120s)"}), 200
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 200
+
+@app.route('/profile', methods=['GET'])
+@login_required
+def profile_page():
+    return render_template('profile.html')
+
+@app.route('/profile', methods=['POST'])
+@login_required
+def profile_update():
+    u    = current_user()
+    d    = request.get_json() or {}
+    users = load_users()
+    if u not in users:
+        return jsonify({"error":"Utilisateur introuvable"}), 404
+    allowed = ['full_name','email','company','lang','notif_email','notif_browser']
+    for k in allowed:
+        if k in d:
+            users[u][k] = d[k]
+    save_users(users)
+    session['fullname'] = users[u].get('full_name', u)
+    return jsonify({"ok": True})
+
+@app.route('/profile/avatar', methods=['POST'])
+@login_required
+def profile_avatar():
+    u = current_user()
+    if 'avatar' not in request.files:
+        return jsonify({"error": "Aucun fichier"}), 400
+    f = request.files['avatar']
+    if not f.filename:
+        return jsonify({"error": "Fichier vide"}), 400
+    ext = os.path.splitext(f.filename)[1].lower()
+    if ext not in ('.jpg','.jpeg','.png','.webp'):
+        return jsonify({"error": "Format non supporté (jpg/png/webp)"}), 400
+    if f.content_length and f.content_length > 2 * 1024 * 1024:
+        return jsonify({"error": "Fichier trop volumineux (max 2 MB)"}), 400
+    try:
+        from PIL import Image
+        from io import BytesIO
+        img_data = BytesIO(f.read())
+        img = Image.open(img_data).convert('RGB')
+        img = img.resize((128, 128), Image.LANCZOS)
+        avatars_dir = os.path.join(BASE_DIR, 'dashboard', 'static', 'avatars')
+        os.makedirs(avatars_dir, exist_ok=True)
+        out_path = os.path.join(avatars_dir, f'{u}.jpg')
+        img.save(out_path, 'JPEG', quality=85)
+        return jsonify({"ok": True})
+    except ImportError:
+        return jsonify({"error": "pip install pillow"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/profile/password', methods=['POST'])
+@login_required
+def profile_change_password():
+    u  = current_user()
+    d  = request.get_json() or {}
+    old_pw = d.get('old_password','')
+    new_pw = d.get('new_password','')
+    if not old_pw or not new_pw:
+        return jsonify({"error":"Tous les champs sont requis"}), 400
+    if len(new_pw) < 8:
+        return jsonify({"error":"Mot de passe trop court (8 car. min)"}), 400
+    users = load_users()
+    if u not in users:
+        return jsonify({"error":"Utilisateur introuvable"}), 404
+    if not check_password_hash(users[u]['password'], old_pw):
+        return jsonify({"error":"Mot de passe actuel incorrect"}), 401
+    users[u]['password'] = generate_password_hash(new_pw)
+    save_users(users)
+    return jsonify({"ok": True})
+
+@app.route('/profile/lang', methods=['POST'])
+@login_required
+def profile_set_lang():
+    d    = request.get_json() or {}
+    lang = d.get('lang', 'fr')
+    if lang not in ('fr', 'en'):
+        return jsonify({"error": "Langue non supportée"}), 400
+    users = load_users()
+    u     = current_user()
+    if u in users:
+        users[u]['lang'] = lang
+        save_users(users)
+    return jsonify({"ok": True, "lang": lang})
+
+@app.route('/avatar/<username>')
+@login_required
+def serve_avatar(username):
+    avatars_dir = os.path.join(BASE_DIR, 'dashboard', 'static', 'avatars')
+    path = os.path.join(avatars_dir, f'{username}.jpg')
+    if not os.path.exists(path):
+        return jsonify({"error": "Pas d'avatar"}), 404
+    return send_file(path, mimetype='image/jpeg')
 
 # ══════════════════════════════════════════════════════════════════
 # 2FA SETUP ROUTES
@@ -633,7 +1258,9 @@ def me():
 @app.route('/setup-2fa', methods=['GET'])
 @login_required
 def setup_2fa_page():
-    return render_template('setup_2fa.html')
+    u = load_users().get(current_user(), {})
+    dashboard_url = '/admin' if u.get('role') == 'admin' else '/dashboard'
+    return render_template('setup_2fa.html', dashboard_url=dashboard_url)
 
 @app.route('/api/2fa/generate', methods=['POST'])
 @login_required
@@ -682,6 +1309,175 @@ def api_2fa_disable():
     return jsonify({"ok":True,"message":"2FA désactivé"})
 
 # ══════════════════════════════════════════════════════════════════
+# PROJECTS
+# ══════════════════════════════════════════════════════════════════
+
+PROJECTS_FILE = os.path.join(BASE_DIR, 'data', 'projects.json')
+ANALYSES_DIR  = os.path.join(BASE_DIR, 'data', 'analyses')
+
+def _load_projects():
+    return _read_json(PROJECTS_FILE, {})
+
+def _save_projects(data):
+    _write_json(PROJECTS_FILE, data)
+
+def _get_project_analyses(project_id):
+    """Load all saved analyses for a project from disk."""
+    d = os.path.join(ANALYSES_DIR, project_id)
+    if not os.path.isdir(d):
+        return []
+    results = []
+    for fname in os.listdir(d):
+        if fname.endswith('.json'):
+            data = _read_json(os.path.join(d, fname), {})
+            if data:
+                results.append(data)
+    results.sort(key=lambda x: x.get('timestamp',''), reverse=True)
+    return results
+
+def _save_analysis(project_id, metrics_snapshot):
+    """Persist an analysis snapshot under data/analyses/<project_id>/."""
+    os.makedirs(os.path.join(ANALYSES_DIR, project_id), exist_ok=True)
+    ts   = datetime.now().strftime('%Y%m%d_%H%M%S')
+    aid  = f"analysis_{ts}"
+    path = os.path.join(ANALYSES_DIR, project_id, aid + '.json')
+    _write_json(path, {**metrics_snapshot, 'id': aid, 'timestamp': datetime.now().isoformat()})
+    return aid
+
+def _project_stats(project_id):
+    analyses = _get_project_analyses(project_id)
+    total_vulns   = sum(a.get('total_vulns', 0) for a in analyses)
+    total_patches = sum(a.get('patches_validated', 0) for a in analyses)
+    avg_rate      = round(sum(a.get('success_rate', 0) for a in analyses) / len(analyses), 1) if analyses else 0
+    last          = analyses[0].get('timestamp', '') if analyses else ''
+    return {
+        'analysis_count': len(analyses),
+        'total_vulns':    total_vulns,
+        'total_patches':  total_patches,
+        'avg_rate':       avg_rate,
+        'last_analysis':  last,
+    }
+
+@app.route('/projects')
+@login_required
+def projects_page():
+    return render_template('projects.html')
+
+@app.route('/projects/<project_id>')
+@login_required
+def project_detail_page(project_id):
+    projects = _load_projects()
+    u = current_user()
+    p = projects.get(project_id)
+    if not p or (p['owner'] != u and u not in p.get('members', [])):
+        return redirect('/projects')
+    return render_template('project_detail.html')
+
+@app.route('/projects/api', methods=['GET'])
+@login_required
+def projects_list():
+    projects = _load_projects()
+    u = current_user()
+    result = []
+    for pid, p in projects.items():
+        if p['owner'] != u and u not in p.get('members', []):
+            continue
+        stats = _project_stats(pid)
+        result.append({**p, **stats})
+    result.sort(key=lambda x: x.get('created_at',''), reverse=True)
+    return jsonify(result)
+
+@app.route('/projects/api', methods=['POST'])
+@login_required
+def projects_create():
+    d    = request.get_json() or {}
+    name = d.get('name','').strip()
+    if not name:
+        return jsonify({"error": "Le nom est requis"}), 400
+    import uuid
+    pid = 'proj_' + uuid.uuid4().hex[:12]
+    projects = _load_projects()
+    projects[pid] = {
+        'id':          pid,
+        'name':        name,
+        'description': d.get('description',''),
+        'owner':       current_user(),
+        'members':     [m for m in d.get('members',[]) if m],
+        'department':  d.get('department',''),
+        'created_at':  datetime.now().isoformat(),
+        'tags':        [t for t in d.get('tags',[]) if t],
+        'status':      'active',
+    }
+    _save_projects(projects)
+    return jsonify({"ok": True, "id": pid})
+
+@app.route('/projects/api/<project_id>', methods=['GET'])
+@login_required
+def project_get(project_id):
+    projects = _load_projects()
+    u = current_user()
+    p = projects.get(project_id)
+    if not p or (p['owner'] != u and u not in p.get('members', [])):
+        return jsonify({"error": "Projet introuvable"}), 404
+    analyses = _get_project_analyses(project_id)
+    return jsonify({"project": p, "analyses": analyses})
+
+@app.route('/projects/api/<project_id>', methods=['DELETE'])
+@login_required
+def project_delete(project_id):
+    projects = _load_projects()
+    u = current_user()
+    p = projects.get(project_id)
+    if not p:
+        return jsonify({"error": "Projet introuvable"}), 404
+    if p['owner'] != u:
+        return jsonify({"error": "Seul le propriétaire peut supprimer ce projet"}), 403
+    del projects[project_id]
+    _save_projects(projects)
+    # Clean analyses dir
+    d = os.path.join(ANALYSES_DIR, project_id)
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    return jsonify({"ok": True})
+
+@app.route('/projects/api/<project_id>/save-analysis', methods=['POST'])
+@login_required
+def project_save_analysis(project_id):
+    """Called after a pipeline run to save the metrics to the project."""
+    projects = _load_projects()
+    u = current_user()
+    p = projects.get(project_id)
+    if not p or (p['owner'] != u and u not in p.get('members', [])):
+        return jsonify({"error": "Projet introuvable"}), 404
+    ps = get_pipeline(u)
+    m  = ps.get('metrics', {})
+    if not m:
+        return jsonify({"error": "Aucune métrique disponible"}), 400
+    aid = _save_analysis(project_id, {**m, 'username': u})
+    return jsonify({"ok": True, "analysis_id": aid})
+
+@app.route('/projects/api/<project_id>/link', methods=['POST'])
+@login_required
+def project_link_analysis(project_id):
+    """Associate a session history entry with a project by analysis_id."""
+    projects = _load_projects()
+    u = current_user()
+    p = projects.get(project_id)
+    if not p or (p['owner'] != u and u not in p.get('members', [])):
+        return jsonify({"error": "Projet introuvable"}), 404
+    d   = request.get_json() or {}
+    aid = d.get('analysis_id','').strip()
+    if not aid:
+        return jsonify({"error": "analysis_id requis"}), 400
+    # Look in user session history for a matching timestamp
+    hist = _read_json(get_user_metrics_path(u), {"sessions": []})
+    match = next((s for s in hist.get('sessions',[]) if aid in s.get('timestamp','').replace(':','').replace('-','').replace(' ','_')[:19]), None)
+    if not match:
+        return jsonify({"error": "Analyse non trouvée"}), 404
+    _save_analysis(project_id, {**match, 'username': u})
+    return jsonify({"ok": True})
+
+# ══════════════════════════════════════════════════════════════════
 # ADMIN ROUTES
 # ══════════════════════════════════════════════════════════════════
 
@@ -709,6 +1505,9 @@ def admin_list_users():
             "sessions":      len(sess),
             "total_vulns":   sum(s.get("total_vulns",0) for s in sess),
             "total_patches": sum(s.get("patches_validated",0) for s in sess),
+            "company":       ud.get("company",""),
+            "blocked":       ud.get("blocked", False),
+            "email":         ud.get("email",""),
         })
     return jsonify(result)
 
@@ -717,24 +1516,35 @@ def admin_list_users():
 @admin_required
 def admin_create_user():
     d = request.get_json() or {}
-    u = d.get('username','').strip()
-    p = d.get('password','')
-    if not u or not p: return jsonify({"error":"Champs requis"}), 400
-    if len(p) < 8:     return jsonify({"error":"Mot de passe trop court (8 car. min)"}), 400
+    u     = d.get('username','').strip()
+    email = d.get('email','').strip()
+    if not u or not email: return jsonify({"error":"Identifiant et email requis"}), 400
     users = load_users()
     if u in users: return jsonify({"error":"Utilisateur déjà existant"}), 400
+    role = d.get('role', 'analyst')
+    if role not in RBAC_ROLES:
+        role = 'analyst'
+    p = generate_password()
     users[u] = {
-        "password":    generate_password_hash(p),
-        "role":        d.get('role','user'),
-        "full_name":   d.get('full_name',u),
-        "created_at":  datetime.now().isoformat(),
-        "totp_secret": generate_totp_secret(),
-        "totp_enabled":False,
-        "active":      True
+        "password":             generate_password_hash(p),
+        "email":                email,
+        "role":                 role,
+        "full_name":            d.get('full_name', u),
+        "company":              d.get('company',''),
+        "created_at":           datetime.now().isoformat(),
+        "totp_secret":          generate_totp_secret(),
+        "totp_enabled":         False,
+        "active":               True,
+        "blocked":              False,
+        "must_change_password": True,
     }
     save_users(users)
-    os.makedirs(os.path.join(DATA_DIR,u,'uploads'),exist_ok=True)
-    return jsonify({"ok":True})
+    os.makedirs(os.path.join(DATA_DIR, u, 'uploads'), exist_ok=True)
+    full_name = d.get('full_name', u)
+    email_sent = send_credentials_email(to_email=email, full_name=full_name, username=u, password=p)
+    if not email_sent:
+        return jsonify({"ok": True, "warn": "Compte créé mais email non envoyé — vérifiez la config SMTP"}), 207
+    return jsonify({"ok": True})
 
 @app.route('/admin/users/<username>', methods=['DELETE'])
 @login_required
@@ -765,6 +1575,33 @@ def admin_toggle_user(username):
     users[username]['active'] = not users[username].get('active',True)
     save_users(users)
     return jsonify({"ok":True,"active":users[username]['active']})
+
+@app.route('/admin/users/<username>/role', methods=['POST'])
+@login_required
+@admin_required
+def admin_change_role(username):
+    if username == 'admin': return jsonify({"error":"Non autorisé"}), 400
+    users = load_users()
+    if username not in users: return jsonify({"error":"Introuvable"}), 404
+    d    = request.get_json() or {}
+    role = d.get('role', '').strip()
+    if role not in RBAC_ROLES:
+        return jsonify({"error": f"Rôle invalide. Valeurs acceptées: {', '.join(RBAC_ROLES)}"}), 400
+    users[username]['role'] = role
+    save_users(users)
+    return jsonify({"ok": True, "role": role})
+
+@app.route('/admin/users/<username>/block', methods=['POST'])
+@login_required
+@admin_required
+def admin_block_user(username):
+    if username == 'admin': return jsonify({"error":"Non autorisé"}), 400
+    users = load_users()
+    if username not in users: return jsonify({"error":"Introuvable"}), 404
+    d = request.get_json() or {}
+    users[username]['blocked'] = bool(d.get('block', True))
+    save_users(users)
+    return jsonify({"ok": True, "blocked": users[username]['blocked']})
 
 @app.route('/admin/stats')
 @login_required
@@ -805,11 +1642,22 @@ def upload():
     if not f.filename: return jsonify({"error":"Nom vide"}),400
     fname=secure_filename(f.filename); fpath=os.path.join(uld,fname)
     f.save(fpath); ext=os.path.splitext(fname)[1].lower()
+
+    try:
+        _ct = json.loads(request.form.get("custom_tools","[]"))
+    except (json.JSONDecodeError, TypeError):
+        _ct = []
+    scanners = {
+        "semgrep":      request.form.get("semgrep","true").lower()=="true",
+        "gitleaks":     request.form.get("gitleaks","true").lower()=="true",
+        "snyk":         request.form.get("snyk","true").lower()=="true",
+        "zap":          request.form.get("zap","false").lower()=="true",
+        "zap_url":      request.form.get("zap_url","").strip(),
+        "custom_tools": _ct,
+    }
+
     ps=get_pipeline(u)
     ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{}})
-
-    def _run(files):
-        threading.Thread(target=run_pipeline,args=(u,files),daemon=True).start()
 
     if ext=='.rar':
         def _rar():
@@ -817,7 +1665,7 @@ def upload():
                 logp(u,f"📦 Extraction RAR : {fname}")
                 files,_=extract_rar(fpath,uld)
                 if not files: logp(u,"⚠️ Vide"); ps["running"]=False; return
-                logp(u,f"✅ {len(files)} fichier(s)"); run_pipeline(u,files)
+                logp(u,f"✅ {len(files)} fichier(s)"); run_pipeline(u,files,scanners)
             except Exception as e: logp(u,f"❌ {e}"); ps["running"]=False
         threading.Thread(target=_rar,daemon=True).start()
         return jsonify({"message":"RAR lancé"})
@@ -828,14 +1676,14 @@ def upload():
                 logp(u,f"📦 Extraction ZIP : {fname}")
                 files,_=extract_zip(fpath,uld)
                 if not files: logp(u,"⚠️ Vide"); ps["running"]=False; return
-                logp(u,f"✅ {len(files)} fichier(s)"); run_pipeline(u,files)
+                logp(u,f"✅ {len(files)} fichier(s)"); run_pipeline(u,files,scanners)
             except Exception as e: logp(u,f"❌ {e}"); ps["running"]=False
         threading.Thread(target=_zip,daemon=True).start()
         return jsonify({"message":"ZIP lancé"})
 
     if ext not in SUPPORTED_EXTENSIONS:
         return jsonify({"error":f"Extension '{ext}' non supportée"}),400
-    threading.Thread(target=run_pipeline,args=(u,[fpath]),daemon=True).start()
+    threading.Thread(target=run_pipeline,args=(u,[fpath],scanners),daemon=True).start()
     return jsonify({"message":"Analyse lancée"})
 
 @app.route('/github', methods=['POST'])
@@ -845,6 +1693,14 @@ def github_analyze():
     d=request.get_json() or {}; url=d.get('url','').strip()
     if not url or not url.startswith('https://github.com/'):
         return jsonify({"error":"URL invalide"}),400
+    scanners = {
+        "semgrep":      d.get("semgrep", True),
+        "gitleaks":     d.get("gitleaks", True),
+        "snyk":         d.get("snyk", True),
+        "zap":          d.get("zap", False),
+        "zap_url":      d.get("zap_url", "").strip(),
+        "custom_tools": d.get("custom_tools", []),
+    }
     ps=get_pipeline(u)
     ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{}})
     def _gh():
@@ -852,7 +1708,7 @@ def github_analyze():
             logp(u,f"📥 Clonage : {url}")
             cp=clone_repo(url,uld); fs=get_supported_files(cp)
             if not fs: logp(u,"⚠️ Vide"); ps["running"]=False; return
-            logp(u,f"✅ {len(fs)} fichier(s)"); run_pipeline(u,fs)
+            logp(u,f"✅ {len(fs)} fichier(s)"); run_pipeline(u,fs,scanners)
         except Exception as e: logp(u,f"❌ {e}"); ps["running"]=False
     threading.Thread(target=_gh,daemon=True).start()
     return jsonify({"message":"GitHub lancé"})
@@ -864,21 +1720,203 @@ def status(): return jsonify(get_pipeline(current_user()))
 @app.route('/files')
 @login_required
 def list_files():
-    uld=get_user_upload_dir(current_user()); files=[]
-    for fname in os.listdir(uld):
-        fp=os.path.join(uld,fname)
-        if not os.path.isfile(fp): continue
-        if '_patched' in fname or '_extracted' in fname: continue
-        _bn, _bext = os.path.splitext(fname)
-        pname = _bn + '_patched' + _bext
-        ppath=os.path.join(uld,pname); st=os.stat(fp)
-        files.append({"name":fname,"path":fp,
-            "size":round(st.st_size/1024,1),
-            "uploaded_at":datetime.fromtimestamp(st.st_mtime).strftime("%d/%m/%Y %H:%M"),
-            "has_patch":os.path.exists(ppath),
-            "patched_path":ppath if os.path.exists(ppath) else ""})
-    files.sort(key=lambda x:x["uploaded_at"],reverse=True)
+    user_dir = get_user_upload_dir(current_user())
+    files = []
+    for root, dirs, fnames in os.walk(user_dir):
+        for fname in fnames:
+            if '_patched' not in fname: continue
+            if '_temp_check' in fname: continue
+            fp = os.path.join(root, fname)
+            st = os.stat(fp)
+            files.append({
+                "name":       fname,
+                "path":       fp,
+                "size":       round(st.st_size / 1024, 1),
+                "patched_at": datetime.fromtimestamp(st.st_mtime).strftime("%d/%m/%Y %H:%M"),
+            })
+    files.sort(key=lambda x: x["patched_at"], reverse=True)
     return jsonify(files)
+
+# ── False Positives (Module 4A) ───────────────────────────────────────────────
+FALSE_POS_FILE = os.path.join(BASE_DIR, 'data', 'false_positives.json')
+
+def _load_false_positives():
+    return _read_json(FALSE_POS_FILE, {})
+
+def _save_false_positives(data):
+    _write_json(FALSE_POS_FILE, data)
+
+def _fp_key(cwe: str, message_snippet: str) -> str:
+    import hashlib
+    raw = f"{cwe}::{message_snippet[:80]}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+def is_false_positive(cwe: str, message: str, threshold: int = 2) -> bool:
+    fps = _load_false_positives()
+    key = _fp_key(cwe, message)
+    entry = fps.get(key, {})
+    return entry.get("confirmed_count", 0) >= threshold
+
+@app.route('/false-positive', methods=['POST'])
+@login_required
+def mark_false_positive():
+    d   = request.get_json() or {}
+    cwe = d.get("cwe", "").strip()
+    msg = d.get("message", "").strip()
+    if not cwe:
+        return jsonify({"error": "CWE requis"}), 400
+    fps = _load_false_positives()
+    key = _fp_key(cwe, msg)
+    entry = fps.setdefault(key, {
+        "cwe": cwe, "message_snippet": msg[:80],
+        "confirmed_count": 0, "reporters": [], "first_seen": datetime.now().isoformat()
+    })
+    u = current_user()
+    if u not in entry.get("reporters", []):
+        entry["reporters"].append(u)
+        entry["confirmed_count"] = len(entry["reporters"])
+    entry["last_seen"] = datetime.now().isoformat()
+    _save_false_positives(fps)
+    audit_log("false_positive_marked", details={"cwe": cwe, "confirmed": entry["confirmed_count"]})
+    return jsonify({"ok": True, "confirmed_count": entry["confirmed_count"],
+                    "auto_filtered": entry["confirmed_count"] >= 2})
+
+@app.route('/false-positives', methods=['GET'])
+@login_required
+def list_false_positives():
+    fps = _load_false_positives()
+    return jsonify(list(fps.values()))
+
+@app.route('/false-positive/<key>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_false_positive(key):
+    fps = _load_false_positives()
+    if key in fps:
+        del fps[key]
+        _save_false_positives(fps)
+    return jsonify({"ok": True})
+
+# ── Assignments (Module 5A) ───────────────────────────────────────────────────
+ASSIGNMENTS_FILE = os.path.join(BASE_DIR, 'data', 'assignments.json')
+
+def _load_assignments():
+    return _read_json(ASSIGNMENTS_FILE, [])
+
+def _save_assignments(data):
+    _write_json(ASSIGNMENTS_FILE, data)
+
+@app.route('/assign', methods=['POST'])
+@login_required
+def assign_vuln():
+    d        = request.get_json() or {}
+    vuln_id  = d.get("vuln_id", "").strip()
+    assignee = d.get("assignee", "").strip()
+    deadline = d.get("deadline", "")
+    cwe      = d.get("cwe", "")
+    msg      = d.get("message", "")
+    if not vuln_id or not assignee:
+        return jsonify({"error": "vuln_id et assignee requis"}), 400
+    users = load_users()
+    if assignee not in users:
+        return jsonify({"error": "Utilisateur introuvable"}), 404
+    assignments = _load_assignments()
+    # Upsert
+    existing = next((a for a in assignments if a["vuln_id"] == vuln_id), None)
+    if existing:
+        existing.update({"assignee": assignee, "deadline": deadline,
+                          "assigned_by": current_user(), "updated_at": datetime.now().isoformat()})
+    else:
+        assignments.append({
+            "vuln_id":     vuln_id,
+            "cwe":         cwe,
+            "message":     msg[:100],
+            "assignee":    assignee,
+            "deadline":    deadline,
+            "assigned_by": current_user(),
+            "status":      "open",
+            "created_at":  datetime.now().isoformat(),
+        })
+    _save_assignments(assignments)
+    audit_log("vuln_assigned", details={"vuln_id": vuln_id, "assignee": assignee})
+    # Optional Slack notify via integrations
+    if INTELLIGENCE_OK:
+        try:
+            send_all_notifications({"type": "assignment", "assignee": assignee, "cwe": cwe}, [], current_user())
+        except Exception:
+            pass
+    return jsonify({"ok": True})
+
+@app.route('/assignments', methods=['GET'])
+@login_required
+def list_assignments():
+    u = current_user()
+    role = session.get('role', 'user')
+    assignments = _load_assignments()
+    if role == 'admin':
+        return jsonify(assignments)
+    # Users see their own assignments
+    return jsonify([a for a in assignments if a.get("assignee") == u or a.get("assigned_by") == u])
+
+# ── Comments (Module 5B) ──────────────────────────────────────────────────────
+COMMENTS_FILE = os.path.join(BASE_DIR, 'data', 'comments.json')
+
+def _load_comments():
+    return _read_json(COMMENTS_FILE, {})
+
+def _save_comments(data):
+    _write_json(COMMENTS_FILE, data)
+
+def _extract_mentions(text: str):
+    return list(set(re.findall(r'@(\w+)', text)))
+
+@app.route('/comments/<vuln_id>', methods=['GET'])
+@login_required
+def get_comments(vuln_id):
+    comments = _load_comments()
+    return jsonify(comments.get(vuln_id, []))
+
+@app.route('/comments/<vuln_id>', methods=['POST'])
+@login_required
+def post_comment(vuln_id):
+    d    = request.get_json() or {}
+    text = d.get("text", "").strip()
+    if not text:
+        return jsonify({"error": "Commentaire vide"}), 400
+    if len(text) > 2000:
+        return jsonify({"error": "Commentaire trop long (max 2000 caractères)"}), 400
+    comments = _load_comments()
+    thread   = comments.setdefault(vuln_id, [])
+    entry = {
+        "id":         secrets.token_hex(6),
+        "vuln_id":    vuln_id,
+        "author":     current_user(),
+        "text":       text,
+        "mentions":   _extract_mentions(text),
+        "created_at": datetime.now().isoformat(),
+    }
+    thread.append(entry)
+    # Keep last 200 comments per vuln
+    if len(thread) > 200:
+        comments[vuln_id] = thread[-200:]
+    _save_comments(comments)
+    audit_log("comment_posted", details={"vuln_id": vuln_id, "mentions": entry["mentions"]})
+    return jsonify({"ok": True, "comment": entry})
+
+@app.route('/comments/<vuln_id>/<comment_id>', methods=['DELETE'])
+@login_required
+def delete_comment(vuln_id, comment_id):
+    comments = _load_comments()
+    thread   = comments.get(vuln_id, [])
+    u = current_user()
+    role = session.get('role', 'user')
+    new_thread = [c for c in thread
+                  if not (c["id"] == comment_id and (c["author"] == u or role == 'admin'))]
+    if len(new_thread) == len(thread):
+        return jsonify({"error": "Commentaire introuvable ou non autorisé"}), 403
+    comments[vuln_id] = new_thread
+    _save_comments(comments)
+    return jsonify({"ok": True})
 
 @app.route('/history')
 @login_required
@@ -911,77 +1949,173 @@ def download_all():
         for p in patches: zf.write(p,os.path.basename(p))
     return send_file(zp,as_attachment=True,download_name=zn)
 
+@app.route('/reanalyze', methods=['POST'])
+@login_required
+def reanalyze():
+    u = current_user()
+    d = request.get_json() or {}
+    path = d.get('path', '').strip()
+    if not path:
+        return jsonify({"error": "Chemin manquant"}), 400
+    uld = get_user_upload_dir(u)
+    if not os.path.realpath(path).startswith(os.path.realpath(uld)):
+        return jsonify({"error": "Accès refusé"}), 403
+    if not os.path.exists(path):
+        return jsonify({"error": "Fichier introuvable"}), 404
+    ps = get_pipeline(u)
+    ps.update({"running": True, "progress": 0, "results": [], "logs": [], "metrics": {}})
+    threading.Thread(target=run_pipeline, args=(u, [path]), daemon=True).start()
+    return jsonify({"ok": True})
+
 @app.route('/report')
 @login_required
 def generate_report():
-    try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib import colors
-        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-        from reportlab.lib.units import cm
-    except ImportError:
-        return jsonify({"error":"pip install reportlab"}),500
+    ps      = get_pipeline(current_user())
+    results = ps.get("results", [])
+    m       = ps.get("metrics", {})
+    if not results:
+        return jsonify({"error": "Aucune analyse disponible"}), 404
 
-    ps=get_pipeline(current_user()); results=ps.get("results",[]); m=ps.get("metrics",{})
-    if not results: return jsonify({"error":"Aucune analyse"}),404
+    # ── CWE descriptions (French) ─────────────────────────────────
+    CWE_DESCS = {
+        'CWE-89':  'Injection SQL — des données utilisateur sont insérées directement dans une requête SQL sans paramétrage.',
+        'CWE-79':  'Cross-Site Scripting (XSS) — du code JavaScript malveillant peut s\'exécuter dans le navigateur.',
+        'CWE-22':  'Path Traversal — un attaquant peut accéder à des fichiers hors du répertoire autorisé.',
+        'CWE-78':  'Injection de commandes OS — des commandes arbitraires peuvent être exécutées sur le serveur.',
+        'CWE-95':  'Eval Injection — du code arbitraire peut être évalué et exécuté dynamiquement.',
+        'CWE-327': 'Algorithme cryptographique obsolète (MD5/SHA1) — facile à casser par force brute.',
+        'CWE-502': 'Désérialisation non sécurisée — peut permettre l\'exécution de code arbitraire.',
+        'CWE-798': 'Identifiants codés en dur — les secrets sont exposés dans le code source.',
+        'CWE-434': 'Upload de fichier non sécurisé — des fichiers malveillants peuvent être exécutés.',
+        'CWE-918': 'Server-Side Request Forgery — le serveur effectue des requêtes pour le compte d\'un attaquant.',
+        'CWE-611': 'Injection XXE — des entités XML externes malveillantes peuvent être injectées.',
+        'CWE-352': 'CSRF — des actions non autorisées peuvent être effectuées à l\'insu de l\'utilisateur.',
+        'CWE-200': 'Exposition d\'informations sensibles — des données confidentielles sont divulguées.',
+        'CWE-306': 'Authentification manquante — des fonctions critiques sont accessibles sans authentification.',
+        'CWE-732': 'Permissions de fichier incorrectes — des fichiers sensibles sont accessibles à trop d\'utilisateurs.',
+    }
 
-    ts=datetime.now().strftime("%Y%m%d_%H%M%S")
-    fname=f"patchmind_report_{current_user()}_{ts}.pdf"
-    fpath=os.path.join(tempfile.gettempdir(),fname)
-    doc=SimpleDocTemplate(fpath,pagesize=A4,leftMargin=2*cm,rightMargin=2*cm,topMargin=2*cm,bottomMargin=2*cm)
-    styles=getSampleStyleSheet(); story=[]
+    # ── Severity helpers ──────────────────────────────────────────
+    def sev_class(sev_str):
+        s = str(sev_str).upper()
+        if 'CRITICAL' in s or 'CRITIQUE' in s: return 'critical'
+        if 'HIGH'     in s or 'HAUTE'    in s: return 'high'
+        if 'MEDIUM'   in s or 'MOYENNE'  in s: return 'medium'
+        if 'LOW'      in s or 'FAIBLE'   in s: return 'low'
+        return 'info'
 
-    story.append(Paragraph("PatchMind — Rapport d'analyse de sécurité",
-        ParagraphStyle('T',parent=styles['Title'],fontSize=20,
-                       textColor=colors.HexColor('#00ff88'),spaceAfter=4)))
-    story.append(Paragraph(
-        f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')} · Utilisateur : {current_user()}",
-        ParagraphStyle('s',parent=styles['Normal'],fontSize=9,textColor=colors.grey,spaceAfter=16)))
-    story.append(HRFlowable(width="100%",thickness=1,color=colors.HexColor('#00ff88')))
-    story.append(Spacer(1,0.4*cm))
-
-    story.append(Paragraph("Résumé de session",styles['Heading2']))
-    t=Table([["Métrique","Valeur"],
-             ["Vulnérabilités",str(m.get("total","—"))],
-             ["Patches validés",str(m.get("validated","—"))],
-             ["Patches rejetés",str(m.get("rejected","—"))],
-             ["Success rate",f"{m.get('success_rate','—')}%"],
-             ["MTTR moyen",f"{m.get('mttr','—')}s"],
-             ["Durée totale",f"{m.get('duration','—')}s"]],
-            colWidths=[9*cm,8*cm])
-    t.setStyle(TableStyle([
-        ('BACKGROUND',(0,0),(-1,0),colors.HexColor('#0c1118')),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.HexColor('#00ff88')),
-        ('FONTSIZE',(0,0),(-1,-1),10),
-        ('GRID',(0,0),(-1,-1),0.5,colors.HexColor('#1a2535')),
-        ('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.HexColor('#111822'),colors.HexColor('#0c1118')]),
-        ('TEXTCOLOR',(0,1),(-1,-1),colors.HexColor('#cdd9e5')),
-        ('PADDING',(0,0),(-1,-1),8)]))
-    story.append(t); story.append(Spacer(1,0.5*cm))
-
-    story.append(Paragraph("Vulnérabilités détectées",styles['Heading2']))
-    rows=[["CWE","Fichier","Ligne","Sévérité","Statut"]]
+    # ── Build per-result context ──────────────────────────────────
+    conf_labels = {
+        'cache':  '⚡ Déjà validé',
+        'high':   '✓ Prêt à appliquer',
+        'medium': '~ Vérifier le diff',
+        'low':    '⚠ Correction manuelle',
+    }
+    enriched = []
     for r in results:
-        rows.append([r["cwe"],r["file"],str(r["line"]),r["severity"][:28],"VALIDÉ" if r["success"] else "REJETÉ"])
-    vt=Table(rows,colWidths=[2.5*cm,4.5*cm,1.5*cm,5.5*cm,3*cm])
-    style_cmds=[
-        ('BACKGROUND',(0,0),(-1,0),colors.HexColor('#0c1118')),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.HexColor('#00c4ff')),
-        ('FONTSIZE',(0,0),(-1,-1),8),
-        ('GRID',(0,0),(-1,-1),0.5,colors.HexColor('#1a2535')),
-        ('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.HexColor('#111822'),colors.HexColor('#0c1118')]),
-        ('TEXTCOLOR',(0,1),(-1,-1),colors.HexColor('#cdd9e5')),
-        ('PADDING',(0,0),(-1,-1),6)]
-    for i,r in enumerate(results):
-        style_cmds.append(('TEXTCOLOR',(4,i+1),(4,i+1),
-            colors.HexColor('#00ff88') if r["success"] else colors.HexColor('#ff4757')))
-    vt.setStyle(TableStyle(style_cmds))
-    story.append(vt); story.append(Spacer(1,0.4*cm))
-    story.append(Paragraph("Rapport confidentiel — PatchMind Automated Security Platform © 2026",
-        ParagraphStyle('f',parent=styles['Normal'],fontSize=7,textColor=colors.grey)))
-    doc.build(story)
-    return send_file(fpath,as_attachment=True,download_name=fname,mimetype='application/pdf')
+        cwe   = r.get('cwe','').split(':')[0].strip()
+        conf  = r.get('confidence', 0)
+        fc    = r.get('from_cache', False)
+        diff  = r.get('diff', '')
+        enriched.append({
+            **r,
+            'cwe_desc':          CWE_DESCS.get(cwe, ''),
+            'explanation':       r.get('explanation') or _VULN_EXPLANATIONS.get(cwe, ''),
+            'fix_recommendation': r.get('solution') or _FIX_RECOMMENDATIONS.get(cwe, ''),
+            'severity_class':    sev_class(r.get('severity','')),
+            'severity_label':    str(r.get('severity',''))[:30],
+            'conf_label':        conf_labels['cache'] if fc else
+                                 conf_labels['high']  if conf >= 80 else
+                                 conf_labels['medium'] if conf >= 65 else
+                                 conf_labels['low'],
+            'diff_lines':        diff.splitlines() if diff else [],
+        })
+
+    # ── Severity breakdown ────────────────────────────────────────
+    sev_map = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0, 'info': 0}
+    for r in enriched:
+        sev_map[r['severity_class']] = sev_map.get(r['severity_class'], 0) + 1
+
+    SEV_DESCS = {
+        'critical': 'Exploitation triviale, impact maximal, correction immédiate requise',
+        'high':     'Risque élevé, à corriger en priorité',
+        'medium':   'Risque modéré, à traiter rapidement',
+        'low':      'Risque faible, à traiter lors du prochain sprint',
+        'info':     'Informatif, aucune action immédiate requise',
+    }
+    severity_breakdown = [
+        (k.upper(), v, round(v/len(enriched)*100, 1) if enriched else 0, SEV_DESCS[k])
+        for k, v in sev_map.items() if v > 0
+    ]
+
+    # ── SVG bar chart (severity) ──────────────────────────────────
+    sev_colors = {'critical':'#dc2626','high':'#ea580c','medium':'#d97706','low':'#0077cc','info':'#64748b'}
+    bar_w = 480; bar_h = 140; n = len(sev_map)
+    bars_svg_parts = []
+    max_v = max(sev_map.values()) or 1
+    bw = 50; gap = 20; x0 = 30
+    for i, (k, v) in enumerate(sev_map.items()):
+        x = x0 + i * (bw + gap)
+        bh = int((v / max_v) * 90) if v else 0
+        y  = 100 - bh
+        bars_svg_parts.append(
+            f'<rect x="{x}" y="{y}" width="{bw}" height="{bh}" fill="{sev_colors.get(k,"#64748b")}" rx="3"/>'
+            f'<text x="{x+bw//2}" y="{y-4}" text-anchor="middle" font-size="11" fill="#1e293b" font-weight="bold">{v}</text>'
+            f'<text x="{x+bw//2}" y="115" text-anchor="middle" font-size="9" fill="#64748b">{k.upper()}</text>'
+        )
+    severity_svg = (
+        f'<svg width="{bar_w}" height="{bar_h}" xmlns="http://www.w3.org/2000/svg">'
+        f'<rect width="{bar_w}" height="{bar_h}" fill="#f8fafc" rx="6"/>'
+        + ''.join(bars_svg_parts) +
+        f'</svg>'
+    )
+
+    # ── Aggregate stats ───────────────────────────────────────────
+    total_vulns   = m.get('total', len(enriched))
+    validated     = m.get('validated', sum(1 for r in enriched if r.get('success')))
+    rejected      = m.get('rejected', total_vulns - validated)
+    success_rate  = m.get('success_rate', round(validated/total_vulns*100, 1) if total_vulns else 0)
+    mttr          = m.get('mttr', 0)
+    duration      = m.get('duration', 0)
+    cache_hits    = sum(1 for r in enriched if r.get('from_cache'))
+    avg_conf      = round(sum(r.get('confidence',0) for r in enriched) / len(enriched), 1) if enriched else 0
+    files_set     = list(dict.fromkeys(r.get('file','') for r in enriched))
+
+    scanners_list = ['Semgrep SAST', 'GitLeaks', 'Snyk/OSV']
+    if ps.get('zap'): scanners_list.append('ZAP DAST')
+    custom_tool_results = ps.get('custom_tools', [])
+    for ct in custom_tool_results:
+        ct_name = ct.get('tool', 'Outil personnalisé')
+        if ct_name not in scanners_list:
+            scanners_list.append(ct_name)
+
+    # ── Render HTML report (opens in browser tab) ────────────────
+    from flask import render_template as rt
+    html_str = rt(
+        'report_template.html',
+        username       = current_user(),
+        gen_date       = datetime.now().strftime('%d/%m/%Y à %H:%M'),
+        files_analyzed = ', '.join(files_set[:5]) + ('…' if len(files_set) > 5 else ''),
+        total_vulns    = total_vulns,
+        validated      = validated,
+        rejected       = rejected,
+        success_rate   = success_rate,
+        mttr           = mttr,
+        duration       = duration,
+        cache_hits     = cache_hits,
+        cache_savings  = cache_hits * 20,
+        avg_confidence = avg_conf,
+        severity_breakdown = severity_breakdown,
+        severity_svg   = severity_svg,
+        scanners_list  = scanners_list,
+        scanners_used  = ' · '.join(scanners_list),
+        results           = enriched,
+        gitleaks_results  = ps.get('gitleaks', []),
+        snyk_results      = ps.get('snyk', []),
+        zap_results       = ps.get('zap', []),
+        custom_tool_results = custom_tool_results,
+    )
+    return html_str, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 # ══════════════════════════════════════════════════════════════════
 # DEMANDES D'ACCÈS
@@ -1136,15 +2270,17 @@ def admin_approve_request(req_id):
 
     password = generate_password()
     users[username] = {
-        "password":    generate_password_hash(password),
-        "role":        "user",
-        "full_name":   req['full_name'],
-        "email":       req['email'],
-        "company":     req['company'],
-        "created_at":  datetime.now().isoformat(),
-        "totp_secret": generate_totp_secret(),
-        "totp_enabled": False,
-        "active":      True
+        "password":             generate_password_hash(password),
+        "role":                 "user",
+        "full_name":            req['full_name'],
+        "email":                req['email'],
+        "company":              req['company'],
+        "created_at":           datetime.now().isoformat(),
+        "totp_secret":          generate_totp_secret(),
+        "totp_enabled":         False,
+        "active":               True,
+        "blocked":              False,
+        "must_change_password": True,
     }
     save_users(users)
     os.makedirs(os.path.join(DATA_DIR, username, 'uploads'), exist_ok=True)
@@ -1184,6 +2320,123 @@ def admin_reject_request(req_id):
     save_requests(reqs)
     return jsonify({"ok": True})
 
+# ══════════════════════════════════════════════════════════════════
+# AUDIT LOG
+# ══════════════════════════════════════════════════════════════════
+
+@app.route('/admin/audit')
+@login_required
+@admin_required
+def admin_audit():
+    return render_template('audit.html')
+
+@app.route('/admin/audit/api')
+@login_required
+@admin_required
+def admin_audit_api():
+    page     = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 50))
+    event_f  = request.args.get('event', '')
+    user_f   = request.args.get('user', '')
+    data = []
+    if os.path.exists(AUDIT_FILE):
+        try:
+            with open(AUDIT_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception:
+            data = []
+    data = list(reversed(data))  # newest first
+    if event_f: data = [e for e in data if event_f.lower() in e.get('event','').lower()]
+    if user_f:  data = [e for e in data if user_f.lower() in e.get('user','').lower()]
+    total   = len(data)
+    start   = (page - 1) * per_page
+    entries = data[start:start + per_page]
+    return jsonify({"entries": entries, "total": total, "page": page, "per_page": per_page})
+
+@app.route('/admin/audit/export')
+@login_required
+@admin_required
+def admin_audit_export():
+    import csv, io as _io
+    data = []
+    if os.path.exists(AUDIT_FILE):
+        try:
+            with open(AUDIT_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception:
+            data = []
+    buf = _io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["timestamp", "event", "user", "ip", "details"])
+    for e in data:
+        writer.writerow([e.get("ts",""), e.get("event",""), e.get("user",""),
+                         e.get("ip",""), json.dumps(e.get("details",{}))])
+    audit_log("audit_export")
+    return send_file(
+        _io.BytesIO(buf.getvalue().encode('utf-8')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='audit_log.csv'
+    )
+
+# ══════════════════════════════════════════════════════════════════
+# ADMIN MONITORING
+# ══════════════════════════════════════════════════════════════════
+
+@app.route('/admin/monitoring')
+@login_required
+@admin_required
+def admin_monitoring():
+    return render_template('monitoring.html')
+
+@app.route('/admin/monitoring/api')
+@login_required
+@admin_required
+def admin_monitoring_api():
+    from generator.generator import get_cache_stats
+    try:
+        cache = get_cache_stats()
+    except Exception:
+        cache = {}
+
+    # Active pipelines
+    active = sum(1 for ps in _pipelines.values() if ps.get("running"))
+    total_analyses = 0
+    try:
+        users = load_users()
+        for uname in users:
+            mp = get_user_metrics_path(uname)
+            if os.path.exists(mp):
+                d = _read_json(mp, {})
+                total_analyses += len(d.get("sessions", []))
+    except Exception:
+        pass
+
+    # Error rate from consensus log
+    consensus_log_data = []
+    cl = os.path.join(BASE_DIR, 'data', 'consensus_log.json')
+    if os.path.exists(cl):
+        try:
+            with open(cl, 'r', encoding='utf-8') as f:
+                consensus_log_data = json.load(f)
+        except Exception:
+            pass
+    fallback_count = sum(1 for e in consensus_log_data if e.get('winner','') != 'groq' or '1/' in e.get('agreement',''))
+
+    return jsonify({
+        "active_pipelines":  active,
+        "total_users":       len(load_users()),
+        "total_analyses":    total_analyses,
+        "cache":             cache,
+        "consensus_entries": len(consensus_log_data),
+        "fallback_rate":     round(fallback_count / max(len(consensus_log_data), 1) * 100, 1),
+        "consensus_ok":      CONSENSUS_OK,
+        "rbac_ok":           RBAC_OK,
+    })
+
+import os
+
 if __name__=='__main__':
     load_users()
-    app.run(debug=False,host='0.0.0.0',port=5000,use_reloader=False)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host='0.0.0.0', port=port, use_reloader=False)

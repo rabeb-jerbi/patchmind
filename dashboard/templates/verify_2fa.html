@@ -46,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="brand-sub">Vérification en deux étapes</div>
   </div>
   <div class="card">
-    <div class="shield">🔐</div>
+    <div class="shield"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
     <div class="card-title">Authentification 2FA</div>
     <div class="desc">Entrez le code à 6 chiffres généré par votre application d'authentification (Google Authenticator, Authy…)</div>
 
@@ -101,7 +101,7 @@ function verify() {
   if (code.length !== 6) return;
   const btn = document.getElementById('verifyBtn');
   const err = document.getElementById('errMsg');
-  btn.disabled = true; btn.textContent = '⏳ Vérification…';
+  btn.disabled = true; btn.textContent = 'Vérification…';
   err.style.display = 'none';
 
   fetch('/verify-2fa', {
@@ -110,7 +110,7 @@ function verify() {
   }).then(r=>r.json()).then(d=>{
     if (d.ok) { window.location.href='/dashboard'; }
     else {
-      err.textContent = '⚠ ' + (d.error||'Code incorrect');
+      err.textContent = d.error || 'Code incorrect';
       err.style.display='block';
       inputs.forEach(i=>{ i.value=''; i.classList.remove('filled'); });
       inputs[0].focus();
