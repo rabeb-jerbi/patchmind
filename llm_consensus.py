@@ -8,9 +8,13 @@ import re
 import json
 import time
 import difflib
+import sys
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from utils.json_io import locked_update as _locked_update
 
 load_dotenv()
 
@@ -63,21 +67,17 @@ def _similarity(a: str, b: str) -> float:
 
 
 def _append_json_log(path: str, entry: dict):
+    """Atomically append *entry* to the JSON log at *path*, capped at 500 entries."""
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        data = []
-        if os.path.exists(path):
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            except Exception:
-                data = []
-        data.append(entry)
-        # Keep last 500 entries
-        if len(data) > 500:
-            data = data[-500:]
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        def _do_append(data):
+            data.append(entry)
+            if len(data) > 500:
+                return data[-500:]
+            return data
+
+        _locked_update(path, _do_append, [])
     except Exception:
         pass
 

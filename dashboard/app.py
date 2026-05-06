@@ -38,6 +38,22 @@ except ImportError:
     RAR_SUPPORTED = False
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.json_io import read_json as _read_json, write_json as _write_json
+
+# ── Database ──────────────────────────────────────────────────────
+from database.init_db import init_schema
+from database.db      import get_db_session, close_db_session
+from database.models  import (User as DBUser, Project as DBProject,
+                               AccessRequest as DBAccessRequest,
+                               Metric as DBMetric, AuditLog as DBAuditLog,
+                               Comment as DBComment,
+                               VulnAssignment as DBAssignment,
+                               FalsePositive as DBFalsePositive,
+                               ToolExecution as DBToolExecution)
+
+# ── Tool registry ─────────────────────────────────────────────────
+from tools.tool_registry import registry as _tool_registry
+
 from scanner.scanner          import run_scan
 from scanner.gitleaks_scanner import run_gitleaks
 from scanner.snyk_scanner     import run_snyk
@@ -60,20 +76,16 @@ try:
 except ImportError:
     CONSENSUS_OK = False
 
-# RBAC
+# RBAC — hard fail: a silent no-op would remove all access control
 try:
     from rbac import require_role, require_permission, has_permission, ROLES as RBAC_ROLES, PERMISSIONS as RBAC_PERMISSIONS
     RBAC_OK = True
-except ImportError:
-    RBAC_OK = False
-    def require_role(*r):
-        def d(f): return f
-        return d
-    def require_permission(p):
-        def d(f): return f
-        return d
-    RBAC_ROLES = ["viewer", "analyst", "dev", "admin"]
-    RBAC_PERMISSIONS = {}
+except ImportError as _rbac_err:
+    raise RuntimeError(
+        f"RBAC module failed to import ({_rbac_err}). "
+        "Aborting startup to prevent authorization bypass. "
+        "Ensure rbac.py exists and is importable."
+    ) from _rbac_err
 
 # Intelligence + Intégrations (import optionnel)
 try:
@@ -85,15 +97,32 @@ except ImportError:
     INTELLIGENCE_OK = False
 
 app = Flask(__name__)
-app.secret_key  = os.environ.get('PATCHMIND_SECRET', 'patchmind-2fa-secret-2026-changeme')
+
+# ── Secret key — mandatory, no insecure fallback ──────────────────
+_secret = os.environ.get('PATCHMIND_SECRET')
+if not _secret:
+    raise RuntimeError(
+        "PATCHMIND_SECRET environment variable is not set. "
+        "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+    )
+app.secret_key = _secret
+
+# ── Session / cookie security ─────────────────────────────────────
 app.permanent_session_lifetime = timedelta(hours=8)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY = True,
+    SESSION_COOKIE_SAMESITE = 'Lax',
+    # Set PATCHMIND_HTTPS=1 in production (HTTPS only).  Kept off by default
+    # so the app works on plain HTTP in development without config changes.
+    SESSION_COOKIE_SECURE   = os.environ.get('PATCHMIND_HTTPS', '').lower() in ('1', 'true', 'yes'),
+    MAX_CONTENT_LENGTH      = 100 * 1024 * 1024,
+)
 
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 USERS_FILE = os.path.join(BASE_DIR, 'data', 'users.json')
 DATA_DIR   = os.path.join(BASE_DIR, 'data', 'users')
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 
-# ── EMAIL CONFIG ── (modifier avec tes vraies infos)
+# ── EMAIL CONFIG ──
 EMAIL_SENDER   = os.environ.get('PATCHMIND_EMAIL', 'votre.email@gmail.com')
 EMAIL_PASSWORD = os.environ.get('PATCHMIND_EMAIL_PASSWORD', 'votre_app_password')
 EMAIL_ENABLED  = EMAIL_SENDER != 'votre.email@gmail.com'
@@ -102,57 +131,79 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, 'data', 'analyses'), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, 'dashboard', 'static', 'avatars'), exist_ok=True)
 
-# ── Jinja2 icon() helper ──────────────────────────────────────────────────────
+# ── Database initialisation (create tables, seed admin if empty) ──
+init_schema()
+
+# ── Release DB session at end of each request ─────────────────────
+app.teardown_appcontext(close_db_session)
+
+# ── Jinja2 icon() helper — SVG cached in memory after first read ──────────────
+_icon_cache: dict = {}
+
 def icon(name, size=18, cls='icon'):
-    path = os.path.join(BASE_DIR, 'dashboard', 'static', 'icons', f'{name}.svg')
-    if os.path.exists(path):
-        with open(path, encoding='utf-8') as f:
-            svg = f.read()
-        svg = svg.replace('<svg ', f'<svg class="{cls}" style="width:{size}px;height:{size}px;vertical-align:middle;flex-shrink:0;" ')
-        return Markup(svg)
-    return Markup(f'<span style="width:{size}px;height:{size}px;display:inline-block"></span>')
+    cache_key = f"{name}:{size}:{cls}"
+    if cache_key not in _icon_cache:
+        path = os.path.join(BASE_DIR, 'dashboard', 'static', 'icons', f'{name}.svg')
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as f:
+                svg = f.read()
+            svg = svg.replace('<svg ', f'<svg class="{cls}" style="width:{size}px;height:{size}px;vertical-align:middle;flex-shrink:0;" ')
+            _icon_cache[cache_key] = Markup(svg)
+        else:
+            _icon_cache[cache_key] = Markup(
+                f'<span style="width:{size}px;height:{size}px;display:inline-block"></span>'
+            )
+    return _icon_cache[cache_key]
 
 app.jinja_env.globals['icon'] = icon
 
 AUDIT_FILE  = os.path.join(BASE_DIR, 'data', 'audit_log.json')
 AUDIT_MAX   = 10000
 
-# ── Audit log helpers ─────────────────────────────────────────────────────────
-_audit_lock = threading.Lock()
+# ── Secure HTTP headers ───────────────────────────────────────────────────────
+@app.after_request
+def _set_security_headers(response):
+    # Prevent MIME-type sniffing
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    # Block embedding in frames (clickjacking)
+    response.headers.setdefault('X-Frame-Options', 'DENY')
+    # Limit referrer leakage
+    response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    # CSP: allows inline styles/scripts and the CDN/font origins used by templates
+    response.headers.setdefault(
+        'Content-Security-Policy',
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com data:; "
+        "img-src 'self' data: blob:; "
+        "connect-src 'self';"
+    )
+    return response
+
+# ── Audit log — DB-backed ─────────────────────────────────────────────────────
 
 def audit_log(event: str, user: str = None, details: dict = None):
-    """Append one audit entry. Rotates at AUDIT_MAX entries."""
-    entry = {
-        "ts":      datetime.now().isoformat(),
-        "event":   event,
-        "user":    user or session.get('username', 'anonymous') if True else 'anonymous',
-        "ip":      request.remote_addr if request else "",
-        "details": details or {},
-    }
-    # Safely get user from session context
+    """Insert one audit entry into the DB.  Never raises."""
+    ev_user = "anonymous"
+    ev_ip   = ""
     try:
-        entry["user"] = user or session.get('username', 'anonymous')
-        entry["ip"]   = request.remote_addr or ""
+        ev_user = user or session.get('username', 'anonymous')
+        ev_ip   = request.remote_addr or ""
     except RuntimeError:
         pass
-
-    with _audit_lock:
-        try:
-            os.makedirs(os.path.dirname(AUDIT_FILE), exist_ok=True)
-            data = []
-            if os.path.exists(AUDIT_FILE):
-                try:
-                    with open(AUDIT_FILE, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                except Exception:
-                    data = []
-            data.append(entry)
-            if len(data) > AUDIT_MAX:
-                data = data[-AUDIT_MAX:]
-            with open(AUDIT_FILE, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+    try:
+        db = get_db_session()
+        db.add(DBAuditLog(
+            ts      = datetime.now(),
+            event   = event,
+            user    = ev_user,
+            ip      = ev_ip,
+            details = details or {},
+        ))
+        db.commit()
+    except Exception:
+        pass
 
 SUPPORTED_EXTENSIONS = [
     '.py','.js','.jsx','.ts','.tsx','.java','.php',
@@ -183,36 +234,62 @@ def record_fail(ip):
 def reset_attempts(ip):
     _login_attempts.pop(ip, None)
 
+# ── Generic per-IP, per-action rate limiter ───────────────────────
+_rate_store: dict = {}   # "{ip}:{action}" -> {calls, window_start}
+_rate_lock = threading.Lock()
+
+def _rate_check(ip: str, action: str, max_calls: int, window_sec: int) -> bool:
+    """Return True if request is within limit, False if rate-limited."""
+    key = f"{ip}:{action}"
+    now = time.time()
+    with _rate_lock:
+        entry = _rate_store.get(key)
+        if entry is None or now - entry['window_start'] >= window_sec:
+            _rate_store[key] = {'calls': 1, 'window_start': now}
+            return True
+        entry['calls'] += 1
+        return entry['calls'] <= max_calls
+
 # ══════════════════════════════════════════════════════════════════
 # USERS
 # ══════════════════════════════════════════════════════════════════
 
-def _read_json(path, default=None):
-    try:
-        with open(path,'r',encoding='utf-8') as f: return json.load(f)
-    except: return default if default is not None else {}
+# ── Users — DB-backed with 5 s TTL in-memory cache ───────────────────────────
+_users_lock      = threading.Lock()
+_users_cache: dict = {}
+_users_cache_ts: float = 0.0
+_USERS_TTL = 5.0
 
-def _write_json(path, data):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path,'w',encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
 
-def load_users():
-    if not os.path.exists(USERS_FILE):
-        default = {"admin": {
-            "password":    generate_password_hash("Admin@2026!"),
-            "role":        "admin",
-            "full_name":   "Administrator",
-            "created_at":  datetime.now().isoformat(),
-            "totp_secret": pyotp.random_base32() if TOTP_SUPPORTED else None,
-            "totp_enabled": False,
-            "active":      True
-        }}
-        _write_json(USERS_FILE, default)
-        return default
-    return _read_json(USERS_FILE)
+def load_users() -> dict:
+    """Return {username: user_dict} from DB, with 5 s TTL cache."""
+    global _users_cache, _users_cache_ts
+    now = time.time()
+    with _users_lock:
+        if _users_cache and (now - _users_cache_ts) < _USERS_TTL:
+            return dict(_users_cache)
+        db = get_db_session()
+        rows = db.query(DBUser).all()
+        data = {r.username: r.to_dict() for r in rows}
+        _users_cache    = data
+        _users_cache_ts = now
+        return dict(data)
 
-def save_users(u): _write_json(USERS_FILE, u)
+
+def save_users(u: dict) -> None:
+    """Upsert all users in *u* dict into the DB and invalidate the cache."""
+    global _users_cache, _users_cache_ts
+    db = get_db_session()
+    for username, data in u.items():
+        row = db.query(DBUser).filter_by(username=username).first()
+        if row:
+            row.update_from_dict(data)
+        else:
+            db.add(DBUser.from_dict(username, data))
+    db.commit()
+    with _users_lock:
+        _users_cache    = {}
+        _users_cache_ts = 0.0
 
 def get_user_upload_dir(u):
     d = os.path.join(DATA_DIR, u, 'uploads')
@@ -286,8 +363,9 @@ def get_pipeline(u):
         _pipelines[u] = {
             "running":  False, "progress": 0,
             "results":  [], "metrics": {}, "logs": [],
-            "gitleaks": [],   # Secrets détectés
-            "snyk":     [],   # Dépendances vulnérables
+            "gitleaks": [],
+            "snyk":     [],
+            "job_id":   None,
         }
     return _pipelines[u]
 
@@ -306,77 +384,268 @@ def get_supported_files(folder):
                 out.append(os.path.join(root,f))
     return out
 
+# ── Archive safety limits ─────────────────────────────────────────
+_ARCHIVE_MAX_UNCOMPRESSED = 500 * 1024 * 1024   # 500 MB
+_ARCHIVE_MAX_FILES        = 2_000
+_ARCHIVE_DANGEROUS_EXTS   = frozenset({
+    '.exe', '.dll', '.so', '.bat', '.cmd', '.sh', '.ps1',
+    '.vbs', '.msi', '.app', '.scr', '.com', '.pif',
+})
+
 def extract_zip(zip_path, uld):
-    name = os.path.splitext(os.path.basename(zip_path))[0]
-    dest = os.path.join(uld, name+'_extracted')
-    if os.path.exists(dest): shutil.rmtree(dest)
-    os.makedirs(dest,exist_ok=True)
-    with zipfile.ZipFile(zip_path,'r') as zf:
-        for m in zf.namelist():
-            mp = os.path.realpath(os.path.join(dest,m))
-            if mp.startswith(os.path.realpath(dest)): zf.extract(m,dest)
+    safe_name = re.sub(r'[^\w\-]', '_', os.path.splitext(os.path.basename(zip_path))[0])
+    dest = os.path.join(uld, safe_name + '_extracted')
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    os.makedirs(dest, exist_ok=True)
+    dest_real = os.path.realpath(dest)
+    with zipfile.ZipFile(zip_path, 'r') as zf:
+        members = zf.infolist()
+        if len(members) > _ARCHIVE_MAX_FILES:
+            raise ValueError(f"Archive trop volumineuse : {len(members)} fichiers (max {_ARCHIVE_MAX_FILES})")
+        total_size = sum(m.file_size for m in members)
+        if total_size > _ARCHIVE_MAX_UNCOMPRESSED:
+            raise ValueError(f"Contenu décompressé trop grand : {total_size // 1024 // 1024} MB")
+        for m in members:
+            mname = m.filename.replace('\\', '/')
+            # Reject absolute paths and directory traversal
+            parts = mname.split('/')
+            if mname.startswith('/') or '..' in parts:
+                continue
+            # Reject dangerous executables
+            if any(mname.lower().endswith(ext) for ext in _ARCHIVE_DANGEROUS_EXTS):
+                continue
+            # Verify resolved path stays inside dest
+            target = os.path.realpath(os.path.join(dest_real, mname))
+            if not (target == dest_real or target.startswith(dest_real + os.sep)):
+                continue
+            zf.extract(m, dest)
     return get_supported_files(dest), dest
 
 def extract_rar(rar_path, uld):
-    if not RAR_SUPPORTED: raise RuntimeError("rarfile non installé")
-    name = os.path.splitext(os.path.basename(rar_path))[0]
-    dest = os.path.join(uld, name+'_extracted')
-    if os.path.exists(dest): shutil.rmtree(dest)
-    os.makedirs(dest,exist_ok=True)
-    with rarfile.RarFile(rar_path,'r') as rf: rf.extractall(dest)
+    if not RAR_SUPPORTED:
+        raise RuntimeError("rarfile non installé")
+    safe_name = re.sub(r'[^\w\-]', '_', os.path.splitext(os.path.basename(rar_path))[0])
+    dest = os.path.join(uld, safe_name + '_extracted')
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    os.makedirs(dest, exist_ok=True)
+    dest_real = os.path.realpath(dest)
+    with rarfile.RarFile(rar_path, 'r') as rf:
+        members = rf.infolist()
+        if len(members) > _ARCHIVE_MAX_FILES:
+            raise ValueError(f"Archive trop volumineuse : {len(members)} fichiers (max {_ARCHIVE_MAX_FILES})")
+        for m in members:
+            mname = m.filename.replace('\\', '/')
+            parts = mname.split('/')
+            if mname.startswith('/') or '..' in parts:
+                continue
+            if any(mname.lower().endswith(ext) for ext in _ARCHIVE_DANGEROUS_EXTS):
+                continue
+            target = os.path.realpath(os.path.join(dest_real, mname))
+            if not (target == dest_real or target.startswith(dest_real + os.sep)):
+                continue
+            rf.extract(m, dest)
     return get_supported_files(dest), dest
 
-def clone_repo(url, uld):
-    import git
-    name = url.rstrip('/').split('/')[-1].replace('.git','')
-    dest = os.path.join(uld, name)
-    if os.path.exists(dest): shutil.rmtree(dest)
-    git.Repo.clone_from(url, dest); return dest
+# ── Git clone safety ──────────────────────────────────────────────
+import ipaddress as _ipaddress
+import urllib.parse as _urlparse
+
+_CLONE_TIMEOUT  = int(os.environ.get('PATCHMIND_CLONE_TIMEOUT', '120'))
+_CLONE_MAX_MB   = int(os.environ.get('PATCHMIND_CLONE_MAX_MB', '200'))
+_GIT_ALLOWED_HOSTS = {'github.com', 'gitlab.com', 'bitbucket.org'}
+
+_PRIVATE_NETS = [
+    _ipaddress.ip_network('10.0.0.0/8'),
+    _ipaddress.ip_network('172.16.0.0/12'),
+    _ipaddress.ip_network('192.168.0.0/16'),
+    _ipaddress.ip_network('169.254.0.0/16'),   # link-local + cloud metadata
+    _ipaddress.ip_network('127.0.0.0/8'),
+    _ipaddress.ip_network('::1/128'),
+    _ipaddress.ip_network('fc00::/7'),
+]
+
+def _validate_git_url(url: str) -> None:
+    """Raise ValueError if url is not a safe public HTTPS git URL."""
+    if not url or len(url) > 512:
+        raise ValueError("URL invalide ou trop longue")
+    parsed = _urlparse.urlparse(url)
+    if parsed.scheme not in ('https', 'http'):
+        raise ValueError("Seuls les schémas http/https sont autorisés")
+    host = (parsed.hostname or '').lower()
+    if not host:
+        raise ValueError("Hôte manquant dans l'URL")
+    # Block raw IP literals pointing to private/metadata ranges
+    try:
+        addr = _ipaddress.ip_address(host)
+        if addr.is_private or addr.is_loopback or addr.is_link_local or addr.is_reserved:
+            raise ValueError("Adresse IP interne ou réservée non autorisée")
+        for net in _PRIVATE_NETS:
+            if addr in net:
+                raise ValueError("Adresse IP dans un réseau privé non autorisée")
+    except ValueError as exc:
+        if 'autoris' in str(exc) or 'interne' in str(exc) or 'priv' in str(exc):
+            raise   # re-raise our own IP-range errors
+        # ip_address() raised ValueError for a hostname — that is expected and fine
+    # Restrict to known public git hosts
+    if host not in _GIT_ALLOWED_HOSTS:
+        raise ValueError(
+            f"Hôte non autorisé : '{host}'. "
+            "Utilisez github.com, gitlab.com ou bitbucket.org."
+        )
+    # No option injection via path (git treats paths starting with '-' as flags)
+    path = parsed.path.lstrip('/')
+    if path.startswith('-'):
+        raise ValueError("Chemin de dépôt invalide")
+
+def clone_repo(url: str, uld: str) -> str:
+    _validate_git_url(url)
+    import subprocess
+    raw_name = url.rstrip('/').split('/')[-1].replace('.git', '')
+    safe_name = re.sub(r'[^\w\-]', '_', raw_name)[:80] or 'repo'
+    dest = os.path.join(uld, safe_name)
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    env = {**os.environ, 'GIT_TERMINAL_PROMPT': '0'}
+    result = subprocess.run(
+        ['git', 'clone', '--depth', '1', '--', url, dest],
+        capture_output=True, text=True,
+        timeout=_CLONE_TIMEOUT,
+        env=env,
+    )
+    if result.returncode != 0:
+        shutil.rmtree(dest, ignore_errors=True)
+        raise RuntimeError(f"Échec du clonage : {(result.stderr or result.stdout)[:300]}")
+    # Post-clone size check
+    total_bytes = sum(
+        os.path.getsize(os.path.join(r, f))
+        for r, _, files in os.walk(dest)
+        for f in files
+    )
+    max_bytes = _CLONE_MAX_MB * 1024 * 1024
+    if total_bytes > max_bytes:
+        shutil.rmtree(dest, ignore_errors=True)
+        raise ValueError(
+            f"Dépôt trop volumineux ({total_bytes // 1024 // 1024} MB > {_CLONE_MAX_MB} MB)"
+        )
+    return dest
 
 def norm_cwe(raw):
     return re.sub(r'^(?i)CWE-0*(\d+)$', lambda m:f'CWE-{m.group(1)}',
                   raw.split(':')[0].strip())
 
-def save_session_history(username, m):
-    path = get_user_metrics_path(username)
-    data = _read_json(path, {"sessions":[]})
-    data.setdefault("sessions",[])
-    data["sessions"].append({
+def save_session_history(username: str, m: dict) -> None:
+    """Persist one analysis session to the DB metrics table."""
+    session_data = {
         "timestamp":         datetime.now().isoformat(),
-        "total_vulns":       m["total"],
-        "patches_validated": m["validated"],
-        "patches_rejected":  m["rejected"],
-        "success_rate":      m["success_rate"],
-        "mttr_seconds":      m["mttr"],
-        "total_duration":    m["duration"],
-        "patched_files":     m.get("patched_files",[]),
-        "files_analyzed":    m.get("files_analyzed",[]),
-    })
-    _write_json(path, data)
-
-def _compute_confidence(ok, from_cache, cwe, fixed_code):
-    """Calcule un score de confiance sur le patch généré."""
-    if not ok:
-        return 0
-    score = 60  # base si validé
-    if from_cache:
-        score += 30  # patch déjà validé = très fiable
-    else:
-        score += 10  # validé par Semgrep
-    # Bonus si le code contient les patterns attendus
-    patterns = {
-        "CWE-89":  ["?", "%s", "prepare", "parameterized", "execute"],
-        "CWE-79":  ["escape", "htmlspecialchars", "textContent", "template", "sanitize"],
-        "CWE-78":  ["shell=False", "execFile", "ProcessBuilder", "escapeshellarg"],
-        "CWE-327": ["sha256", "SHA-256", "bcrypt", "sha512"],
-        "CWE-22":  ["realpath", "normalize", "startsWith", "basename"],
-        "CWE-502": ["json.loads", "JSON.parse", "safe_load"],
-        "CWE-798": ["os.getenv", "process.env", "System.getenv", "getenv"],
+        "total_vulns":       m.get("total", 0),
+        "patches_validated": m.get("validated", 0),
+        "patches_rejected":  m.get("rejected", 0),
+        "success_rate":      m.get("success_rate", 0),
+        "mttr_seconds":      m.get("mttr", 0),
+        "total_duration":    m.get("duration", 0),
+        "patched_files":     m.get("patched_files", []),
+        "files_analyzed":    m.get("files_analyzed", []),
     }
-    expected = patterns.get(cwe, [])
-    if expected and any(p.lower() in fixed_code.lower() for p in expected):
-        score += 10
-    return min(score, 100)
+    try:
+        db = get_db_session()
+        db.add(DBMetric(username=username, session_data=session_data))
+        db.commit()
+    except Exception as exc:
+        print(f"⚠️  save_session_history DB error: {exc}")
+
+def _compute_confidence(validation_results: dict, from_cache: bool, cwe: str,
+                        fixed_code: str, consensus_info: dict = None):
+    """
+    Weighted confidence score (0-100) based on Section 10 requirements.
+
+    Weights:
+      Syntax valid       +30
+      Semgrep clean      +30
+      GitLeaks clean     +20
+      Regression/lint    +20
+    Bonuses:
+      No new vulns       +5
+      Cache hit          +5
+    Cap: 100
+
+    Returns (score: int, details: dict)
+    """
+    details: dict = {}
+
+    if not validation_results.get("vuln_fixed"):
+        errors = validation_results.get("errors", [])
+        details = {
+            "syntax":    "—",
+            "semgrep":   "failed: vulnerability not fixed",
+            "gitleaks":  "—",
+            "lint":      "—",
+            "consensus": "—",
+        }
+        if errors:
+            details["semgrep"] = f"failed: {errors[0][:80]}"
+        return 0, details
+
+    score = 0
+
+    # ── Syntax (+30) ─────────────────────────────────────────────
+    syn = validation_results.get("syntax", {})
+    if syn.get("warning"):
+        score += 15  # tool not available — partial credit
+        details["syntax"] = f"warning: {syn.get('message','')[:80]}"
+    elif syn.get("passed", True):
+        score += 30
+        details["syntax"] = f"passed ({syn.get('tool','?')})"
+    else:
+        details["syntax"] = f"failed: {syn.get('message','')[:80]}"
+
+    # ── Semgrep (+30) ────────────────────────────────────────────
+    if validation_results.get("rescan_passed"):
+        score += 30
+        details["semgrep"] = "passed"
+    else:
+        score += 10  # fixed but vuln still detected at nearby line
+        details["semgrep"] = "warning: vulnerability may still be present at original line"
+
+    # ── GitLeaks (+20) ───────────────────────────────────────────
+    gl = validation_results.get("gitleaks", {})
+    if gl.get("passed", True):
+        score += 20
+        details["gitleaks"] = "passed"
+    else:
+        score += 5  # partial — no hard block, but reduced score
+        details["gitleaks"] = f"warning: {gl.get('count', 0)} secret(s) detected in patched file"
+
+    # ── Regression / lint (+20) ──────────────────────────────────
+    reg = validation_results.get("regression", {})
+    if not reg.get("passed", True):
+        details["lint"] = f"failed: {(reg.get('errors') or ['unknown'])[0][:80]}"
+    elif reg.get("warnings"):
+        score += 10  # warnings present but not blocking
+        details["lint"] = f"warning: {reg['warnings'][0][:80]}"
+    else:
+        score += 20
+        details["lint"] = "passed"
+
+    # ── Bonuses ──────────────────────────────────────────────────
+    if validation_results.get("new_vulns", 0) == 0:
+        score += 5
+    if from_cache:
+        score += 5
+
+    # ── Consensus label ──────────────────────────────────────────
+    if from_cache:
+        details["consensus"] = "cache"
+    elif consensus_info:
+        badge   = consensus_info.get("badge", "")
+        patches = consensus_info.get("patches", {})
+        n_agree = len(patches)
+        details["consensus"] = f"{n_agree}/3" if n_agree else (badge or "single model")
+    else:
+        details["consensus"] = "single model"
+
+    return min(score, 100), details
 
 def _compute_diff(original_code, fixed_code):
     """Génère un diff simplifié entre le code original et corrigé."""
@@ -701,10 +970,13 @@ def run_pipeline(username, file_paths, scanners=None):
                 with lock:
                     logp(username, f"✅ [{i}/{len(all_vulns)}] Validation...")
 
-                ok, _ = validate_patch(src, fixed_code, vuln)
+                target_url = (scanners or {}).get("zap_url", "") or None
+                ok, validation_results = validate_patch(src, fixed_code, vuln, target_url=target_url)
 
-                # Score de confiance
-                confidence = _compute_confidence(ok, from_cache, cwe_clean, fixed_code)
+                # Score de confiance (Section 10 — weighted)
+                confidence, confidence_details = _compute_confidence(
+                    validation_results, from_cache, cwe_clean, fixed_code, consensus_info
+                )
 
                 # Diff visuel
                 diff = _compute_diff(original_code, fixed_code) if ok else ""
@@ -726,21 +998,23 @@ def run_pipeline(username, file_paths, scanners=None):
                     logp(username, f"{'✅' if ok else '❌'} [{i}/{len(all_vulns)}] {'VALIDÉ' if ok else 'REJETÉ'} {'(cache ⚡)' if from_cache else ''} — confiance: {confidence}%")
 
                 return {
-                    "cwe":          vuln['cwe'].split(':')[0].strip(),
-                    "file":         os.path.basename(orig_path),
-                    "line":         vuln["line"],
-                    "severity":     sev,
-                    "success":      ok,
-                    "message":      vuln["message"][:100],
-                    "patched":      patched if patched_exists else "",
-                    "patched_name": os.path.basename(patched) if patched_exists else "",
-                    "analyzed_at":  datetime.now().strftime("%H:%M:%S"),
-                    "from_cache":   from_cache,
-                    "confidence":   confidence,
-                    "diff":         diff,
-                    "tools":        suggestions.get("tools", []),
-                    "test_code":    suggestions.get("test_code", ""),
-                    "consensus":    consensus_info,
+                    "cwe":                 vuln['cwe'].split(':')[0].strip(),
+                    "file":                os.path.basename(orig_path),
+                    "line":                vuln["line"],
+                    "severity":            sev,
+                    "success":             ok,
+                    "message":             vuln["message"][:100],
+                    "patched":             patched if patched_exists else "",
+                    "patched_name":        os.path.basename(patched) if patched_exists else "",
+                    "analyzed_at":         datetime.now().strftime("%H:%M:%S"),
+                    "from_cache":          from_cache,
+                    "confidence":          confidence,
+                    "confidence_details":  confidence_details,
+                    "validation_warnings": validation_results.get("warnings", []),
+                    "diff":                diff,
+                    "tools":               suggestions.get("tools", []),
+                    "test_code":           suggestions.get("test_code", ""),
+                    "consensus":           consensus_info,
                 }
             except Exception as e:
                 with lock:
@@ -912,7 +1186,7 @@ def login_page():
 
         reset_attempts(ip)
         audit_log("login_success", user=u, details={"ip": ip, "role": users[u].get('role','user')})
-        session.permanent = False  # Session expire à la fermeture du navigateur
+        session.permanent = True   # Enforce the 8-hour PERMANENT_SESSION_LIFETIME timeout
         session['username'] = u
         session['role']     = users[u].get('role','user')
         session['fullname'] = users[u].get('full_name',u)
@@ -939,6 +1213,8 @@ def verify_2fa():
     if '2fa_ok' not in session: return redirect('/login')
     if session.get('2fa_ok'):   return redirect('/dashboard')
     if request.method == 'POST':
+        if not _rate_check(request.remote_addr, 'verify-2fa', 5, 300):
+            return jsonify({"error": "Trop de tentatives 2FA. Réessayez dans 5 minutes."}), 429
         d    = request.get_json() or {}
         code = d.get('code','').replace(' ','')
         users = load_users()
@@ -1057,6 +1333,8 @@ _BINARY_TOOLS = {'trivy'}
 @app.route('/run-tool', methods=['POST'])
 @login_required
 def run_recommended_tool():
+    if not _rate_check(request.remote_addr, 'run-tool', 15, 60):
+        return jsonify({"ok": False, "error": "Trop de requêtes. Réessayez dans une minute."}), 429
     import subprocess, shlex
     d    = request.get_json() or {}
     cmd  = (d.get('cmd') or '').strip()
@@ -1315,11 +1593,22 @@ def api_2fa_disable():
 PROJECTS_FILE = os.path.join(BASE_DIR, 'data', 'projects.json')
 ANALYSES_DIR  = os.path.join(BASE_DIR, 'data', 'analyses')
 
-def _load_projects():
-    return _read_json(PROJECTS_FILE, {})
+def _load_projects() -> dict:
+    db = get_db_session()
+    rows = db.query(DBProject).all()
+    return {r.id: r.to_dict() for r in rows}
 
-def _save_projects(data):
-    _write_json(PROJECTS_FILE, data)
+def _save_projects(data: dict) -> None:
+    db = get_db_session()
+    for pid, pdata in data.items():
+        row = db.query(DBProject).filter_by(id=pid).first()
+        if row:
+            for k, v in pdata.items():
+                if hasattr(row, k):
+                    setattr(row, k, v)
+        else:
+            db.add(DBProject.from_dict(pid, pdata))
+    db.commit()
 
 def _get_project_analyses(project_id):
     """Load all saved analyses for a project from disk."""
@@ -1636,12 +1925,25 @@ def index(): return render_template('index.html')
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload():
+    if not _rate_check(request.remote_addr, 'upload', 10, 60):
+        return jsonify({"error": "Trop de requêtes. Réessayez dans une minute."}), 429
     u=current_user(); uld=get_user_upload_dir(u)
     if 'file' not in request.files: return jsonify({"error":"Aucun fichier"}),400
     f=request.files['file']
     if not f.filename: return jsonify({"error":"Nom vide"}),400
-    fname=secure_filename(f.filename); fpath=os.path.join(uld,fname)
-    f.save(fpath); ext=os.path.splitext(fname)[1].lower()
+    fname=secure_filename(f.filename)
+    if not fname: return jsonify({"error":"Nom de fichier invalide"}),400
+    ext=os.path.splitext(fname)[1].lower()
+    # Allowlist check before writing to disk
+    _allowed_upload = set(SUPPORTED_EXTENSIONS) | {'.zip', '.rar'}
+    if ext not in _allowed_upload:
+        return jsonify({"error":f"Extension '{ext}' non supportée"}),400
+    # Prevent silent overwrite: add a short unique suffix if file already exists
+    if os.path.exists(os.path.join(uld, fname)):
+        base, suf = os.path.splitext(fname)
+        fname = f"{base}_{int(time.time())}{suf}"
+    fpath=os.path.join(uld,fname)
+    f.save(fpath)
 
     try:
         _ct = json.loads(request.form.get("custom_tools","[]"))
@@ -1656,8 +1958,9 @@ def upload():
         "custom_tools": _ct,
     }
 
-    ps=get_pipeline(u)
-    ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{}})
+    job_id = secrets.token_urlsafe(12)
+    ps = get_pipeline(u)
+    ps.update({"running": True, "progress": 0, "results": [], "logs": [], "metrics": {}, "job_id": job_id})
 
     if ext=='.rar':
         def _rar():
@@ -1668,7 +1971,7 @@ def upload():
                 logp(u,f"✅ {len(files)} fichier(s)"); run_pipeline(u,files,scanners)
             except Exception as e: logp(u,f"❌ {e}"); ps["running"]=False
         threading.Thread(target=_rar,daemon=True).start()
-        return jsonify({"message":"RAR lancé"})
+        return jsonify({"message": "RAR lancé", "job_id": job_id})
 
     if ext=='.zip':
         def _zip():
@@ -1679,20 +1982,22 @@ def upload():
                 logp(u,f"✅ {len(files)} fichier(s)"); run_pipeline(u,files,scanners)
             except Exception as e: logp(u,f"❌ {e}"); ps["running"]=False
         threading.Thread(target=_zip,daemon=True).start()
-        return jsonify({"message":"ZIP lancé"})
+        return jsonify({"message": "ZIP lancé", "job_id": job_id})
 
-    if ext not in SUPPORTED_EXTENSIONS:
-        return jsonify({"error":f"Extension '{ext}' non supportée"}),400
     threading.Thread(target=run_pipeline,args=(u,[fpath],scanners),daemon=True).start()
-    return jsonify({"message":"Analyse lancée"})
+    return jsonify({"message": "Analyse lancée", "job_id": job_id})
 
 @app.route('/github', methods=['POST'])
 @login_required
 def github_analyze():
+    if not _rate_check(request.remote_addr, 'github', 5, 60):
+        return jsonify({"error": "Trop de requêtes. Réessayez dans une minute."}), 429
     u=current_user(); uld=get_user_upload_dir(u)
     d=request.get_json() or {}; url=d.get('url','').strip()
-    if not url or not url.startswith('https://github.com/'):
-        return jsonify({"error":"URL invalide"}),400
+    try:
+        _validate_git_url(url)
+    except ValueError as ve:
+        return jsonify({"error": str(ve)}), 400
     scanners = {
         "semgrep":      d.get("semgrep", True),
         "gitleaks":     d.get("gitleaks", True),
@@ -1701,8 +2006,9 @@ def github_analyze():
         "zap_url":      d.get("zap_url", "").strip(),
         "custom_tools": d.get("custom_tools", []),
     }
-    ps=get_pipeline(u)
-    ps.update({"running":True,"progress":0,"results":[],"logs":[],"metrics":{}})
+    job_id = secrets.token_urlsafe(12)
+    ps = get_pipeline(u)
+    ps.update({"running": True, "progress": 0, "results": [], "logs": [], "metrics": {}, "job_id": job_id})
     def _gh():
         try:
             logp(u,f"📥 Clonage : {url}")
@@ -1711,11 +2017,17 @@ def github_analyze():
             logp(u,f"✅ {len(fs)} fichier(s)"); run_pipeline(u,fs,scanners)
         except Exception as e: logp(u,f"❌ {e}"); ps["running"]=False
     threading.Thread(target=_gh,daemon=True).start()
-    return jsonify({"message":"GitHub lancé"})
+    return jsonify({"message": "GitHub lancé", "job_id": job_id})
 
 @app.route('/status')
 @login_required
-def status(): return jsonify(get_pipeline(current_user()))
+def status():
+    u  = current_user()
+    ps = get_pipeline(u)
+    job_id = request.args.get('job_id')
+    if job_id and ps.get('job_id') != job_id:
+        return jsonify({"error": "job_id not found", "running": False}), 404
+    return jsonify(ps)
 
 @app.route('/files')
 @login_required
@@ -1962,10 +2274,11 @@ def reanalyze():
         return jsonify({"error": "Accès refusé"}), 403
     if not os.path.exists(path):
         return jsonify({"error": "Fichier introuvable"}), 404
+    job_id = secrets.token_urlsafe(12)
     ps = get_pipeline(u)
-    ps.update({"running": True, "progress": 0, "results": [], "logs": [], "metrics": {}})
+    ps.update({"running": True, "progress": 0, "results": [], "logs": [], "metrics": {}, "job_id": job_id})
     threading.Thread(target=run_pipeline, args=(u, [path]), daemon=True).start()
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "job_id": job_id})
 
 @app.route('/report')
 @login_required
@@ -2121,13 +2434,39 @@ def generate_report():
 # DEMANDES D'ACCÈS
 # ══════════════════════════════════════════════════════════════════
 
-REQUESTS_FILE = os.path.join(BASE_DIR, 'data', 'requests.json')
+def load_requests() -> list:
+    db = get_db_session()
+    return [r.to_dict() for r in db.query(DBAccessRequest).all()]
 
-def load_requests():
-    return _read_json(REQUESTS_FILE, [])
-
-def save_requests(reqs):
-    _write_json(REQUESTS_FILE, reqs)
+def save_requests(reqs: list) -> None:
+    db = get_db_session()
+    for req in reqs:
+        rid = req.get("id")
+        if not rid:
+            continue
+        row = db.query(DBAccessRequest).filter_by(id=rid).first()
+        if row:
+            for k in ("status", "reviewed_by", "username"):
+                if k in req:
+                    setattr(row, k, req[k])
+        else:
+            from datetime import datetime as _dt
+            created = req.get("created_at")
+            if isinstance(created, str):
+                try:   created = _dt.fromisoformat(created)
+                except ValueError: created = _dt.now()
+            db.add(DBAccessRequest(
+                id             = rid,
+                email          = req.get("email", ""),
+                full_name      = req.get("full_name", req.get("name", "")),
+                reason         = req.get("reason", ""),
+                status         = req.get("status", "pending"),
+                role_requested = req.get("role", req.get("role_requested", "analyst")),
+                created_at     = created,
+                reviewed_by    = req.get("reviewed_by"),
+                username       = req.get("username"),
+            ))
+    db.commit()
 
 def generate_password(length=12):
     chars = string.ascii_letters + string.digits + '!@#$'
@@ -2435,6 +2774,111 @@ def admin_monitoring_api():
     })
 
 import os
+
+# ══════════════════════════════════════════════════════════════════
+# TOOL API  (GET /api/tools, POST /api/tools/recommend, POST /api/tools/run)
+# ══════════════════════════════════════════════════════════════════
+
+@app.route('/api/tools', methods=['GET'])
+@login_required
+def api_tools_list():
+    """Return all registered tools with their availability status."""
+    return jsonify({"ok": True, "tools": _tool_registry.list_all()})
+
+
+@app.route('/api/tools/recommend', methods=['POST'])
+@login_required
+def api_tools_recommend():
+    """Recommend tools for a target path inside the user's workspace."""
+    d = request.get_json() or {}
+    target = (d.get('target_path') or '').strip()
+    if not target:
+        return jsonify({"ok": False, "error": "target_path requis"}), 400
+
+    user_workspace = get_user_upload_dir(current_user())
+
+    # Resolve and validate path stays within user's workspace
+    abs_target = os.path.realpath(os.path.join(user_workspace, target))
+    if not abs_target.startswith(os.path.realpath(user_workspace) + os.sep):
+        if abs_target != os.path.realpath(user_workspace):
+            return jsonify({"ok": False, "error": "Accès refusé — chemin hors du workspace"}), 403
+    if not os.path.exists(abs_target):
+        return jsonify({"ok": False, "error": "Chemin introuvable"}), 404
+
+    # recommend() returns list of to_info_dict() + "reason" key — already serializable
+    recommendations = _tool_registry.recommend(abs_target)
+    return jsonify({"ok": True, "recommendations": recommendations})
+
+
+@app.route('/api/tools/run', methods=['POST'])
+@login_required
+def api_tools_run():
+    """Execute a named tool against a path in the user's workspace."""
+    if not _rate_check(request.remote_addr, 'api-tools-run', 10, 60):
+        return jsonify({"ok": False, "error": "Trop de requêtes. Réessayez dans une minute."}), 429
+
+    # Permission check — only roles with run_scan may execute tools
+    u = current_user()
+    users = load_users()
+    role = users.get(u, {}).get("role", "analyst")
+    if not has_permission(role, "run_scan"):
+        return jsonify({"ok": False, "error": "Permission insuffisante"}), 403
+
+    d = request.get_json() or {}
+    tool_name = (d.get('tool_name') or '').strip()
+    target    = (d.get('target_path') or '').strip()
+    use_cache = bool(d.get('use_cache', True))
+
+    if not tool_name:
+        return jsonify({"ok": False, "error": "tool_name requis"}), 400
+    if not target:
+        return jsonify({"ok": False, "error": "target_path requis"}), 400
+
+    # Validate tool name is registered
+    if not _tool_registry.get(tool_name):
+        known = [t["name"] for t in _tool_registry.list_all()]
+        return jsonify({"ok": False, "error": f"Outil inconnu. Disponibles: {', '.join(known)}"}), 404
+
+    user_workspace = get_user_upload_dir(u)
+
+    # Resolve and verify path containment
+    abs_target = os.path.realpath(os.path.join(user_workspace, target))
+    if not abs_target.startswith(os.path.realpath(user_workspace)):
+        return jsonify({"ok": False, "error": "Accès refusé — chemin hors du workspace"}), 403
+    if not os.path.exists(abs_target):
+        return jsonify({"ok": False, "error": "Chemin introuvable"}), 404
+
+    try:
+        result = _tool_registry.run_tool(
+            name           = tool_name,
+            target_path    = abs_target,
+            username       = u,
+            workspace      = user_workspace,
+            use_cache      = use_cache,
+        )
+        findings = result.get("findings", [])
+        audit_log("tool_run", user=u, details={
+            "tool":           tool_name,
+            "target":         abs_target,
+            "ok":             result.get("ok"),
+            "findings_count": len(findings),
+        })
+        # Strip raw output (may be MBs) — send only findings and metadata
+        response = {
+            "ok":           True,
+            "tool_name":    tool_name,
+            "findings":     findings,
+            "findings_count": len(findings),
+            "from_cache":   result.get("from_cache", False),
+            "duration_ms":  int(result.get("duration", 0) * 1000),
+            "error":        result.get("error", ""),
+        }
+        return jsonify(response)
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 403
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"Erreur interne: {e}"}), 500
+
 
 if __name__=='__main__':
     load_users()

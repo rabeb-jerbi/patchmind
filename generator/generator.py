@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from rag.rag import search_similar_fixes, get_cwe_description
+from utils.json_io import read_json as _read_json_file, locked_update as _locked_update
 
 load_dotenv()
 
@@ -37,21 +38,9 @@ def _rotate_model():
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_FILE = os.path.join(BASE_DIR, "data", "patch_cache.json")
 
-def _load_cache():
-    if os.path.exists(CACHE_FILE):
-        try:
-            with open(CACHE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
+# L1 in-memory cache — avoids disk I/O for repeated lookups within a session
+_mem_cache: dict = {}
 
-def _save_cache(cache):
-    try:
-        with open(CACHE_FILE, "w", encoding="utf-8") as f:
-            json.dump(cache, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        print(f"⚠️  Cache save error: {e}")
 
 def _cache_key(cwe, lang, code_snippet):
     """Clé unique : CWE + langage + hash du snippet vulnérable."""
@@ -68,37 +57,56 @@ def _extract_vuln_snippet(code, line_num, context=5):
 
 def get_from_cache(cwe, lang, code, line):
     """Cherche un patch dans le cache. Retourne le patch ou None."""
-    cache   = _load_cache()
     snippet = _extract_vuln_snippet(code, line)
     key     = _cache_key(cwe, lang, snippet)
-    entry   = cache.get(key)
+
+    # L1: check memory first (no disk I/O)
+    if key in _mem_cache:
+        _mem_cache[key]["hits"] = _mem_cache[key].get("hits", 0) + 1
+        print(f"⚡ L1 Cache HIT (mémoire) — patch réutilisé ({cwe} {lang})")
+        return _mem_cache[key]["fixed_code"]
+
+    # L2: check disk
+    entry = _read_json_file(CACHE_FILE, {}).get(key)
     if entry:
-        # Incrémenter le compteur de hits
-        entry["hits"] = entry.get("hits", 0) + 1
-        _save_cache(cache)
-        print(f"⚡ Cache HIT — patch réutilisé ({cwe} {lang}) — économie ~20s + 1 appel LLM")
+        _mem_cache[key] = entry  # warm L1
+        try:
+            def _inc(c):
+                if key in c:
+                    c[key]["hits"] = c[key].get("hits", 0) + 1
+                return c
+            _locked_update(CACHE_FILE, _inc, {})
+        except Exception:
+            pass
+        print(f"⚡ L2 Cache HIT (disque) — patch réutilisé ({cwe} {lang}) — économie ~20s + 1 appel LLM")
         return entry["fixed_code"]
     return None
 
 def save_to_cache(cwe, lang, code, line, fixed_code):
-    """Sauvegarde un patch validé dans le cache."""
-    cache   = _load_cache()
-    snippet = _extract_vuln_snippet(code, line)
-    key     = _cache_key(cwe, lang, snippet)
-    cache[key] = {
+    """Sauvegarde un patch validé dans le cache (L1 + disque)."""
+    snippet   = _extract_vuln_snippet(code, line)
+    key       = _cache_key(cwe, lang, snippet)
+    new_entry = {
         "cwe":        cwe,
         "lang":       lang,
         "fixed_code": fixed_code,
         "snippet":    snippet[:200],
         "hits":       0,
-        "saved_at":   time.strftime("%Y-%m-%d %H:%M:%S")
+        "saved_at":   time.strftime("%Y-%m-%d %H:%M:%S"),
     }
-    _save_cache(cache)
-    print(f"💾 Patch mis en cache : {cwe} ({lang})")
+    _mem_cache[key] = new_entry
+    try:
+        def _add(c):
+            c[key] = new_entry
+            return c
+        _locked_update(CACHE_FILE, _add, {})
+        print(f"💾 Patch mis en cache : {cwe} ({lang})")
+    except Exception as e:
+        print(f"⚠️  Cache save error: {e}")
 
 def get_cache_stats():
     """Retourne les statistiques du cache."""
-    cache      = _load_cache()
+    cache      = _read_json_file(CACHE_FILE, {})
     total_hits = sum(e.get("hits", 0) for e in cache.values())
     by_cwe     = {}
     for entry in cache.values():
@@ -109,7 +117,7 @@ def get_cache_stats():
         "total_hits":      total_hits,
         "llm_calls_saved": total_hits,
         "time_saved_sec":  total_hits * 20,
-        "by_cwe":          by_cwe
+        "by_cwe":          by_cwe,
     }
 
 # ── Règles par langage ────────────────────────────────────────────────────────

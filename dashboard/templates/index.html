@@ -1349,37 +1349,13 @@ input[type="file"] { display: none; }
             </div>
           </div>
 
-          <!-- Outil supplémentaire -->
+          <!-- Registry tools -->
           <div style="margin-top:20px;">
-            <div class="section-label">Outil supplémentaire (optionnel)</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-                <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);">Suggestions :</span>
-                <button type="button" class="scanner-pill" onclick="selectCustomTool('Bandit')" style="padding:4px 12px;font-size:11px;">Bandit</button>
-                <button type="button" class="scanner-pill" onclick="selectCustomTool('Trivy')" style="padding:4px 12px;font-size:11px;">Trivy</button>
-                <button type="button" class="scanner-pill" onclick="selectCustomTool('Safety')" style="padding:4px 12px;font-size:11px;">Safety</button>
-                <button type="button" class="scanner-pill" onclick="selectCustomTool('Pylint')" style="padding:4px 12px;font-size:11px;">Pylint</button>
-                <button type="button" class="scanner-pill" onclick="selectCustomTool('ESLint')" style="padding:4px 12px;font-size:11px;">ESLint</button>
-                <button type="button" class="scanner-pill" onclick="selectCustomTool('Checkov')" style="padding:4px 12px;font-size:11px;">Checkov</button>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <input type="text" id="customToolName"
-                  placeholder="Nom de l'outil — Entrée pour exécuter"
-                  style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:13px;font-family:var(--mono);outline:none;transition:border-color .15s;"
-                  onfocus="this.style.borderColor='var(--green)'"
-                  onblur="this.style.borderColor='var(--border)'"
-                  oninput="document.getElementById('customToolRunBtn').disabled=!this.value.trim()"
-                  onkeydown="if(event.key==='Enter'&&this.value.trim())runCustomToolByName(this.value)">
-                <button type="button" id="customToolRunBtn" class="btn btn-outline btn-sm" disabled
-                  onclick="runCustomToolByName(document.getElementById('customToolName').value)">
-                  {{ icon('play', 12) }} Exécuter
-                </button>
-                <button type="button" class="btn btn-ghost btn-sm" id="customToolClearBtn" style="display:none;" onclick="clearCustomTool()">
-                  {{ icon('x', 12) }}
-                </button>
-              </div>
-              <div id="customToolStatus" style="display:none;font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:var(--radius-sm);"></div>
+            <div class="section-label">Outils de validation disponibles</div>
+            <div id="registryToolsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+              <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Chargement…</span>
             </div>
+            <div id="registryToolOutput" style="display:none;margin-top:8px;font-family:var(--mono);font-size:11px;padding:7px 10px;border-radius:var(--radius-sm);word-break:break-word;line-height:1.5;"></div>
           </div>
 
           <!-- Actions -->
@@ -1475,6 +1451,22 @@ input[type="file"] { display: none; }
           </div>
         </div>
         <div class="card-body" id="patchedFilesList"></div>
+      </div>
+
+      <!-- Recommended Tools (appears after analysis) -->
+      <div class="card" id="recommendedToolsCard" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-title-accent" style="background:var(--accent);"></span>
+            Outils recommandés
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:12px;">
+            Outils de sécurité détectés comme pertinents pour ce projet. Exécutez-les pour une analyse complémentaire.
+          </div>
+          <div id="recommendedToolsGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
       </div>
 
     </div>
@@ -1899,117 +1891,68 @@ function getScanners(prefix) {
   };
 }
 
-// ══ CUSTOM TOOLS ══
-const _TOOL_COMMANDS = {
-  bandit:  'bandit -r {dir} -f json',
-  trivy:   'trivy fs {dir}',
-  safety:  'safety check',
-  pylint:  'pylint {dir}',
-  eslint:  'eslint {dir}',
-  checkov: 'checkov -d {dir}',
-};
-const _TOOL_INSTALLS = {
-  bandit:  'pip install bandit',
-  trivy:   '',
-  safety:  'pip install safety',
-  pylint:  'pip install pylint',
-  eslint:  'npm install -g eslint',
-  checkov: 'pip install checkov',
-};
+// ══ REGISTRY TOOLS ══
+let _registryTools = [];
 
-function selectCustomTool(name) {
-  const inp = document.getElementById('customToolName');
-  if (!inp) return;
-  inp.value = name;
-  inp.dispatchEvent(new Event('input'));
-  runCustomToolByName(name);
+function loadRegistryTools() {
+  fetch('/api/tools')
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) return;
+      _registryTools = d.tools || [];
+      const el = document.getElementById('registryToolsList');
+      if (!el) return;
+      if (!_registryTools.length) {
+        el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Aucun outil disponible</span>';
+        return;
+      }
+      el.innerHTML = _registryTools.map(t => {
+        const avail = t.available;
+        const badgeStyle = avail
+          ? 'background:rgba(22,163,74,.12);color:var(--success);border:1px solid rgba(22,163,74,.3);'
+          : 'background:var(--surface-2);color:var(--text-3);border:1px solid var(--border);opacity:.6;';
+        return `<button type="button"
+          style="padding:5px 12px;border-radius:var(--radius-sm);font-size:11px;font-family:var(--mono);cursor:${avail?'pointer':'not-allowed'};display:flex;align-items:center;gap:5px;${badgeStyle}"
+          title="${escHtml(t.description||'')} [${escHtml(t.category||'')}]"
+          ${avail ? `onclick="runRegistryTool('${escHtml(t.name)}','registryToolOutput')"` : 'disabled'}
+        >
+          <svg width="9" height="9" fill="${avail?'var(--success)':'var(--text-3)'}" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
+          ${escHtml(t.name)}
+        </button>`;
+      }).join('');
+    })
+    .catch(() => {});
 }
 
-function clearCustomTool() {
-  const inp = document.getElementById('customToolName');
-  const btn = document.getElementById('customToolRunBtn');
-  const clr = document.getElementById('customToolClearBtn');
-  const st  = document.getElementById('customToolStatus');
-  if (inp) inp.value = '';
-  if (btn) btn.disabled = true;
-  if (clr) clr.style.display = 'none';
-  if (st)  { st.style.display = 'none'; st.textContent = ''; }
-}
-
-function runCustomToolByName(name) {
-  name = (name || '').trim();
-  if (!name) return;
-  const key  = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const cmd  = (_TOOL_COMMANDS[key] || name.toLowerCase() + ' {dir}').replace(/\{dir\}/g, '.');
-  const clr  = document.getElementById('customToolClearBtn');
-  const st   = document.getElementById('customToolStatus');
-  if (clr) clr.style.display = '';
-  if (st)  {
-    st.style.display = '';
-    st.style.background = 'var(--surface-2)';
-    st.style.color = 'var(--text-3)';
-    st.style.border = '1px solid var(--border)';
-    st.textContent = 'Vérification de ' + name + '…';
-  }
-  fetch('/run-tool', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ cmd, tool_name: name })
-  })
-  .then(r => r.json())
-  .then(d => {
-    if (!st) return;
-    if (d.ok) {
-      const prefix = d.installed ? 'Installé et exécuté — ' : '';
-      const firstLine = (d.output || '').split('\n').find(l => l.trim()) || 'OK';
-      st.style.color = 'var(--success)';
-      st.style.border = '1px solid rgba(22,163,74,.3)';
-      st.style.background = 'var(--success-bg,rgba(22,163,74,.06))';
-      st.textContent = prefix + name + ' : ' + firstLine.slice(0, 100);
-    } else {
-      st.style.color = 'var(--danger)';
-      st.style.border = '1px solid rgba(220,38,38,.3)';
-      st.style.background = 'var(--danger-bg,rgba(220,38,38,.06))';
-      const hint = d.install_hint ? ' — ' + d.install_hint : '';
-      st.textContent = (d.error || 'Erreur').slice(0, 160) + hint;
-    }
-  })
-  .catch(() => {
-    if (st) { st.style.color = 'var(--danger)'; st.textContent = 'Erreur réseau'; }
-  });
-}
-
-function runVulnTool(name, outputDivId) {
+function runRegistryTool(toolName, outputDivId) {
   const out = document.getElementById(outputDivId);
   if (!out) return;
-  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const cmd = (_TOOL_COMMANDS[key] || name.toLowerCase() + ' {dir}').replace(/\{dir\}/g, '.');
   out.style.display = '';
   out.style.background = 'var(--surface-2)';
   out.style.color = 'var(--text-3)';
   out.style.border = '1px solid var(--border)';
-  out.textContent = 'Vérification de ' + name + '…';
-  fetch('/run-tool', {
+  out.textContent = 'Exécution de ' + toolName + '…';
+  fetch('/api/tools/run', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ cmd, tool_name: name })
+    body: JSON.stringify({ tool_name: toolName, target_path: '.', use_cache: true })
   })
   .then(r => r.json())
   .then(d => {
     if (d.ok) {
-      const prefix = d.installed ? 'Installé et exécuté — ' : '';
-      const lines = (d.output || '').split('\n').filter(l => l.trim());
-      const summary = lines.slice(0, 3).join('\n') || 'OK';
-      out.style.color = 'var(--success)';
-      out.style.border = '1px solid rgba(22,163,74,.3)';
-      out.style.background = 'var(--success-bg,rgba(22,163,74,.06))';
-      out.textContent = prefix + name + ' :\n' + summary;
+      const findings = d.findings || [];
+      const summary = findings.length
+        ? findings.slice(0, 3).map(f => `[${f.severity||''}] ${(f.message||'').slice(0,80)}`).join('\n')
+        : (d.from_cache ? '(cache) ' : '') + 'Aucune anomalie détectée';
+      out.style.color = findings.length ? 'var(--warn)' : 'var(--success)';
+      out.style.border = findings.length ? '1px solid rgba(217,119,6,.3)' : '1px solid rgba(22,163,74,.3)';
+      out.style.background = findings.length ? 'var(--warn-bg,rgba(217,119,6,.06))' : 'var(--success-bg,rgba(22,163,74,.06))';
+      out.textContent = toolName + ' — ' + findings.length + ' résultat(s)\n' + summary;
     } else {
       out.style.color = 'var(--danger)';
       out.style.border = '1px solid rgba(220,38,38,.3)';
       out.style.background = 'var(--danger-bg,rgba(220,38,38,.06))';
-      const hint = d.install_hint ? '\n' + d.install_hint : '';
-      out.textContent = (d.error || 'Erreur').slice(0, 200) + hint;
+      out.textContent = (d.error || 'Erreur').slice(0, 200);
     }
   })
   .catch(() => {
@@ -2020,13 +1963,55 @@ function runVulnTool(name, outputDivId) {
   });
 }
 
-function getCustomTools() {
-  const name = (document.getElementById('customToolName')?.value || '').trim();
-  if (!name) return [];
-  const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const command = (_TOOL_COMMANDS[key] || name.toLowerCase() + ' {dir}').replace(/\{dir\}/g, '.');
-  return [{ name, command }];
+function showRecommendedTools(targetPath) {
+  const card = document.getElementById('recommendedToolsCard');
+  const grid = document.getElementById('recommendedToolsGrid');
+  if (!card || !grid) return;
+  fetch('/api/tools/recommend', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ target_path: targetPath || '.' })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (!d.ok || !d.recommendations || !d.recommendations.length) return;
+    card.style.display = 'block';
+    grid.innerHTML = d.recommendations.map((t, i) => {
+      const avail = t.available;
+      const outId = 'rec-tool-out-' + i;
+      const catColors = {
+        'SAST':'rgba(99,102,241,.12)', 'Dependency':'rgba(16,185,129,.12)',
+        'IaC':'rgba(245,158,11,.12)', 'Container':'rgba(14,165,233,.12)', 'Lint':'rgba(168,85,247,.12)'
+      };
+      const catColor = catColors[t.category] || 'var(--surface-2)';
+      return `
+      <div style="padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:${catColor};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:13px;font-weight:600;">${escHtml(t.name)}</span>
+            <span style="font-size:10px;padding:1px 7px;border-radius:9px;background:var(--surface-1);color:var(--text-3);border:1px solid var(--border);">${escHtml(t.category||'')}</span>
+            <svg width="8" height="8" fill="${avail?'var(--success)':'var(--danger)'}" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
+            <span style="font-size:10px;color:${avail?'var(--success)':'var(--danger)'};">${avail?'Installé':'Non installé'}</span>
+          </div>
+          ${avail ? `<button class="act-btn" style="padding:3px 10px;font-size:11px;" onclick="runRegistryTool('${escHtml(t.name)}','${outId}')">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Exécuter
+          </button>` : ''}
+        </div>
+        <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">${escHtml(t.reason||t.description||'')}</div>
+        <div id="${outId}" style="display:none;margin-top:6px;padding:6px 10px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:11px;line-height:1.5;word-break:break-word;"></div>
+      </div>`;
+    }).join('');
+  })
+  .catch(() => {});
 }
+
+function runVulnTool(name, outputDivId) {
+  // Try registry first; if tool is not in registry, the endpoint returns 404 and we show an error
+  runRegistryTool(name, outputDivId);
+}
+
+function getCustomTools() { return []; }
 
 // ══ ANALYSIS ══
 function startAnalysis() {
@@ -2041,6 +2026,7 @@ function startAnalysis() {
   resetPipeline();
   fetch('/upload',{method:'POST',body:fd}).then(r=>r.json()).then(data=>{
     if (data.error){alert('Erreur: '+data.error);return;}
+    window._currentJobId = data.job_id || null;
     requestNotifPermission();
     polling = setInterval(checkStatus,2000);
   });
@@ -2053,12 +2039,18 @@ function startGithubAnalysis() {
   resetPipeline();
   fetch('/github',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({url,...sc, custom_tools: customTools})})
-    .then(r=>r.json()).then(()=>{requestNotifPermission();polling=setInterval(checkStatus,2000);});
+    .then(r=>r.json()).then(data=>{
+      window._currentJobId = (data && data.job_id) ? data.job_id : null;
+      requestNotifPermission();
+      polling=setInterval(checkStatus,2000);
+    });
 }
 function resetPipeline() {
   document.getElementById('progressCard').style.display = 'block';
   document.getElementById('resultsCard').style.display = 'none';
   document.getElementById('patchedFilesCard').style.display = 'none';
+  const _rtc = document.getElementById('recommendedToolsCard');
+  if (_rtc) _rtc.style.display = 'none';
   document.getElementById('pipelineDoneActions').style.display = 'none';
   document.getElementById('reportBtn').style.display = 'none';
   document.getElementById('exportExcelBtn').style.display = 'none';
@@ -2081,6 +2073,8 @@ function resetForNewAnalysis() {
   document.getElementById('progressCard').style.display = 'none';
   document.getElementById('resultsCard').style.display = 'none';
   document.getElementById('patchedFilesCard').style.display = 'none';
+  const _rtc2 = document.getElementById('recommendedToolsCard');
+  if (_rtc2) _rtc2.style.display = 'none';
   document.getElementById('newAnalysisBtn').style.display = 'none';
   document.getElementById('githubUrl').value = '';
   ['ov-total','ov-validated','ov-rate','ov-mttr'].forEach(id=>document.getElementById(id).textContent='—');
@@ -2109,7 +2103,9 @@ function _pipelineStep(logs) {
 
 // ══ STATUS POLLING ══
 function checkStatus() {
-  fetch('/status').then(r=>r.json()).then(data=>{
+  const statusUrl = window._currentJobId ? '/status?job_id=' + encodeURIComponent(window._currentJobId) : '/status';
+  fetch(statusUrl).then(r=>r.json()).then(data=>{
+    if (data.error) return;
     document.getElementById('progressFill').style.width = data.progress + '%';
     document.getElementById('progressPct').textContent = data.progress + '%';
     document.getElementById('progressLabel').textContent = data.running ? 'Analyse en cours…' : 'Terminé';
@@ -2147,6 +2143,7 @@ function checkStatus() {
       showComparison(m);
       sendNotification(`Analyse terminée — ${m.validated}/${m.total} vulnérabilités patchées (${m.success_rate}%)`);
       resetSessionTimer();
+      showRecommendedTools('.');
       const _pid = new URLSearchParams(window.location.search).get('project');
       if (_pid) saveToProject(_pid);
     }
@@ -2195,6 +2192,15 @@ function renderResults(results, filtered) {
           <div class="conf-bar-wrap"><div class="conf-bar" style="width:${conf}%;background:${confColor};"></div></div>
           <span class="conf-label" style="color:${confColor};">${confLabel}</span>
         </div>
+        ${(r.confidence_details && Object.keys(r.confidence_details).length > 0) ? `
+        <div class="tech-detail" style="display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:4px;">
+          ${Object.entries(r.confidence_details).map(([k,v])=>{
+            const ok2 = String(v).startsWith('passed');
+            const warn = String(v).startsWith('warning') || String(v).startsWith('cache') || String(v).startsWith('single');
+            const col  = ok2 ? 'var(--success)' : warn ? 'var(--warn)' : String(v)==='—' ? 'var(--text-3)' : 'var(--danger)';
+            return `<span style="font-size:10px;color:${col};">${escHtml(k)}: ${escHtml(String(v).slice(0,60))}</span>`;
+          }).join('<span style="color:var(--border);">·</span>')}
+        </div>` : ''}
         ${ann.note ? `<div class="vuln-note">${ann.note}</div>` : ''}
         <div class="result-actions">
           ${r.diff ? `<button class="act-btn" onclick="showDiff(${realIdx},'${r.cwe}')">Voir diff</button>` : ''}
@@ -2387,7 +2393,7 @@ function loadFiles() {
 function reAnalyze(encodedPath,encodedName) {
   const path=decodeURIComponent(encodedPath),name=decodeURIComponent(encodedName);
   if(!confirm(`Re-analyser "${name}" ?`)) return;
-  fetch('/reanalyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path})}).then(r=>r.json()).then(data=>{if(data.error){alert('Erreur: '+data.error);return;}showPage('analyse');resetPipeline();requestNotifPermission();polling=setInterval(checkStatus,2000);});
+  fetch('/reanalyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path})}).then(r=>r.json()).then(data=>{if(data.error){alert('Erreur: '+data.error);return;}window._currentJobId=data.job_id||null;showPage('analyse');resetPipeline();requestNotifPermission();polling=setInterval(checkStatus,2000);});
 }
 
 // ══ HISTORY ══
@@ -2549,7 +2555,7 @@ function loadHome() {
 // ══ EXCEL ══
 function exportExcel() {
   if(!allResults.length) return;
-  const data=allResults.map((r,i)=>{const ann=vulnAnnotations[i]||{};return{CWE:r.cwe,Fichier:r.file,Ligne:r.line,Sévérité:r.severity,Statut:r.success?'VALIDÉ':'REJETÉ',Description:getCweDesc(r.cwe),Confiance:r.confidence+'%',Cache:r.from_cache?'Oui':'Non',Note:ann.note||'',Assigné:ann.assignee||'',StatutManuel:ann.status||''};});
+  const data=allResults.map((r,i)=>{const ann=vulnAnnotations[i]||{};const cd=r.confidence_details||{};return{CWE:r.cwe,Fichier:r.file,Ligne:r.line,Sévérité:r.severity,Statut:r.success?'VALIDÉ':'REJETÉ',Description:getCweDesc(r.cwe),Confiance:r.confidence+'%',Syntaxe:cd.syntax||'',Semgrep:cd.semgrep||'',GitLeaks:cd.gitleaks||'',Lint:cd.lint||'',Consensus:cd.consensus||'',Cache:r.from_cache?'Oui':'Non',Note:ann.note||'',Assigné:ann.assignee||'',StatutManuel:ann.status||''};});
   const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Vulnérabilités');XLSX.writeFile(wb,`patchmind_${new Date().toISOString().substring(0,10)}.xlsx`);
 }
 function exportHistoryExcel() {
@@ -2588,6 +2594,7 @@ function resetSessionTimer() {
 }
 ['click','keydown','mousemove','touchstart'].forEach(evt=>document.addEventListener(evt,resetSessionTimer,{passive:true}));
 resetSessionTimer();
+loadRegistryTools();
 
 // ══ PROJECT CONTEXT ══
 (function initProjectContext(){

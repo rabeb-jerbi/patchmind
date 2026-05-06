@@ -36,6 +36,12 @@ data/patch_cache.json
 
 data/analyses/
 
+# SQLite database
+data/patchmind.db
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
 # ─────────────────────────────────────────
 
 # Uploads / extracted archives
@@ -44,6 +50,9 @@ data/analyses/
 
 uploads/
 outputs/
+data/users/
+data/llm_errors.json
+data/rag_examples.json
 
 # User-generated files
 
