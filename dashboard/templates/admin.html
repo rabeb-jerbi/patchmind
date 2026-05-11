@@ -119,6 +119,181 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 
 .page{display:none;}
 .page.active{display:block;}
+
+/* ADMIN DASHBOARD MODERN */
+.admin-hero {
+  background:linear-gradient(135deg, rgba(99,102,241,.14), rgba(14,165,233,.08));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:24px;
+  margin-bottom:22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+}
+
+.admin-hero h1 {
+  font-size:28px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.admin-hero p {
+  color:var(--text-dim);
+  font-size:14px;
+  line-height:1.6;
+}
+
+.admin-pill {
+  font-family:var(--mono);
+  font-size:11px;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(99,102,241,.12);
+  color:#6366F1;
+  border:1px solid rgba(99,102,241,.25);
+  white-space:nowrap;
+}
+
+.stats-row {
+  grid-template-columns:repeat(4, minmax(180px, 1fr));
+}
+
+.stat-box {
+  background:var(--surface);
+  border-radius:18px;
+  padding:22px;
+  text-align:left;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+  position:relative;
+  overflow:hidden;
+}
+
+.stat-box::before {
+  content:'';
+  position:absolute;
+  left:0;
+  top:0;
+  width:100%;
+  height:4px;
+  background:linear-gradient(90deg,#6366F1,var(--accent2));
+}
+
+.stat-lbl {
+  margin-top:8px;
+  line-height:1.4;
+}
+
+.stat-help {
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  margin-top:8px;
+}
+
+.card {
+  background:var(--surface);
+  border-radius:18px;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+}
+
+.card-title {
+  font-size:13px;
+  color:var(--text);
+  letter-spacing:.8px;
+}
+
+.admin-grid {
+  display:grid;
+  grid-template-columns:1.4fr .9fr;
+  gap:20px;
+}
+
+.quick-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+}
+
+.quick-action {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-dim);
+}
+
+.quick-action:last-child {
+  border-bottom:none;
+}
+
+.quick-action button,
+.quick-action a {
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:11px;
+}
+
+.recent-table {
+  overflow:hidden;
+  border-radius:12px;
+}
+
+.recent-table th {
+  padding:12px 14px;
+}
+
+.recent-table td {
+  padding:13px 14px;
+}
+
+.users-table {
+  background:var(--surface);
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.users-table th {
+  padding:13px 14px;
+}
+
+.users-table td {
+  padding:14px;
+}
+
+.modal {
+  border-radius:18px;
+}
+
+.btn {
+  border-radius:10px;
+}
+
+.btn-primary {
+  background:linear-gradient(135deg,#6366F1,#4F46E5);
+}
+
+.btn-outline {
+  border-color:var(--border2);
+  color:var(--text);
+}
+
+@media(max-width:1100px) {
+  .stats-row { grid-template-columns:repeat(2,1fr); }
+  .admin-grid { grid-template-columns:1fr; }
+}
+
+@media(max-width:700px) {
+  .stats-row { grid-template-columns:1fr; }
+  .admin-hero { flex-direction:column; align-items:flex-start; }
+}
+
 </style>
 </head>
 <body>
@@ -193,16 +368,76 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 
     <!-- PAGE: DASHBOARD -->
     <div class="page active" id="page-dashboard">
-      <div class="stats-row" id="globalStats">
-        <div class="stat-box"><div class="stat-val" id="gs-users">—</div><div class="stat-lbl">Utilisateurs</div></div>
-        <div class="stat-box"><div class="stat-val yellow" id="gs-sessions">—</div><div class="stat-lbl">Sessions totales</div></div>
-        <div class="stat-box"><div class="stat-val blue" id="gs-vulns">—</div><div class="stat-lbl">Vulns analysées</div></div>
-        <div class="stat-box"><div class="stat-val" id="gs-patches">—</div><div class="stat-lbl">Patches générés</div></div>
+      <div class="admin-hero">
+        <div>
+          <h1>Tableau de bord admin</h1>
+          <p>Supervisez les utilisateurs, les demandes d’accès, les invitations et l’activité globale de PatchMind.</p>
+        </div>
+        <span class="admin-pill">● ADMIN PANEL</span>
       </div>
 
-      <div class="card">
-        <div class="card-title">Activité récente — toutes sessions</div>
-        <div id="recentActivity"><div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+      <div class="stats-row" id="globalStats">
+        <div class="stat-box">
+          <div class="stat-val" id="gs-users">—</div>
+          <div class="stat-lbl">Utilisateurs</div>
+          <div class="stat-help">Comptes enregistrés</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-val yellow" id="gs-sessions">—</div>
+          <div class="stat-lbl">Sessions totales</div>
+          <div class="stat-help">Analyses exécutées</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-val blue" id="gs-vulns">—</div>
+          <div class="stat-lbl">Vulnérabilités</div>
+          <div class="stat-help">Failles analysées</div>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-val" id="gs-patches">—</div>
+          <div class="stat-lbl">Patches générés</div>
+          <div class="stat-help">Correctifs produits</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="card">
+          <div class="card-title">Activité récente — toutes sessions</div>
+          <div id="recentActivity">
+            <div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div>
+          </div>
+        </div>
+
+        <div class="quick-card">
+          <div class="card-title">Actions rapides</div>
+
+          <div class="quick-action">
+            <span>Gérer les utilisateurs</span>
+            <button class="btn btn-outline btn-sm" onclick="showPage('users')">Ouvrir</button>
+          </div>
+
+          <div class="quick-action">
+            <span>Demandes d’accès</span>
+            <button class="btn btn-outline btn-sm" onclick="showPage('requests')">Voir</button>
+          </div>
+
+          <div class="quick-action">
+            <span>Invitations projets</span>
+            <button class="btn btn-outline btn-sm" onclick="showPage('invitations');loadInvitations()">Voir</button>
+          </div>
+
+          <div class="quick-action">
+            <span>Audit système</span>
+            <a href="/admin/audit" class="btn btn-outline btn-sm">Audit</a>
+          </div>
+
+          <div class="quick-action">
+            <span>Monitoring</span>
+            <a href="/admin/monitoring" class="btn btn-outline btn-sm">Monitoring</a>
+          </div>
+        </div>
       </div>
     </div>
 

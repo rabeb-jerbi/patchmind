@@ -808,8 +808,7 @@ input[type="file"] { display: none; }
   margin-bottom: 10px; overflow: hidden;
 }
 .history-main {
-  display: grid; grid-template-columns: 1.3fr 1fr 1.4fr .8fr .8fr .8fr .8fr .8fr .8fr;
-  align-items: center;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
   align-items: center;
 }
 .history-cell { padding: 12px 16px; font-family: var(--mono); font-size: 12px; color: var(--text-3); }
@@ -1131,6 +1130,176 @@ input[type="file"] { display: none; }
   display: none !important;
 }
 
+
+/* USER DASHBOARD MODERN */
+.user-hero {
+  background: linear-gradient(135deg, rgba(79,70,229,.14), rgba(14,165,233,.08));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  box-shadow: var(--shadow-md);
+}
+
+.user-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-hero-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-hero h1 {
+  font-size: 25px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.user-hero p {
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.kpi-row {
+  grid-template-columns: repeat(4, minmax(190px, 1fr));
+}
+
+.kpi-card {
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: var(--shadow-md);
+}
+
+.kpi-label {
+  margin-bottom: 14px;
+}
+
+.kpi-val {
+  font-size: 34px;
+}
+
+.dashboard-grid-modern {
+  display: grid;
+  grid-template-columns: 1.35fr .9fr;
+  gap: 18px;
+}
+
+.side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.home-action-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+
+.home-action-card h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.home-action-card p {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.card {
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  padding: 18px 20px;
+}
+
+.home-mini-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-mini-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.home-mini-row:last-child {
+  border-bottom: none;
+}
+
+.home-mini-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.home-mini-title {
+  flex: 1;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-mini-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+@media(max-width: 1100px) {
+  .dashboard-grid-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media(max-width: 700px) {
+  .user-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .user-hero-left {
+    align-items: flex-start;
+  }
+
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1250,16 +1419,19 @@ input[type="file"] { display: none; }
     <div class="page active" id="page-home">
 
       <!-- Welcome banner -->
-      <div style="margin-bottom:22px;padding:20px 24px;background:linear-gradient(135deg,var(--green-light) 0%,var(--surface) 100%);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:var(--radius);display:flex;align-items:center;gap:16px;">
-        <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#6366F1,#4F46E5);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;">
-          {{ icon('shield-check', 22) }}
+      <div class="user-hero">
+        <div class="user-hero-left">
+          <div class="user-hero-icon">
+            {{ icon('shield-check', 26) }}
+          </div>
+          <div>
+            <h1 id="homeWelcomeTitle">Bonjour !</h1>
+            <p>Suivez vos analyses, vos projets, vos fichiers corrigés et l’état de vos correctifs de sécurité.</p>
+          </div>
         </div>
-        <div style="flex:1;">
-          <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px;" id="homeWelcomeTitle">Bonjour !</div>
-          <div style="font-size:13px;color:var(--text-2);">Vue d'ensemble de vos analyses de sécurité PatchMind</div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="showPage('analyse', document.getElementById('navAnalyse'))">
-          {{ icon('zap', 13) }} Nouvelle analyse
+
+        <button class="btn btn-primary" onclick="showPage('analyse', document.getElementById('navAnalyse'))">
+          {{ icon('zap', 14) }} Nouvelle analyse
         </button>
       </div>
 
@@ -1287,7 +1459,7 @@ input[type="file"] { display: none; }
         </div>
       </div>
 
-      <div class="grid-2" style="gap:16px;">
+      <div class="dashboard-grid-modern">
 
         <!-- Last 5 sessions -->
         <div class="card" style="margin-bottom:0;">
@@ -1301,7 +1473,17 @@ input[type="file"] { display: none; }
         </div>
 
         <!-- Projects + Files -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="side-stack">
+          <div class="home-action-card">
+            <h3>Comment utiliser PatchMind ?</h3>
+            <p>1. Lancez une analyse sur un fichier ou un dépôt GitHub.<br>
+               2. Consultez les vulnérabilités détectées.<br>
+               3. Téléchargez le patch et le rapport généré.</p>
+            <button class="btn btn-outline btn-sm" onclick="showPage('analyse', document.getElementById('navAnalyse'))">
+              Démarrer maintenant
+            </button>
+          </div>
+
           <div class="card" style="margin-bottom:0;flex:1;">
             <div class="card-header">
               <div class="card-title"><span class="card-title-accent"></span>{{ icon('folder', 14) }} &nbsp;Projets actifs</div>
@@ -2013,7 +2195,6 @@ const explanations = {
 
   "CWE-319": "Des informations sensibles sont transmises sans protection suffisante sur le réseau."
 };
-
   const fallback =
     r.message ||
     r.title ||
@@ -2707,221 +2888,51 @@ function reAnalyze(encodedPath,encodedName) {
 }
 
 // ══ HISTORY ══
-
 let _allHistory = [];
-
-let _historyProjects = [];
-
-function histEsc(v) {
-  return String(v ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function fmtSec(v) {
-  if (v === undefined || v === null || v === '' || v === '-' || v === '—') return '—';
-  return String(v).endsWith('s') ? String(v) : String(v) + 's';
-}
-
-function histPick(s, keys, fallback = '—') {
-  for (const k of keys) {
-    if (s && s[k] !== undefined && s[k] !== null && s[k] !== '') return s[k];
-  }
-  return fallback;
-}
-
-function histProjectName(s) {
-  const pid = histPick(s, ['project_id', 'project'], '');
-  const pname = histPick(s, ['project_name', 'project_title', 'projectName'], '');
-
-  if (pname) return pname;
-
-  const p = _historyProjects.find(x =>
-    String(x.id || '') === String(pid) ||
-    String(x.name || '') === String(pid)
-  );
-
-  return p ? (p.name || p.id) : (pid || '—');
-}
-
-function histFileName(s) {
-  if (s.files_analyzed && s.files_analyzed[0] && s.files_analyzed[0].name) {
-    return s.files_analyzed[0].name;
-  }
-
-  if (s.results && s.results[0] && s.results[0].file) {
-    return String(s.results[0].file).replace(/\\/g, '/').split('/').pop();
-  }
-
-  if (s.patched_files && s.patched_files[0] && s.patched_files[0].name) {
-    return s.patched_files[0].name;
-  }
-
-  return s.file || s.filename || '—';
-}
-
-function histProjectMatches(s, selected) {
-  if (!selected) return true;
-
-  const q = String(selected).toLowerCase();
-
-  const values = [
-    s.project_id,
-    s.project,
-    s.project_name,
-    s.project_title,
-    s.projectName,
-    histProjectName(s)
-  ].filter(Boolean).map(v => String(v).toLowerCase());
-
-  return values.includes(q);
-}
-
 function renderHistoryTable(sessions) {
   const el = document.getElementById('historyTable');
-  if (!el) return;
-
-  if (!sessions || !sessions.length) {
-    el.innerHTML = '<div class="empty" style="padding:40px;"><p>Aucune session correspond aux filtres.</p></div>';
-    return;
-  }
-
-  el.innerHTML = sessions.map(s => {
-    const total = histPick(s, ['total_detected', 'total_vulns', 'total'], 0);
-    const ok = histPick(s, ['patches_validated', 'validated', 'patches_applied'], 0);
-    const ko = histPick(s, ['patches_rejected', 'rejected'], 0);
-    const rate = histPick(s, ['success_rate'], 0);
-    const mttr = histPick(s, ['mttr_seconds', 'mttr'], null);
-    const duration = histPick(s, ['total_duration', 'duration'], null);
-
-    return `
-      <div class="history-row">
-        <div class="history-main">
-          <div class="history-cell">${histEsc(String(s.timestamp || '').substring(0, 16))}</div>
-          <div class="history-cell">${histEsc(histProjectName(s))}</div>
-          <div class="history-cell" style="color:var(--success);">${histEsc(histFileName(s))}</div>
-          <div class="history-cell">${total} vulns</div>
-          <div class="history-cell" style="color:var(--success);">${ok} OK</div>
-          <div class="history-cell" style="color:var(--danger);">${ko} KO</div>
-          <div class="history-cell">
-            <span class="rate-pill ${Number(rate) >= 80 ? 'rate-good' : 'rate-bad'}">${rate}%</span>
-          </div>
-          <div class="history-cell">${fmtSec(mttr)}</div>
-          <div class="history-cell">${fmtSec(duration)}</div>
-        </div>
-
-        ${(s.patched_files || []).length > 0 ? `
-          <div style="padding:10px 16px;background:var(--success-bg);border-top:1px solid rgba(22,163,74,.1);display:flex;flex-wrap:wrap;gap:7px;">
-            ${(s.patched_files || []).map(p => `
-              <a href="/download?file=${encodeURIComponent(p.path)}"
-                 style="font-family:var(--mono);font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid rgba(22,163,74,.2);border-radius:4px;color:var(--success);text-decoration:none;">
-                ${histEsc(p.name || 'patch')}
-              </a>
-            `).join('')}
-          </div>` : ''}
-      </div>`;
-  }).join('');
+  if(!sessions.length){el.innerHTML='<div class="empty" style="padding:40px;"><p>Aucune session correspond aux filtres.</p></div>';return;}
+  el.innerHTML = sessions.map(s=>`
+  <div class="history-row">
+    <div class="history-main">
+      <div class="history-cell" style="color:var(--text);">${s.timestamp?.substring(0,16)||'—'}</div>
+      <div class="history-cell">${s.total_vulns??'—'} vulns</div>
+      <div class="history-cell" style="color:var(--success);">${s.patches_validated??'—'} OK</div>
+      <div class="history-cell" style="color:var(--danger);">${s.patches_rejected??'—'} KO</div>
+      <div class="history-cell"><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></div>
+      <div class="history-cell">${s.mttr_seconds??'—'}s</div>
+      <div class="history-cell">${s.total_duration??'—'}s</div>
+    </div>
+    ${(s.patched_files||[]).length>0?`<div style="padding:10px 16px;background:var(--success-bg);border-top:1px solid rgba(22,163,74,.1);display:flex;flex-wrap:wrap;gap:7px;">${s.patched_files.map(p=>`<a href="/download?file=${encodeURIComponent(p.path)}" style="font-family:var(--mono);font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid rgba(22,163,74,.2);border-radius:4px;color:var(--success);text-decoration:none;">${p.name}</a>`).join('')}</div>`:''}
+  </div>`).join('');
 }
-
-
-function _histProjectMatches(session, projectQ) {
-  if (!projectQ) return true;
-
-  const q = String(projectQ).toLowerCase();
-
-  const values = [
-    session.project_id,
-    session.project,
-    session.project_name,
-    session.project_title,
-    session.projectName
-  ].filter(Boolean).map(v => String(v).toLowerCase());
-
-  if (values.includes(q)) return true;
-
-  const proj = _historyProjects.find(p =>
-    String(p.id || '').toLowerCase() === q ||
-    String(p.name || '').toLowerCase() === q
-  );
-
-  if (!proj) return false;
-
-  return values.includes(String(proj.id || '').toLowerCase()) ||
-         values.includes(String(proj.name || '').toLowerCase());
-}
-
 function applyHistoryFilter() {
   const dateQ = document.getElementById('histFilterDate')?.value || '';
   const rateQ = document.getElementById('histFilterRate')?.value || '';
-
-  let filtered = Array.isArray(_allHistory) ? [..._allHistory] : [];
-
-  filtered.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
-
-  if (dateQ) {
-    filtered = filtered.filter(s => String(s.timestamp || '').startsWith(dateQ));
-  }
-
-  if (rateQ === 'good') {
-    filtered = filtered.filter(s => Number(s.success_rate || 0) >= 80);
-  }
-
-  if (rateQ === 'bad') {
-    filtered = filtered.filter(s => Number(s.success_rate || 0) < 80);
-  }
-
+  let filtered = [..._allHistory].reverse();
+  if (dateQ) filtered = filtered.filter(s => (s.timestamp||'').startsWith(dateQ));
+  if (rateQ === 'good') filtered = filtered.filter(s => (s.success_rate||0) >= 80);
+  if (rateQ === 'bad')  filtered = filtered.filter(s => (s.success_rate||0) < 80);
   renderHistoryTable(filtered);
 }
-
-
 function loadHistory() {
-  const el = document.getElementById('historyTable');
-  if (el) {
-    el.innerHTML = '<div class="empty" style="padding:40px;"><p>Chargement…</p></div>';
-  }
-
+  document.getElementById('historyTable').innerHTML='<div class="empty" style="padding:40px;"><p>Chargement…</p></div>';
+  const projectId = (document.getElementById('histFilterProject')||{}).value || '';
+  const url = projectId ? `/history?project_id=${encodeURIComponent(projectId)}` : '/history';
+  // Populate project dropdown once
   const projSel = document.getElementById('histFilterProject');
-  const selectedProject = projSel ? projSel.value : '';
-
-  const populateProjects = fetch('/projects/api')
-    .then(r => r.json())
-    .then(projects => {
-      if (!projSel) return;
-
-      const list = Array.isArray(projects) ? projects : (projects.projects || []);
-
+  if (projSel && projSel.options.length <= 1) {
+    fetch('/projects/api').then(r=>r.json()).then(projects=>{
+      const current = projSel.value;
       projSel.innerHTML = '<option value="">Tous les projets</option>' +
-        list.map(p =>
-          `<option value="${escHtml(p.id)}">${escHtml(p.name || p.id)}</option>`
-        ).join('');
-
-      if ([...projSel.options].some(o => o.value === selectedProject)) {
-        projSel.value = selectedProject;
-      }
-    })
-    .catch(() => {});
-
-  populateProjects.finally(() => {
-    const projectId = projSel ? projSel.value : '';
-    const url = projectId ? `/history?project_id=${encodeURIComponent(projectId)}` : '/history';
-
-    fetch(url)
-      .then(r => r.json())
-      .then(sessions => {
-        _allHistory = Array.isArray(sessions) ? sessions : [];
-        applyHistoryFilter();
-      })
-      .catch(err => {
-        console.error('history load error:', err);
-        if (el) {
-          el.innerHTML = '<div class="empty" style="padding:40px;"><p>Erreur chargement historique.</p></div>';
-        }
-      });
+        projects.map(p=>`<option value="${escHtml(p.id)}"${p.id===current?' selected':''}>${escHtml(p.name)}</option>`).join('');
+    }).catch(()=>{});
+  }
+  fetch(url).then(r=>r.json()).then(sessions=>{
+    _allHistory = sessions;
+    applyHistoryFilter();
   });
 }
-
-
 
 // ══ METRICS ══
 function loadMetriques() {
@@ -3005,7 +3016,7 @@ function loadHome() {
         <td style="padding:10px 8px;font-family:var(--mono);font-size:12px;color:var(--text-3);">${s.total_vulns??'—'}</td>
         <td style="padding:10px 8px;font-family:var(--mono);font-size:12px;color:var(--success);">${s.patches_validated??'—'}</td>
         <td style="padding:10px 8px;"><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></td>
-        <td style="padding:10px 16px;font-family:var(--mono);font-size:12px;color:var(--text-3);">${fmtSec(s.mttr_seconds)}</td>
+        <td style="padding:10px 16px;font-family:var(--mono);font-size:12px;color:var(--text-3);">${s.mttr_seconds??'—'}s</td>
       </tr>`).join('')}</tbody>
     </table>`;
   }).catch(() => {

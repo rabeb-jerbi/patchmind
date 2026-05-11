@@ -58,6 +58,186 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .kv-val{color:var(--text);font-weight:600;}
 .refresh-btn{background:transparent;border:1px solid var(--border2);border-radius:5px;padding:6px 14px;font-family:var(--mono);font-size:11px;color:var(--accent2);cursor:pointer;transition:all 0.2s;}
 .refresh-btn:hover{background:rgba(0,196,255,0.08);}
+
+.monitor-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:20px;
+  margin-bottom:22px;
+}
+
+.refresh-btn.big {
+  padding:10px 18px;
+  border-radius:8px;
+  font-size:12px;
+  background:var(--surface);
+}
+
+.status-banner {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:linear-gradient(135deg, rgba(56,189,248,.12), rgba(129,140,248,.08));
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px 20px;
+  margin-bottom:22px;
+}
+
+.status-banner.ok { border-color:rgba(74,222,128,.35); }
+.status-banner.warn { border-color:rgba(251,191,36,.35); }
+.status-banner.danger { border-color:rgba(248,113,113,.35); }
+
+.status-icon {
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  background:rgba(56,189,248,.14);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--accent);
+  font-size:18px;
+}
+
+.status-banner p {
+  margin-top:4px;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-2);
+}
+
+.metrics-grid.modern {
+  grid-template-columns:repeat(4, minmax(190px, 1fr));
+}
+
+.modern-card {
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  min-height:170px;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+.modern-card::before {
+  content:'';
+  position:absolute;
+  inset:0 0 auto 0;
+  height:4px;
+  background:linear-gradient(90deg, var(--green), var(--accent));
+}
+
+.metric-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.metric-icon {
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.metric-icon.blue { background:rgba(56,189,248,.13); color:var(--accent); }
+.metric-icon.green { background:rgba(74,222,128,.13); color:var(--success); }
+.metric-icon.orange { background:rgba(251,191,36,.13); color:var(--warn); }
+.metric-icon.red { background:rgba(248,113,113,.13); color:var(--danger); }
+
+.metric-state {
+  font-family:var(--mono);
+  font-size:10px;
+  padding:4px 9px;
+  border-radius:999px;
+  background:var(--surface-2);
+  color:var(--text-2);
+}
+
+.metric-state.ok {
+  background:rgba(74,222,128,.12);
+  color:var(--success);
+}
+
+.metric-state.warn {
+  background:rgba(251,191,36,.12);
+  color:var(--warn);
+}
+
+.metric-state.bad {
+  background:rgba(248,113,113,.12);
+  color:var(--danger);
+}
+
+.explain-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.modern-section {
+  border-radius:14px;
+  box-shadow:0 8px 24px rgba(0,0,0,.06);
+}
+
+.section-help {
+  font-size:13px;
+  color:var(--text-2);
+  line-height:1.6;
+  margin-bottom:18px;
+}
+
+.info-list .kv-row {
+  padding:11px 0;
+}
+
+.help-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:14px;
+}
+
+.help-grid div {
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+}
+
+.help-grid strong {
+  font-size:13px;
+  color:var(--text);
+}
+
+.help-grid p {
+  margin-top:6px;
+  font-size:12px;
+  color:var(--text-2);
+  line-height:1.5;
+}
+
+.loading-line {
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-dim);
+}
+
+@media(max-width:1100px) {
+  .metrics-grid.modern { grid-template-columns:repeat(2,1fr); }
+  .explain-grid { grid-template-columns:1fr; }
+  .help-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+@media(max-width:700px) {
+  .metrics-grid.modern,
+  .help-grid { grid-template-columns:1fr; }
+  .monitor-header { flex-direction:column; }
+}
+
 </style>
 </head>
 <body>
@@ -95,30 +275,117 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   </div>
 </aside>
 
+
 <main class="main">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-    <div class="page-title" style="display:flex;align-items:center;gap:10px;">{{ icon('bar-chart-2', 20) }} Monitoring</div>
-  </div>
-  <div class="page-sub">État du système en temps réel · <span id="lastUpdated">—</span> <button class="refresh-btn" onclick="loadMetrics()" style="margin-left:10px;display:inline-flex;align-items:center;gap:5px;">{{ icon('refresh-cw', 11) }} Actualiser</button></div>
-
-  <div class="metrics-grid" id="metricsGrid">
-    <div class="metric-card"><div class="metric-label">Pipelines actifs</div><div class="metric-value" id="m-active" style="color:var(--accent2);">…</div></div>
-    <div class="metric-card"><div class="metric-label">Utilisateurs</div><div class="metric-value" id="m-users" style="color:var(--accent);">…</div></div>
-    <div class="metric-card"><div class="metric-label">Analyses totales</div><div class="metric-value" id="m-analyses" style="color:var(--warn);">…</div></div>
-    <div class="metric-card"><div class="metric-label">Taux de fallback LLM</div><div class="metric-value" id="m-fallback" style="color:var(--danger);">…</div></div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-    <div class="card">
-      <div class="card-title">{{ icon('zap', 14) }} Cache patches</div>
-      <div id="cacheInfo"><div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+  <div class="monitor-header">
+    <div>
+      <div class="page-title">{{ icon('activity', 22) }} Monitoring système</div>
+      <div class="page-sub">
+        Supervision en temps réel de PatchMind · Dernière mise à jour :
+        <span id="lastUpdated">—</span>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title">{{ icon('share-2', 14) }} Multi-LLM Consensus</div>
-      <div id="consensusInfo"><div style="font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+
+    <button class="refresh-btn big" onclick="loadMetrics()">
+      {{ icon('refresh-cw', 13) }} Actualiser
+    </button>
+  </div>
+
+  <div class="status-banner" id="globalStatus">
+    <div class="status-icon">●</div>
+    <div>
+      <strong>État général</strong>
+      <p id="globalStatusText">Chargement de l’état du système…</p>
+    </div>
+  </div>
+
+  <div class="metrics-grid modern">
+    <div class="metric-card modern-card">
+      <div class="metric-top">
+        <div class="metric-icon blue">{{ icon('zap', 18) }}</div>
+        <span class="metric-state" id="state-active">—</span>
+      </div>
+      <div class="metric-label">Pipelines actifs</div>
+      <div class="metric-value" id="m-active">…</div>
+      <div class="metric-sub">Analyses actuellement en cours.</div>
+    </div>
+
+    <div class="metric-card modern-card">
+      <div class="metric-top">
+        <div class="metric-icon green">{{ icon('users', 18) }}</div>
+        <span class="metric-state ok">Comptes</span>
+      </div>
+      <div class="metric-label">Utilisateurs</div>
+      <div class="metric-value" id="m-users">…</div>
+      <div class="metric-sub">Nombre total de comptes créés.</div>
+    </div>
+
+    <div class="metric-card modern-card">
+      <div class="metric-top">
+        <div class="metric-icon orange">{{ icon('bar-chart', 18) }}</div>
+        <span class="metric-state ok">Historique</span>
+      </div>
+      <div class="metric-label">Analyses totales</div>
+      <div class="metric-value" id="m-analyses">…</div>
+      <div class="metric-sub">Nombre d’analyses sauvegardées.</div>
+    </div>
+
+    <div class="metric-card modern-card">
+      <div class="metric-top">
+        <div class="metric-icon red">{{ icon('alert-triangle', 18) }}</div>
+        <span class="metric-state" id="state-fallback">—</span>
+      </div>
+      <div class="metric-label">Fallback LLM</div>
+      <div class="metric-value" id="m-fallback">…</div>
+      <div class="metric-sub">Taux d’utilisation du mode secours IA.</div>
+    </div>
+  </div>
+
+  <div class="explain-grid">
+    <div class="card modern-section">
+      <div class="card-title">{{ icon('zap', 15) }} Cache des patches</div>
+      <p class="section-help">
+        Le cache permet de réutiliser des correctifs déjà générés pour gagner du temps et réduire les appels aux LLM.
+      </p>
+      <div id="cacheInfo" class="info-list">
+        <div class="loading-line">Chargement…</div>
+      </div>
+    </div>
+
+    <div class="card modern-section">
+      <div class="card-title">{{ icon('share-2', 15) }} Consensus Multi-LLM</div>
+      <p class="section-help">
+        PatchMind compare plusieurs réponses IA pour sélectionner le correctif le plus fiable.
+      </p>
+      <div id="consensusInfo" class="info-list">
+        <div class="loading-line">Chargement…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card modern-section">
+    <div class="card-title">{{ icon('info', 15) }} Comment lire ces indicateurs ?</div>
+    <div class="help-grid">
+      <div>
+        <strong>Pipelines actifs</strong>
+        <p>Si la valeur est supérieure à 0, une analyse est en cours.</p>
+      </div>
+      <div>
+        <strong>Fallback LLM</strong>
+        <p>Un taux élevé indique que les modèles IA principaux échouent ou sont indisponibles.</p>
+      </div>
+      <div>
+        <strong>Cache patches</strong>
+        <p>Plus il y a de hits, plus PatchMind économise du temps et des appels API.</p>
+      </div>
+      <div>
+        <strong>RBAC</strong>
+        <p>Indique si le contrôle des rôles et permissions est actif.</p>
+      </div>
     </div>
   </div>
 </main>
+
 
 <script>
 const _SVG_MOON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -135,28 +402,53 @@ fetch('/me').then(r=>r.json()).then(d=>{
 
 function loadMetrics(){
   fetch('/admin/monitoring/api').then(r=>r.json()).then(d=>{
-    document.getElementById('m-active').textContent   = d.active_pipelines ?? '0';
+    const active = d.active_pipelines ?? 0;
+    const fallback = d.fallback_rate ?? 0;
+
+    document.getElementById('m-active').textContent   = active;
     document.getElementById('m-users').textContent    = d.total_users ?? '0';
     document.getElementById('m-analyses').textContent = d.total_analyses ?? '0';
-    document.getElementById('m-fallback').textContent = (d.fallback_rate ?? 0) + '%';
+    document.getElementById('m-fallback').textContent = fallback + '%';
     document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('fr-FR');
 
-    // Cache
+    const activeState = document.getElementById('state-active');
+    activeState.textContent = active > 0 ? 'En cours' : 'Stable';
+    activeState.className = 'metric-state ' + (active > 0 ? 'warn' : 'ok');
+
+    const fallbackState = document.getElementById('state-fallback');
+    fallbackState.textContent = fallback > 50 ? 'Critique' : fallback > 20 ? 'Attention' : 'OK';
+    fallbackState.className = 'metric-state ' + (fallback > 50 ? 'bad' : fallback > 20 ? 'warn' : 'ok');
+
+    const banner = document.getElementById('globalStatus');
+    const bannerText = document.getElementById('globalStatusText');
+
+    if (fallback > 50) {
+      banner.className = 'status-banner danger';
+      bannerText.textContent = 'Le système fonctionne, mais le taux de fallback IA est élevé. Vérifiez les clés API, quotas ou modèles indisponibles.';
+    } else if (active > 0) {
+      banner.className = 'status-banner warn';
+      bannerText.textContent = 'Une ou plusieurs analyses sont en cours. Les métriques peuvent évoluer dans quelques secondes.';
+    } else {
+      banner.className = 'status-banner ok';
+      bannerText.textContent = 'Aucun pipeline actif. La plateforme est stable et disponible.';
+    }
+
     const c = d.cache || {};
     document.getElementById('cacheInfo').innerHTML = `
-      <div class="kv-row"><span class="kv-key">Entrées</span><span class="kv-val">${c.total_entries??0}</span></div>
-      <div class="kv-row"><span class="kv-key">Appels LLM économisés</span><span class="kv-val">${c.llm_calls_saved??0}</span></div>
-      <div class="kv-row"><span class="kv-key">Temps économisé</span><span class="kv-val">${c.time_saved_sec??0}s</span></div>
-      <div class="kv-row"><span class="kv-key">Total hits</span><span class="kv-val">${c.total_hits??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Patches stockés</span><span class="kv-val">${c.total_entries??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Appels IA évités</span><span class="kv-val">${c.llm_calls_saved??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Temps gagné</span><span class="kv-val">${c.time_saved_sec??0}s</span></div>
+      <div class="kv-row"><span class="kv-key">Réutilisations réussies</span><span class="kv-val">${c.total_hits??0}</span></div>
     `;
 
-    // Consensus
     document.getElementById('consensusInfo').innerHTML = `
-      <div class="kv-row"><span class="kv-key">Module actif</span><span class="kv-val"><span class="status-badge ${d.consensus_ok?'status-ok':'status-off'}">${d.consensus_ok?'✓ Actif':'✗ Inactif'}</span></span></div>
-      <div class="kv-row"><span class="kv-key">RBAC actif</span><span class="kv-val"><span class="status-badge ${d.rbac_ok?'status-ok':'status-off'}">${d.rbac_ok?'✓ Actif':'✗ Inactif'}</span></span></div>
-      <div class="kv-row"><span class="kv-key">Consensus analysés</span><span class="kv-val">${d.consensus_entries??0}</span></div>
-      <div class="kv-row"><span class="kv-key">Taux de fallback</span><span class="kv-val" style="color:${(d.fallback_rate??0)>30?'var(--danger)':'var(--accent)'};">${d.fallback_rate??0}%</span></div>
+      <div class="kv-row"><span class="kv-key">Consensus IA</span><span class="kv-val"><span class="status-badge ${d.consensus_ok?'status-ok':'status-off'}">${d.consensus_ok?'✓ Actif':'✗ Inactif'}</span></span></div>
+      <div class="kv-row"><span class="kv-key">Contrôle des rôles</span><span class="kv-val"><span class="status-badge ${d.rbac_ok?'status-ok':'status-off'}">${d.rbac_ok?'✓ Actif':'✗ Inactif'}</span></span></div>
+      <div class="kv-row"><span class="kv-key">Consensus exécutés</span><span class="kv-val">${d.consensus_entries??0}</span></div>
+      <div class="kv-row"><span class="kv-key">Fallback IA</span><span class="kv-val" style="color:${fallback>50?'var(--danger)':fallback>20?'var(--warn)':'var(--success)'};">${fallback}%</span></div>
     `;
+  }).catch(()=>{
+    document.getElementById('globalStatusText').textContent = 'Impossible de charger les métriques de monitoring.';
   });
 }
 

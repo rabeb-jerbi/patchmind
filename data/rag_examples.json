@@ -290,6 +290,13 @@
       "description": "Auto-saved validated fix — 2026-05-11",
       "vulnerable": "import sqlite3\nimport os\nimport hashlib\nimport pickle\nfrom flask import Flask, request\n\napp = Flask(__name__)\n\n# 1. SQL Injection (CWE-89)\ndef get_user(user_id):\n    conn = sqlite3.connect(\"db.sqlite3\")\n    cursor = conn.cursor()\n    query = \"SELECT * FROM users WHERE id = \" + user_id\n    cursor.execute(query)\n    return cursor.fetchone()\n\n# 2. XSS (CWE-79)\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"\n\n# 3. Path Traversal (CWE-",
       "fixed": "import sqlite3\nimport os\nimport hashlib\nimport pickle\nfrom flask import Flask, request\n\napp = Flask(__name__)\n\n# 1. SQL Injection (CWE-89)\ndef get_user(user_id):\n    conn = sqlite3.connect(\"db.sqlite3\")\n    cursor = conn.cursor()\n    query = \"SELECT * FROM users WHERE id = ?\"\n    cursor.execute(query, (user_id,))\n    return cursor.fetchone()\n\n# 2. XSS (CWE-79)\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"\n\n# 3. Path Traversal (C"
+    },
+    {
+      "cwe": "CWE-89",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre"
     }
   ],
   "CWE-502": [
@@ -698,6 +705,13 @@
       "description": "Auto-saved validated fix — 2026-05-11",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
+    },
+    {
+      "cwe": "CWE-704",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\nimport sqlite3\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n   "
     }
   ],
   "CWE-915": [
@@ -804,6 +818,34 @@
       "description": "Auto-saved validated fix — 2026-05-11",
       "vulnerable": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n",
       "fixed": "\"\"\"\nNouveau fichier de test — vulnérabilités différentes des précédents\nThème : API de e-commerce avec paiement\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport yaml\nimport subprocess\nimport requests\nfrom flask import Flask, request, jsonify, session\n\napp = Flask(__name__)\n\n# ── Base de données ───────────────────────────────────────────\nDB = \"shop.db\"\n\n# CWE-89: SQL Injection dans recherche produits\n@app.route('/products/search')\ndef search_products():\n    keyword = request.args.get('q', '')\n"
+    },
+    {
+      "cwe": "CWE-918",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\nfrom urllib.parse import urlparse\n\napp = Flask(__name__)\n\n# Define an allowlist of schemes and hosts\nALLOWED_SCHEMES = ['http', 'https']\nALLOWED_HOSTS = ['example.com', 'www.example.com']\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    parsed_url = urlparse(url)\n    if parsed_url.scheme in ALLOWED_SCHEMES "
+    },
+    {
+      "cwe": "CWE-918",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\nfrom urllib.parse import urlparse\n\napp = Flask(__name__)\n\n# Define an allowlist of schemes and hosts\nALLOWED_SCHEMES = ['http', 'https']\nALLOWED_HOSTS = ['example.com', 'www.example.com']\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    parsed_url = urlparse(url)\n    if parsed_url.scheme in ALLOWED_SCHEMES "
+    },
+    {
+      "cwe": "CWE-918",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    if not url.startswith('http'):\n        return \"Invalid URL\", 400\n    allowed_hosts = ['example.com', 'api.example.com']\n    if not any(url.startswith('http://' + host) or url.startswith('https://' + host) for host in allowed_hosts):\n   "
+    },
+    {
+      "cwe": "CWE-918",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    if url.startswith('http://') or url.startswith('https://'):\n        allowed_hosts = ['example.com', 'www.example.com']\n        if url.split('://')[-1].split('/')[0] in allowed_hosts:\n            response = requests.get(url)\n            "
     }
   ],
   "CWE-798": [
@@ -877,6 +919,22 @@
       "description": "Auto-saved validated fix — 2026-05-11",
       "vulnerable": "<?php\n// CWE-798: Hardcoded credentials\ndefine('DB_HOST', 'localhost');\ndefine('DB_USER', 'root');\ndefine('DB_PASS', 'admin123');  // CWE-798\ndefine('JWT_SECRET', 'my-secret-key');  // CWE-321\n\n// CWE-918: SSRF\nfunction fetchUrl($url) {\n    return file_get_contents($url);  // CWE-918\n}\n\n// CWE-611: XXE\nfunction parseXml($xmlData) {\n    $doc = new DOMDocument();\n    $doc->loadXML($xmlData);  // CWE-611\n    return $doc;\n}\n\n// CWE-1336: SSTI via Twig/Smarty\nfunction renderTemplate($userInput) {\n   ",
       "fixed": "<?php\n// CWE-798: Hardcoded credentials\ndefine('DB_HOST', 'localhost');\ndefine('DB_USER', 'root');\ndefine('DB_PASS', 'admin123');  // CWE-798\ndefine('JWT_SECRET', 'my-secret-key');  // CWE-321\n\n// CWE-918: SSRF\nfunction fetchUrl($url) {\n    return file_get_contents($url);  // CWE-918\n}\n\n// CWE-611: XXE\nfunction parseXml($xmlData) {\n    $doc = new DOMDocument();\n    $doc->loadXML($xmlData);  // CWE-611\n    return $doc;\n}\n\n// CWE-1336: SSTI via Twig/Smarty\nfunction renderTemplate($userInput) {\n   "
+    }
+  ],
+  "CWE-96": [
+    {
+      "cwe": "CWE-96",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre"
+    },
+    {
+      "cwe": "CWE-96",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-11",
+      "vulnerable": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre",
+      "fixed": "\"\"\"Test web vulnerabilities - Python\"\"\"\nimport requests\nimport yaml\nfrom lxml import etree\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\n\n# CWE-918: SSRF\n@app.route('/fetch')\ndef fetch_url():\n    url = request.args.get('url')\n    response = requests.get(url)  # CWE-918\n    return response.text\n\n# CWE-611: XXE\n@app.route('/parse_xml', methods=['POST'])\ndef parse_xml():\n    xml_data = request.data\n    tree = etree.fromstring(xml_data)  # CWE-611\n    return str(tre"
     }
   ]
 }

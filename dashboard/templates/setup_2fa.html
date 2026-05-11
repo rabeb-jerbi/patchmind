@@ -104,6 +104,128 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .msg-err{margin-top:12px;padding:10px 14px;background:var(--danger-bg);border:1px solid rgba(220,38,38,.2);border-radius:var(--radius-sm);font-family:var(--mono);font-size:12px;color:var(--danger);display:none;}
 .msg-ok{margin-top:12px;padding:10px 14px;background:var(--success-bg);border:1px solid rgba(22,163,74,.2);border-radius:var(--radius-sm);font-family:var(--mono);font-size:12px;color:var(--success);display:none;text-align:center;}
 .info-text{font-family:var(--mono);font-size:12px;color:var(--text-3);line-height:1.7;margin-bottom:12px;}
+
+.twofa-layout {
+  display:grid;
+  grid-template-columns:1fr 320px;
+  gap:22px;
+  align-items:start;
+}
+
+.twofa-hero {
+  background:linear-gradient(135deg, rgba(79,70,229,.12), rgba(14,165,233,.08));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:24px;
+  margin-bottom:22px;
+}
+
+.twofa-hero h1 {
+  font-size:26px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.twofa-hero p {
+  color:var(--text-2);
+  line-height:1.7;
+}
+
+.security-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+}
+
+.security-card h3 {
+  font-size:15px;
+  margin-bottom:12px;
+}
+
+.security-card ul {
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.security-card li {
+  display:flex;
+  gap:10px;
+  color:var(--text-2);
+  line-height:1.5;
+  font-size:13px;
+}
+
+.security-card li span {
+  color:var(--success);
+  font-weight:800;
+}
+
+.card {
+  border-radius:18px;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+}
+
+.card-section-label {
+  font-size:11px;
+  color:var(--green);
+  margin-bottom:18px;
+}
+
+.info-text {
+  font-family:var(--sans);
+  font-size:14px;
+  color:var(--text-2);
+}
+
+.app-tiles {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.app-tile {
+  text-align:center;
+  border-radius:12px;
+  padding:14px 10px;
+  background:var(--surface-2);
+  color:var(--text);
+}
+
+.qr-box {
+  border-radius:16px;
+  padding:28px;
+}
+
+.secret-display {
+  font-size:12px;
+  letter-spacing:1px;
+}
+
+.code-inputs input {
+  border-radius:14px;
+  width:52px;
+  height:60px;
+}
+
+.btn-primary,
+.btn-outline {
+  border-radius:12px;
+  padding:12px 20px;
+}
+
+@media(max-width:1050px) {
+  .twofa-layout { grid-template-columns:1fr; }
+}
+
+@media(max-width:700px) {
+  .app-tiles { grid-template-columns:1fr; }
+  .code-inputs input { width:42px; height:54px; }
+}
+
 </style>
 </head>
 <body>
@@ -155,74 +277,117 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     </div>
   </div>
 
-  <div class="content">
-    <div class="page-header">
-      <div class="page-title">Configurer la double authentification</div>
-      <div class="page-sub">Sécurisez votre compte avec une application d'authentification TOTP</div>
+  
+<div class="content">
+  <div class="twofa-hero">
+    <h1>Configurer la double authentification</h1>
+    <p>
+      La 2FA ajoute une deuxième protection à votre compte. Même si quelqu’un connaît votre mot de passe,
+      il ne pourra pas se connecter sans le code temporaire généré par votre téléphone.
+    </p>
+  </div>
+
+  <div class="twofa-layout">
+    <div>
+      <div class="stepper">
+        <div class="step-item">
+          <div class="step-num active" id="snum0">1</div>
+          <span class="step-label active" id="slbl0">Installer</span>
+        </div>
+        <div class="step-line" id="sline0"></div>
+        <div class="step-item">
+          <div class="step-num pending" id="snum1">2</div>
+          <span class="step-label pending" id="slbl1">Scanner</span>
+        </div>
+        <div class="step-line" id="sline1"></div>
+        <div class="step-item">
+          <div class="step-num pending" id="snum2">3</div>
+          <span class="step-label pending" id="slbl2">Valider</span>
+        </div>
+      </div>
+
+      <div class="card" id="step0">
+        <div class="card-section-label">Étape 1 — Préparer l’application</div>
+        <p class="info-text">
+          Installez une application d’authentification sur votre téléphone. Elle générera un code de sécurité
+          à 6 chiffres qui change toutes les 30 secondes.
+        </p>
+
+        <div class="app-tiles">
+          <div class="app-tile">Google Authenticator</div>
+          <div class="app-tile">Microsoft Authenticator</div>
+          <div class="app-tile">Authy</div>
+        </div>
+
+        <button class="btn btn-primary" onclick="generateQR()">
+          {{ icon('arrow-right', 14) }} J’ai installé l’application
+        </button>
+
+        <a href="{{ dashboard_url }}" class="btn btn-outline">
+          {{ icon('arrow-left', 14) }} Retour au dashboard
+        </a>
+      </div>
+
+      <div class="card" id="step1" style="display:none;">
+        <div class="card-section-label">Étape 2 — Scanner le QR code</div>
+        <p class="info-text">
+          Ouvrez votre application, choisissez “Ajouter un compte”, puis scannez ce QR code.
+          Si le scan ne marche pas, copiez la clé affichée sous le QR code.
+        </p>
+
+        <div class="qr-box">
+          <div id="qrLoading" style="font-family:var(--mono);font-size:12px;color:var(--text-3);padding:20px;">
+            Génération du QR code…
+          </div>
+          <img id="qrImg" style="display:none;margin:auto;" alt="QR Code 2FA">
+          <div class="secret-display" id="secretBox" style="display:none;"></div>
+        </div>
+
+        <button class="btn btn-primary" onclick="goStep(2)">
+          {{ icon('check', 14) }} J’ai scanné le QR code
+        </button>
+      </div>
+
+      <div class="card" id="step2" style="display:none;">
+        <div class="card-section-label">Étape 3 — Confirmer le code</div>
+        <p class="info-text">
+          Entrez le code à 6 chiffres affiché dans votre application pour activer définitivement la 2FA.
+        </p>
+
+        <div class="code-inputs" id="codeInputs">
+          <input type="text" maxlength="1" inputmode="numeric" id="d0">
+          <input type="text" maxlength="1" inputmode="numeric" id="d1">
+          <input type="text" maxlength="1" inputmode="numeric" id="d2">
+          <input type="text" maxlength="1" inputmode="numeric" id="d3">
+          <input type="text" maxlength="1" inputmode="numeric" id="d4">
+          <input type="text" maxlength="1" inputmode="numeric" id="d5">
+        </div>
+
+        <button class="btn btn-primary" id="enableBtn" onclick="enable2FA()" disabled>
+          {{ icon('shield', 14) }} Activer la 2FA
+        </button>
+
+        <div class="msg-err" id="errMsg"></div>
+        <div class="msg-ok" id="okMsg"></div>
+
+        <button class="btn btn-outline" onclick="goStep(1)" style="margin-top:6px;">
+          {{ icon('arrow-left', 14) }} Retour au QR code
+        </button>
+      </div>
     </div>
 
-    <!-- Stepper -->
-    <div class="stepper">
-      <div class="step-item">
-        <div class="step-num active" id="snum0">1</div>
-        <span class="step-label active" id="slbl0">Installation</span>
-      </div>
-      <div class="step-line" id="sline0"></div>
-      <div class="step-item">
-        <div class="step-num pending" id="snum1">2</div>
-        <span class="step-label pending" id="slbl1">QR Code</span>
-      </div>
-      <div class="step-line" id="sline1"></div>
-      <div class="step-item">
-        <div class="step-num pending" id="snum2">3</div>
-        <span class="step-label pending" id="slbl2">Vérification</span>
-      </div>
-    </div>
-
-    <!-- STEP 1 -->
-    <div class="card" id="step0">
-      <div class="card-section-label">Étape 1 / 3 — Application requise</div>
-      <p class="info-text">La 2FA protège votre compte même si votre mot de passe est compromis. Vous aurez besoin d'une application d'authentification :</p>
-      <div class="app-tiles">
-        <div class="app-tile">Google Authenticator</div>
-        <div class="app-tile">Authy</div>
-        <div class="app-tile">Microsoft Authenticator</div>
-      </div>
-      <p class="info-text">Téléchargez l'une de ces apps sur votre téléphone avant de continuer.</p>
-      <button class="btn btn-primary" onclick="generateQR()">{{ icon('arrow-right', 14) }} Continuer</button>
-      <a href="{{ dashboard_url }}" class="btn btn-outline">{{ icon('arrow-left', 14) }} Retour au tableau de bord</a>
-    </div>
-
-    <!-- STEP 2 -->
-    <div class="card" id="step1" style="display:none;">
-      <div class="card-section-label">Étape 2 / 3 — Scanner le QR code</div>
-      <p class="info-text">Ouvrez votre application d'authentification et scannez ce QR code. Si vous ne pouvez pas scanner, entrez la clé manuellement.</p>
-      <div class="qr-box">
-        <div id="qrLoading" style="font-family:var(--mono);font-size:12px;color:var(--text-3);padding:20px;">Génération en cours…</div>
-        <img id="qrImg" style="display:none;" alt="QR Code 2FA">
-        <div class="secret-display" id="secretBox" style="display:none;"></div>
-      </div>
-      <button class="btn btn-primary" onclick="goStep(2)">{{ icon('check', 14) }} J'ai scanné le QR code</button>
-    </div>
-
-    <!-- STEP 3 -->
-    <div class="card" id="step2" style="display:none;">
-      <div class="card-section-label">Étape 3 / 3 — Vérifier le code</div>
-      <p class="info-text">Entrez le code à 6 chiffres affiché dans votre application pour confirmer la configuration.</p>
-      <div class="code-inputs" id="codeInputs">
-        <input type="text" maxlength="1" inputmode="numeric" id="d0">
-        <input type="text" maxlength="1" inputmode="numeric" id="d1">
-        <input type="text" maxlength="1" inputmode="numeric" id="d2">
-        <input type="text" maxlength="1" inputmode="numeric" id="d3">
-        <input type="text" maxlength="1" inputmode="numeric" id="d4">
-        <input type="text" maxlength="1" inputmode="numeric" id="d5">
-      </div>
-      <button class="btn btn-primary" id="enableBtn" onclick="enable2FA()" disabled>{{ icon('shield', 14) }} Activer la 2FA</button>
-      <div class="msg-err" id="errMsg"></div>
-      <div class="msg-ok" id="okMsg"></div>
-      <button class="btn btn-outline" onclick="goStep(1)" style="margin-top:6px;">{{ icon('arrow-left', 14) }} Retour</button>
+    <div class="security-card">
+      <h3>Pourquoi activer la 2FA ?</h3>
+      <ul>
+        <li><span>✓</span> Protège votre compte même si le mot de passe est compromis.</li>
+        <li><span>✓</span> Ajoute une vérification par téléphone à chaque connexion sensible.</li>
+        <li><span>✓</span> Réduit fortement le risque d’accès non autorisé.</li>
+        <li><span>✓</span> Recommandé pour les comptes admin et analystes SOC.</li>
+      </ul>
     </div>
   </div>
+</div>
+</div>
 </div>
 
 <script>
