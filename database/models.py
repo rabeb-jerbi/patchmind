@@ -6,6 +6,8 @@ Persisted here        →  Was stored in
 ─────────────────────────────────────────
 User                  →  data/users.json
 Project               →  data/projects.json
+ProjectMember         →  (new — project collaborators)
+ProjectInvitation     →  (new — email-based invite tokens)
 AccessRequest         →  data/requests.json
 Metric (session hist) →  data/users/<u>/metrics.json
 AuditLog              →  data/audit_log.json
@@ -17,6 +19,7 @@ ToolExecution         →  (new — tool run results + cache)
 Knowledge-base JSON files (cve_database.json, cwe_list.json,
 rag_examples.json) are intentionally NOT migrated.
 """
+import json as _json
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Boolean, Float,
@@ -163,6 +166,84 @@ class Project(Base):
 
 
 # ══════════════════════════════════════════════════════════════════
+# ProjectMember
+# ══════════════════════════════════════════════════════════════════
+
+class ProjectMember(Base):
+    __tablename__ = "project_members"
+    __table_args__ = (
+        Index("ix_pm_project_user", "project_id", "username", unique=True),
+    )
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(String(30), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    username   = Column(String(50), ForeignKey("users.username", ondelete="CASCADE"), nullable=False, index=True)
+    role       = Column(String(20), default="member")   # "owner" | "member" | "viewer"
+    joined_at  = Column(DateTime, default=datetime.now)
+
+    def to_dict(self) -> dict:
+        return {
+            "project_id": self.project_id,
+            "username":   self.username,
+            "role":       self.role or "member",
+            "joined_at":  self.joined_at.isoformat() if self.joined_at else "",
+        }
+
+
+# ══════════════════════════════════════════════════════════════════
+# ProjectInvitation
+# ══════════════════════════════════════════════════════════════════
+
+class ProjectInvitation(Base):
+    __tablename__ = "project_invitations"
+    # status values: pending | approved | rejected | cancelled | accepted | expired
+
+    id                    = Column(Integer, primary_key=True, autoincrement=True)
+    project_id            = Column(String(30), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    invited_by            = Column(String(50), ForeignKey("users.username", ondelete="SET NULL"), nullable=True)
+    email                 = Column(String(200), nullable=False, index=True)
+    token                 = Column(String(64), unique=True, nullable=False, index=True)
+    role                  = Column(String(20), default="member")
+    status                = Column(String(20), default="pending", index=True)
+    expires_at            = Column(DateTime, nullable=False)
+    created_at            = Column(DateTime, default=datetime.now)
+    responded_at          = Column(DateTime)
+    # Approval workflow fields
+    approved_by           = Column(String(50), nullable=True)
+    approved_at           = Column(DateTime, nullable=True)
+    rejected_at           = Column(DateTime, nullable=True)
+    rejection_reason      = Column(Text, default="")
+    cancelled_at          = Column(DateTime, nullable=True)
+    cancelled_by          = Column(String(50), nullable=True)
+    # Provisioning metadata
+    invited_existing_user = Column(Boolean, nullable=True)   # True=existing, False=new account created
+    credentials_sent      = Column(Boolean, default=False)
+    provisioned_username  = Column(String(50), nullable=True)  # username created for new-user case
+
+    def to_dict(self) -> dict:
+        return {
+            "id":                    self.id,
+            "project_id":            self.project_id,
+            "invited_by":            self.invited_by or "",
+            "email":                 self.email,
+            "role":                  self.role or "member",
+            "status":                self.status or "pending",
+            "expires_at":            self.expires_at.isoformat() if self.expires_at else "",
+            "created_at":            self.created_at.isoformat() if self.created_at else "",
+            "responded_at":          self.responded_at.isoformat() if self.responded_at else "",
+            "approved_by":           self.approved_by or "",
+            "approved_at":           self.approved_at.isoformat() if self.approved_at else "",
+            "rejected_at":           self.rejected_at.isoformat() if self.rejected_at else "",
+            "rejection_reason":      self.rejection_reason or "",
+            "cancelled_at":          self.cancelled_at.isoformat() if self.cancelled_at else "",
+            "cancelled_by":          self.cancelled_by or "",
+            "invited_existing_user": self.invited_existing_user,
+            "credentials_sent":      bool(self.credentials_sent),
+            "provisioned_username":  self.provisioned_username or "",
+        }
+
+
+# ══════════════════════════════════════════════════════════════════
 # AccessRequest
 # ══════════════════════════════════════════════════════════════════
 
@@ -181,11 +262,25 @@ class AccessRequest(Base):
     username       = Column(String(50))     # assigned on approval
 
     def to_dict(self) -> dict:
+        # reason field may be JSON-encoded (stores company + use_case + plain reason)
+        company = ""
+        use_case = ""
+        reason_text = self.reason or ""
+        if reason_text.startswith("{"):
+            try:
+                parsed = _json.loads(reason_text)
+                company     = parsed.get("company", "")
+                use_case    = parsed.get("use_case", "")
+                reason_text = parsed.get("reason", "")
+            except (_json.JSONDecodeError, AttributeError):
+                pass
         return {
             "id":             self.id,
             "email":          self.email,
             "full_name":      self.full_name or "",
-            "reason":         self.reason or "",
+            "reason":         reason_text,
+            "company":        company,
+            "use_case":       use_case,
             "status":         self.status,
             "role_requested": self.role_requested,
             "created_at":     self.created_at.isoformat() if self.created_at else "",
@@ -253,17 +348,26 @@ class Comment(Base):
     __tablename__ = "comments"
 
     id         = Column(Integer, primary_key=True, autoincrement=True)
-    vuln_key   = Column(String(300), index=True)   # "{file}:{line}:{cwe}"
+    hex_id     = Column(String(20), unique=True, index=True)  # external identifier
+    vuln_key   = Column(String(300), index=True)
     username   = Column(String(50))
     text       = Column(Text)
+    mentions   = Column(Text, default="[]")  # JSON-encoded list of @mentioned users
     created_at = Column(DateTime, default=datetime.now)
 
     def to_dict(self) -> dict:
+        import json as _json
+        try:
+            mentions = _json.loads(self.mentions or "[]")
+        except Exception:
+            mentions = []
         return {
-            "id":         self.id,
+            "id":         self.hex_id or str(self.id),
+            "vuln_id":    self.vuln_key,
             "vuln_key":   self.vuln_key,
-            "username":   self.username,
+            "author":     self.username or "",
             "text":       self.text or "",
+            "mentions":   mentions,
             "created_at": self.created_at.isoformat() if self.created_at else "",
         }
 
@@ -275,20 +379,31 @@ class Comment(Base):
 class VulnAssignment(Base):
     __tablename__ = "vuln_assignments"
 
-    id         = Column(Integer, primary_key=True, autoincrement=True)
-    vuln_key   = Column(String(300), index=True)
-    assignee   = Column(String(50))
-    status     = Column(String(30), default="open")
-    note       = Column(Text, default="")
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    id          = Column(Integer, primary_key=True, autoincrement=True)
+    vuln_key    = Column(String(300), index=True)   # same as vuln_id in app routes
+    cwe         = Column(String(50), default="")
+    message     = Column(String(200), default="")
+    assignee    = Column(String(50))
+    assigned_by = Column(String(50), default="")
+    deadline    = Column(String(30), default="")
+    status      = Column(String(30), default="open")
+    note        = Column(Text, default="")
+    created_at  = Column(DateTime, default=datetime.now)
+    updated_at  = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     def to_dict(self) -> dict:
         return {
-            "vuln_key":   self.vuln_key,
-            "assignee":   self.assignee or "",
-            "status":     self.status or "open",
-            "note":       self.note or "",
-            "updated_at": self.updated_at.isoformat() if self.updated_at else "",
+            "vuln_id":     self.vuln_key,
+            "vuln_key":    self.vuln_key,
+            "cwe":         self.cwe or "",
+            "message":     self.message or "",
+            "assignee":    self.assignee or "",
+            "assigned_by": self.assigned_by or "",
+            "deadline":    self.deadline or "",
+            "status":      self.status or "open",
+            "note":        self.note or "",
+            "created_at":  self.created_at.isoformat() if self.created_at else "",
+            "updated_at":  self.updated_at.isoformat() if self.updated_at else "",
         }
 
 
@@ -299,18 +414,33 @@ class VulnAssignment(Base):
 class FalsePositive(Base):
     __tablename__ = "false_positives"
 
-    id         = Column(Integer, primary_key=True, autoincrement=True)
-    vuln_key   = Column(String(300), unique=True, index=True)
-    reason     = Column(Text, default="")
-    reported_by= Column(String(50))
-    created_at = Column(DateTime, default=datetime.now)
+    id              = Column(Integer, primary_key=True, autoincrement=True)
+    vuln_key        = Column(String(300), unique=True, index=True)
+    cwe             = Column(String(50), default="")
+    message_snippet = Column(String(200), default="")
+    reporters       = Column(Text, default="[]")   # JSON list of usernames
+    confirmed_count = Column(Integer, default=0)
+    reason          = Column(Text, default="")
+    reported_by     = Column(String(50))           # first reporter
+    created_at      = Column(DateTime, default=datetime.now)
+    last_seen       = Column(DateTime)
 
     def to_dict(self) -> dict:
+        import json as _json
+        try:
+            reporters = _json.loads(self.reporters or "[]")
+        except Exception:
+            reporters = []
         return {
-            "vuln_key":    self.vuln_key,
-            "reason":      self.reason or "",
-            "reported_by": self.reported_by or "",
-            "created_at":  self.created_at.isoformat() if self.created_at else "",
+            "vuln_key":        self.vuln_key,
+            "cwe":             self.cwe or "",
+            "message_snippet": self.message_snippet or "",
+            "reporters":       reporters,
+            "confirmed_count": self.confirmed_count or 0,
+            "reason":          self.reason or "",
+            "reported_by":     self.reported_by or "",
+            "created_at":      self.created_at.isoformat() if self.created_at else "",
+            "last_seen":       self.last_seen.isoformat() if self.last_seen else "",
         }
 
 

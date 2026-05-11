@@ -3,11 +3,22 @@ tools/tool_registry.py
 Central registry for all tool adapters.  Handles discovery, recommendation,
 and safe execution with result caching backed by the ToolExecution DB table.
 """
+import hashlib
+import json
 import os
 import time
 from typing import Dict, List, Optional, Any
 
 from tools.base_tool import BaseTool
+
+
+def _cache_key(tool_name: str, file_path: str, options: dict = None) -> str:
+    """Stable cache key for a (tool, path, options) triple."""
+    payload = json.dumps(
+        {"tool": tool_name, "path": file_path, "opts": options or {}},
+        sort_keys=True,
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 # File-type → language heuristic map
 _EXT_LANG: Dict[str, str] = {
@@ -63,19 +74,18 @@ class ToolRegistry:
         Inspect *target_path* (file or directory) and return a prioritised list
         of tools with a recommendation reason.
         """
-        langs   = _detect_languages(target_path)
+        langs      = _detect_languages(target_path)
         has_docker = _has_docker(target_path)
         has_iac    = _has_iac(target_path)
 
         recs: List[Dict[str, Any]] = []
+        seen: set = set()
 
         def _add(name: str):
             t = self._tools.get(name)
-            if t:
-                recs.append({
-                    **t.to_info_dict(),
-                    "reason": _REASONS.get(name, ""),
-                })
+            if t and t.name not in seen:
+                seen.add(t.name)
+                recs.append({**t.to_info_dict(), "reason": _REASONS.get(name, "")})
 
         if "python" in langs:
             _add("bandit"); _add("pylint"); _add("pip_audit")
@@ -86,13 +96,18 @@ class ToolRegistry:
         if has_iac:
             _add("checkov"); _add("trivy")
 
-        # De-duplicate while preserving order
-        seen: set = set()
-        unique: List[Dict[str, Any]] = []
-        for r in recs:
-            if r["name"] not in seen:
-                seen.add(r["name"]); unique.append(r)
-        return unique
+        # Include any other registered tools that support detected languages
+        for tool in self._tools.values():
+            if tool.name in seen:
+                continue
+            for lang in langs:
+                if lang in (tool.supported_languages or []):
+                    seen.add(tool.name)
+                    recs.append({**tool.to_info_dict(),
+                                 "reason": _REASONS.get(tool.name, tool.description or "")})
+                    break
+
+        return recs
 
     def run_tool(self, name: str, target_path: str,
                  username: str = None, workspace: str = None,
@@ -109,8 +124,8 @@ class ToolRegistry:
             return {"ok": False, "error": f"Unknown tool: {name!r}", "findings": []}
 
         if not tool.is_available():
-            return {"ok": False, "error": f"{name!r} is not installed", "findings": [],
-                    "install_hint": f"pip install {name}  # or check tool docs"}
+            return {"ok": False, "error": f"{name!r} n'est pas installé", "findings": [],
+                    "install_hint": tool.install_hint or f"Consultez la documentation de {name}"}
 
         # Path validation
         if workspace:
@@ -125,7 +140,7 @@ class ToolRegistry:
         if use_cache:
             cached = _load_cache(cache_key)
             if cached:
-                return {"ok": True, "findings": cached["findings_json"] or [],
+                return {"ok": True, "findings": cached.findings_json or [],
                         "from_cache": True, "duration": 0}
 
         # Execute

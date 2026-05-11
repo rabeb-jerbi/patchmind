@@ -15,6 +15,7 @@ class ESLintTool(BaseTool):
     supported_languages  = ["javascript", "typescript"]
     supported_file_types = [".js", ".jsx", ".ts", ".tsx", ".mjs"]
     default_timeout      = 120
+    install_hint         = "npm install -g eslint"
 
     def is_available(self) -> bool:
         return shutil.which("eslint") is not None

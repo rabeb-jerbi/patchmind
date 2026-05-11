@@ -15,6 +15,7 @@ class TrivyTool(BaseTool):
     supported_languages  = []
     supported_file_types = [".dockerfile", ".yaml", ".yml", ".tf"]
     default_timeout      = 180
+    install_hint         = "https://aquasecurity.github.io/trivy/latest/getting-started/installation/"
 
     def is_available(self) -> bool:
         r = self._safe_run(["trivy", "--version"], timeout=10)

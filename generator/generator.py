@@ -9,7 +9,11 @@ from groq import Groq
 from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from rag.rag import search_similar_fixes, get_cwe_description
+try:
+    from rag.rag import search_similar_fixes, get_cwe_description
+except ImportError:
+    def search_similar_fixes(*a, **kw): return []
+    def get_cwe_description(*a, **kw): return ""
 from utils.json_io import read_json as _read_json_file, locked_update as _locked_update
 
 load_dotenv()

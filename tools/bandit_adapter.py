@@ -13,6 +13,7 @@ class BanditTool(BaseTool):
     supported_languages  = ["python"]
     supported_file_types = [".py"]
     default_timeout      = 120
+    install_hint         = "pip install bandit"
 
     def is_available(self) -> bool:
         r = self._safe_run([sys.executable, "-m", "bandit", "--version"], timeout=10)

@@ -51,6 +51,7 @@ class BaseTool(ABC):
     supported_languages: List[str]    = []
     supported_file_types: List[str]   = []
     default_timeout: int    = 120      # seconds
+    install_hint: str       = ""       # shown in UI when tool is not installed
 
     # ── Helpers available to subclasses ──────────────────────────
 
@@ -180,4 +181,5 @@ class BaseTool(ABC):
             "supported_languages": self.supported_languages,
             "supported_file_types": self.supported_file_types,
             "available":           self.is_available(),
+            "install_hint":        self.install_hint,
         }

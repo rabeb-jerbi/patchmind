@@ -21,13 +21,29 @@ import json
 import os
 import re
 import sys
+import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-SEMGREP_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "venv", "Scripts", "semgrep.exe"
-)
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _resolve_semgrep() -> str:
+    env_path = os.environ.get("SEMGREP_PATH", "")
+    if env_path and os.path.isfile(env_path):
+        return env_path
+    for c in [
+        os.path.join(_ROOT, "venv",  "Scripts", "semgrep.exe"),
+        os.path.join(_ROOT, "venv",  "bin",     "semgrep"),
+        os.path.join(_ROOT, ".venv", "Scripts", "semgrep.exe"),
+        os.path.join(_ROOT, ".venv", "bin",     "semgrep"),
+    ]:
+        if os.path.isfile(c):
+            return c
+    return shutil.which("semgrep") or ""
+
+
+SEMGREP_PATH = _resolve_semgrep()
 
 # Dependency file names — Snyk/OSV is meaningful only for these
 _DEP_FILES = frozenset({
@@ -243,23 +259,28 @@ def _regression_check(original_code: str, fixed_code: str) -> dict:
 # ══════════════════════════════════════════════════════════════════
 
 def run_semgrep(file_path):
-    """Launch Semgrep and return findings list."""
-    result = subprocess.run(
-        [SEMGREP_PATH, "--config=auto", "--json", file_path],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="ignore",
-    )
-    output = result.stdout.strip()
-    if not output:
-        return []
-    json_start = output.find("{")
-    if json_start == -1:
+    """Launch Semgrep and return findings list. Returns [] if semgrep is absent."""
+    if not SEMGREP_PATH:
         return []
     try:
+        result = subprocess.run(
+            [SEMGREP_PATH, "--config=auto", "--json", file_path],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            timeout=120,
+        )
+        output = result.stdout.strip()
+        if not output:
+            return []
+        json_start = output.find("{")
+        if json_start == -1:
+            return []
         data = json.loads(output[json_start:])
         return data.get("results", [])
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return []
     except Exception:
         return []
 

@@ -16,6 +16,7 @@ class PylintTool(BaseTool):
     supported_languages  = ["python"]
     supported_file_types = [".py"]
     default_timeout      = 120
+    install_hint         = "pip install pylint"
 
     def is_available(self) -> bool:
         r = self._safe_run([sys.executable, "-m", "pylint", "--version"], timeout=10)

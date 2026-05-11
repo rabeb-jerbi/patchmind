@@ -11,6 +11,7 @@ import json
 import os
 import threading
 import tempfile
+import time
 
 # ── Per-file lock registry ────────────────────────────────────────────────────
 _locks: dict = {}
@@ -59,16 +60,27 @@ def _write_locked(path: str, data) -> None:
     dir_ = os.path.dirname(os.path.realpath(path)) or '.'
     os.makedirs(dir_, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=dir_, suffix='.tmp')
+    replaced = False
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        os.replace(tmp, path)
-    except Exception:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
-        raise
+        # On Windows, os.replace can transiently fail with PermissionError
+        # when the OS file handle from a prior read hasn't fully closed.
+        for attempt in range(6):
+            try:
+                os.replace(tmp, path)
+                replaced = True
+                break
+            except PermissionError:
+                if attempt == 5:
+                    raise
+                time.sleep(0.01 * (attempt + 1))
+    finally:
+        if not replaced:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def write_json(path: str, data) -> None:

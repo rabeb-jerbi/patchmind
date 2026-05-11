@@ -1324,8 +1324,8 @@ input[type="file"] { display: none; }
                 <span class="scanner-name">Snyk/OSV</span>
                 <span class="scanner-tag">DEPS</span>
               </label>
-              <label class="scanner-pill" id="pill-sc-zap">
-                <input type="checkbox" id="sc-zap" onchange="updatePill(this,'pill-sc-zap')">
+              <label class="scanner-pill checked" id="pill-sc-zap">
+                <input type="checkbox" id="sc-zap" checked onchange="updatePill(this,'pill-sc-zap')">
                 <div class="check-icon">{{ icon('check', 10) }}</div>
                 {{ icon('globe', 14) }}
                 <span class="scanner-name">ZAP DAST</span>
@@ -1349,10 +1349,10 @@ input[type="file"] { display: none; }
             </div>
           </div>
 
-          <!-- Registry tools -->
+          <!-- Optional tools -->
           <div style="margin-top:20px;">
-            <div class="section-label">Outils de validation disponibles</div>
-            <div id="registryToolsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+            <div class="section-label">Outils optionnels <span style="font-weight:400;color:var(--text-3);font-size:10px;">(sélectionnez pour inclure dans l'analyse)</span></div>
+            <div id="optionalToolsGrid" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">
               <span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Chargement…</span>
             </div>
             <div id="registryToolOutput" style="display:none;margin-top:8px;font-family:var(--mono);font-size:11px;padding:7px 10px;border-radius:var(--radius-sm);word-break:break-word;line-height:1.5;"></div>
@@ -1579,13 +1579,16 @@ input[type="file"] { display: none; }
         <!-- Filter bar -->
         <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--surface-2);">
           <span style="font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);">{{ icon('filter', 11) }} Filtres</span>
+          <select id="histFilterProject" onchange="loadHistory()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:12px;font-family:var(--mono);outline:none;">
+            <option value="">Tous les projets</option>
+          </select>
           <input id="histFilterDate" type="date" onchange="applyHistoryFilter()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:12px;font-family:var(--mono);outline:none;">
           <select id="histFilterRate" onchange="applyHistoryFilter()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:12px;font-family:var(--mono);outline:none;">
             <option value="">Tous les taux</option>
             <option value="good">Taux ≥ 80% (bon)</option>
             <option value="bad">Taux &lt; 80% (faible)</option>
           </select>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histFilterDate').value='';document.getElementById('histFilterRate').value='';applyHistoryFilter();">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histFilterDate').value='';document.getElementById('histFilterRate').value='';document.getElementById('histFilterProject').value='';loadHistory();">
             Réinitialiser
           </button>
         </div>
@@ -1883,11 +1886,15 @@ function launchAnalysis() {
 
 // ══ SCANNER HELPERS ══
 function getScanners(prefix) {
+  const optTools = (_registryTools || [])
+    .filter(t => t.available && document.getElementById('opt-' + t.name)?.checked)
+    .map(t => t.name);
   return {
-    semgrep:  document.getElementById(prefix+'semgrep')?.checked ?? true,
-    gitleaks: document.getElementById(prefix+'gitleaks')?.checked ?? true,
-    snyk:     document.getElementById(prefix+'snyk')?.checked ?? true,
-    zap:      document.getElementById(prefix+'zap')?.checked ?? false,
+    semgrep:        document.getElementById(prefix + 'semgrep')?.checked  ?? true,
+    gitleaks:       document.getElementById(prefix + 'gitleaks')?.checked ?? true,
+    snyk:           document.getElementById(prefix + 'snyk')?.checked     ?? true,
+    zap:            document.getElementById(prefix + 'zap')?.checked      ?? true,
+    optional_tools: optTools,
   };
 }
 
@@ -1899,29 +1906,31 @@ function loadRegistryTools() {
     .then(r => r.json())
     .then(d => {
       if (!d.ok) return;
-      _registryTools = d.tools || [];
-      const el = document.getElementById('registryToolsList');
+      // Only keep installed and available tools
+      _registryTools = (d.tools || []).filter(t => t.available);
+      const el = document.getElementById('optionalToolsGrid');
       if (!el) return;
       if (!_registryTools.length) {
-        el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Aucun outil disponible</span>';
+        el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Aucun outil optionnel installé</span>';
         return;
       }
       el.innerHTML = _registryTools.map(t => {
-        const avail = t.available;
-        const badgeStyle = avail
-          ? 'background:rgba(22,163,74,.12);color:var(--success);border:1px solid rgba(22,163,74,.3);'
-          : 'background:var(--surface-2);color:var(--text-3);border:1px solid var(--border);opacity:.6;';
-        return `<button type="button"
-          style="padding:5px 12px;border-radius:var(--radius-sm);font-size:11px;font-family:var(--mono);cursor:${avail?'pointer':'not-allowed'};display:flex;align-items:center;gap:5px;${badgeStyle}"
-          title="${escHtml(t.description||'')} [${escHtml(t.category||'')}]"
-          ${avail ? `onclick="runRegistryTool('${escHtml(t.name)}','registryToolOutput')"` : 'disabled'}
-        >
-          <svg width="9" height="9" fill="${avail?'var(--success)':'var(--text-3)'}" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
-          ${escHtml(t.name)}
-        </button>`;
+        const pillId = 'pill-opt-' + t.name;
+        const cbId   = 'opt-' + t.name;
+        const hint   = t.description || '';
+        const catTag = t.category ? `<span class="scanner-tag">${escHtml(t.category)}</span>` : '';
+        return `<label class="scanner-pill" id="${pillId}" title="${escHtml(hint)}">
+          <input type="checkbox" id="${cbId}" onchange="updatePill(this,'${pillId}')">
+          <div class="check-icon"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="scanner-name">${escHtml(t.name)}</span>
+          ${catTag}
+        </label>`;
       }).join('');
     })
-    .catch(() => {});
+    .catch(() => {
+      const el = document.getElementById('optionalToolsGrid');
+      if (el) el.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--text-3);">Impossible de charger les outils</span>';
+    });
 }
 
 function runRegistryTool(toolName, outputDivId) {
@@ -2021,29 +2030,27 @@ function startAnalysis() {
   fd.append('file', selectedFile);
   fd.append('semgrep', sc.semgrep); fd.append('gitleaks', sc.gitleaks);
   fd.append('snyk', sc.snyk); fd.append('zap', sc.zap);
-  const customTools = getCustomTools();
-  if (customTools.length > 0) fd.append('custom_tools', JSON.stringify(customTools));
+  if (sc.optional_tools.length > 0) fd.append('optional_tools', JSON.stringify(sc.optional_tools));
   resetPipeline();
   fetch('/upload',{method:'POST',body:fd}).then(r=>r.json()).then(data=>{
     if (data.error){alert('Erreur: '+data.error);return;}
     window._currentJobId = data.job_id || null;
     requestNotifPermission();
     polling = setInterval(checkStatus,2000);
-  });
+  }).catch(() => { alert('Erreur réseau. Vérifiez votre connexion.'); });
 }
 function startGithubAnalysis() {
   const url = document.getElementById('githubUrl').value.trim();
   if (!url){alert('Entrez un lien GitHub valide');return;}
   const sc = getScanners('sc-');
-  const customTools = getCustomTools();
   resetPipeline();
   fetch('/github',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({url,...sc, custom_tools: customTools})})
+    body:JSON.stringify({url,...sc})})
     .then(r=>r.json()).then(data=>{
       window._currentJobId = (data && data.job_id) ? data.job_id : null;
       requestNotifPermission();
       polling=setInterval(checkStatus,2000);
-    });
+    }).catch(() => { alert('Erreur réseau. Vérifiez votre connexion.'); });
 }
 function resetPipeline() {
   document.getElementById('progressCard').style.display = 'block';
@@ -2102,6 +2109,8 @@ function _pipelineStep(logs) {
 }
 
 // ══ STATUS POLLING ══
+const _TERMINAL_STATUSES = new Set(['completed', 'completed_with_warnings', 'failed']);
+
 function checkStatus() {
   const statusUrl = window._currentJobId ? '/status?job_id=' + encodeURIComponent(window._currentJobId) : '/status';
   fetch(statusUrl).then(r=>r.json()).then(data=>{
@@ -2113,11 +2122,45 @@ function checkStatus() {
     const step = _pipelineStep(data.logs);
     document.getElementById('pipelineStepIcon').textContent = step.icon;
     document.getElementById('pipelineStepText').textContent = step.text;
-    if (data.results.length > 0) { allResults=data.results; renderResults(data.results); updateFilters(data.results); }
-    if (!data.running && data.metrics && data.metrics.patched_files && data.metrics.patched_files.length > 0) {
-      renderPatchedFiles(data.metrics.patched_files, data.results);
+    if (data.results && data.results.length > 0) { allResults=data.results; renderResults(data.results); updateFilters(data.results); }
+    if (!data.running && data.metrics && data.metrics.patched_files !== undefined) {
+      renderPatchedFiles(data.metrics.patched_files, data.results || []);
     }
-    if (!data.running && Object.keys(data.metrics).length > 0) {
+    // Stop polling on any terminal status (completed, completed_with_warnings, failed)
+    // or on the legacy !running + metrics path for backward compat
+    const isTerminal = _TERMINAL_STATUSES.has(data.status) || (!data.running && data.status !== 'running');
+
+    if (data.status === 'failed' && !data.running) {
+      clearInterval(polling);
+      updateAnalyzeBtnState();
+      document.getElementById('newAnalysisBtn').style.display = 'inline-flex';
+      const sumEl = document.getElementById('pipelineSummary');
+      sumEl.style.background = 'rgba(220,38,38,.06)';
+      sumEl.style.borderColor = 'rgba(220,38,38,.2)';
+      sumEl.style.color = 'var(--danger,#f87171)';
+      sumEl.textContent = 'Analyse échouée — vérifiez les logs pour plus de détails.';
+      sumEl.style.display = 'block';
+      document.getElementById('pipelineStepIcon').textContent = '✗';
+      document.getElementById('pipelineStepText').textContent = 'Analyse échouée';
+      return;
+    }
+
+    if (data.status === 'completed_with_warnings' && !data.running && Object.keys(data.metrics || {}).length === 0) {
+      clearInterval(polling);
+      updateAnalyzeBtnState();
+      document.getElementById('newAnalysisBtn').style.display = 'inline-flex';
+      const sumEl = document.getElementById('pipelineSummary');
+      sumEl.style.background = 'rgba(217,119,6,.06)';
+      sumEl.style.borderColor = 'rgba(217,119,6,.2)';
+      sumEl.style.color = 'var(--warn,#d97706)';
+      sumEl.textContent = 'Analyse terminée avec avertissements — certains scanners optionnels ont échoué.';
+      sumEl.style.display = 'block';
+      document.getElementById('pipelineStepIcon').textContent = '!';
+      document.getElementById('pipelineStepText').textContent = 'Analyse terminée avec avertissements';
+      return;
+    }
+
+    if (!data.running && Object.keys(data.metrics || {}).length > 0) {
       clearInterval(polling);
       updateAnalyzeBtnState();
       document.getElementById('newAnalysisBtn').style.display = 'inline-flex';
@@ -2146,6 +2189,23 @@ function checkStatus() {
       showRecommendedTools('.');
       const _pid = new URLSearchParams(window.location.search).get('project');
       if (_pid) saveToProject(_pid);
+    } else if (isTerminal && !data.running) {
+      // Terminal status but no metrics (e.g. no vulns found, completed cleanly)
+      clearInterval(polling);
+      updateAnalyzeBtnState();
+      document.getElementById('newAnalysisBtn').style.display = 'inline-flex';
+      const sumEl = document.getElementById('pipelineSummary');
+      const isWarn = data.status === 'completed_with_warnings';
+      sumEl.style.background = isWarn ? 'rgba(217,119,6,.06)' : 'rgba(22,163,74,.06)';
+      sumEl.style.borderColor = isWarn ? 'rgba(217,119,6,.2)' : 'rgba(22,163,74,.2)';
+      sumEl.style.color = isWarn ? 'var(--warn,#d97706)' : 'var(--success,#16a34a)';
+      sumEl.textContent = isWarn
+        ? 'Analyse terminée avec avertissements — aucune vulnérabilité SAST trouvée.'
+        : 'Analyse terminée — aucune vulnérabilité détectée.';
+      sumEl.style.display = 'block';
+      document.getElementById('pipelineStepIcon').textContent = isWarn ? '!' : '✓';
+      document.getElementById('pipelineStepText').textContent = isWarn
+        ? 'Analyse terminée avec avertissements' : 'Analyse terminée';
     }
   });
 }
@@ -2159,8 +2219,21 @@ function severityClass(sev) {
   return 'LOW';
 }
 
+// Labels explaining what each optional tool's findings mean
+const _TOOL_SOURCE_LABELS = {
+  bandit:    { label: 'Bandit',    color: 'var(--danger)',                desc: 'Problèmes de sécurité Python détectés dans le code source' },
+  pylint:    { label: 'Pylint',    color: 'var(--warn)',                  desc: 'Qualité de code — avertissements lint, pas nécessairement des vulnérabilités critiques' },
+  pip_audit: { label: 'pip-audit', color: 'rgba(99,102,241,1)',           desc: 'Vulnérabilités connues dans les dépendances Python (pas dans le code uploadé directement)' },
+  eslint:    { label: 'ESLint',    color: 'var(--warn)',                  desc: 'Analyse statique JavaScript/TypeScript — sécurité et qualité de code' },
+  npm_audit: { label: 'npm-audit', color: 'rgba(99,102,241,1)',           desc: 'Vulnérabilités connues dans les dépendances npm' },
+  trivy:     { label: 'Trivy',     color: 'rgba(14,165,233,1)',           desc: 'Vulnérabilités dans les images Docker ou le système de fichiers' },
+  checkov:   { label: 'Checkov',   color: 'rgba(245,158,11,1)',           desc: 'Mauvaises configurations IaC (Terraform, Kubernetes, CloudFormation)' },
+};
+
 function renderResults(results, filtered) {
   const list = filtered !== undefined ? filtered : results;
+  // Build a set of known tool names from the registry (available tools only)
+  const _knownToolNames = new Set(_registryTools.map(t => t.name));
   document.getElementById('resultsCard').style.display = 'block';
   document.getElementById('resultsGrid').innerHTML = list.map((r, i) => {
     const ann  = vulnAnnotations[i] || {};
@@ -2169,6 +2242,17 @@ function renderResults(results, filtered) {
     const confLabel = r.from_cache ? 'Déjà validé' : conf>=90?'Hautement fiable':conf>=80?'Prêt à appliquer':conf>=70?'Vérifier le diff':'Correction manuelle';
     const realIdx = results.indexOf(r);
     const sevClass = severityClass(r.severity);
+    // Source label for optional tools
+    const srcKey = (r.source || 'semgrep').toLowerCase();
+    const srcInfo = _TOOL_SOURCE_LABELS[srcKey];
+    const srcBadge = srcInfo
+      ? `<span style="font-size:10px;padding:1px 7px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);color:${srcInfo.color};font-family:var(--mono);">${srcInfo.label}</span>`
+      : '';
+    const srcDesc = (srcInfo && srcKey !== 'semgrep')
+      ? `<div style="font-size:10px;color:var(--text-3);font-family:var(--mono);margin-top:3px;font-style:italic;">${escHtml(srcInfo.desc)}</div>`
+      : '';
+    // Filter LLM-suggested tools to only those installed in the registry
+    const filteredTools = (r.tools || []).filter(t => t && t.name && _knownToolNames.has(t.name));
     return `
     <div class="result-item ${r.success?'ok':'bad'}" id="result-${realIdx}">
       <div class="result-status-icon ${r.success?'status-ok':'status-bad'}">
@@ -2180,8 +2264,10 @@ function renderResults(results, filtered) {
           <span class="badge ${r.success?'badge-ok':'badge-bad'}">${r.success?'VALIDÉ':'REJETÉ'}</span>
           ${r.from_cache ? '<span class="badge badge-cache">cache</span>' : ''}
           ${r.consensus && r.consensus.badge ? `<span class="badge badge-info">${escHtml(r.consensus.badge)}</span>` : ''}
+          ${srcBadge}
           ${ann.assignee ? `<span class="assignee-tag">@${ann.assignee}</span>` : ''}
         </div>
+        ${srcDesc}
         <div class="result-desc">${buildVulnDesc(r, sevClass)}</div>
         <div class="result-meta tech-detail">
           <span>${r.file}</span><span class="result-meta-sep">·</span>
@@ -2205,14 +2291,14 @@ function renderResults(results, filtered) {
         <div class="result-actions">
           ${r.diff ? `<button class="act-btn" onclick="showDiff(${realIdx},'${r.cwe}')">Voir diff</button>` : ''}
         </div>
-        ${(r.tools && r.tools.length > 0) ? `
+        ${(filteredTools.length > 0) ? `
         <div class="accordion-wrap tech-detail">
           <div class="accordion-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';">
-            <span>OUTILS RECOMMANDÉS (${r.tools.length})</span>
+            <span>OUTILS RECOMMANDÉS (${filteredTools.length})</span>
             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="accordion-body">
-            ${r.tools.map((t,j)=>`
+            ${filteredTools.map((t,j)=>`
               <div style="margin-bottom:8px;padding:10px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border);">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
                   <span style="font-size:13px;font-weight:600;">${escHtml(t.name||'')}</span>
@@ -2334,6 +2420,10 @@ document.getElementById('commentModal').addEventListener('click',function(e){if(
 // ══ PATCHED FILES ══
 function renderPatchedFiles(pf, results) {
   document.getElementById('patchedFilesCard').style.display='block';
+  if (!pf || !pf.length) {
+    document.getElementById('patchedFilesList').innerHTML = '<div class="empty"><p>Aucun fichier corrigé généré pour cette analyse.</p></div>';
+    return;
+  }
   document.getElementById('patchedFilesList').innerHTML = pf.map(f=>{
     const baseSrc=f.name.replace('_patched','');
     const related=results.filter(r=>r.file===baseSrc||r.patched_name===f.name);
@@ -2385,7 +2475,9 @@ function applyFilesFilter() {
 }
 function loadFiles() {
   document.getElementById('filesTable').innerHTML='<div class="empty"><p>Chargement…</p></div>';
-  fetch('/files').then(r=>r.json()).then(files=>{
+  const jobId = window._currentJobId;
+  const url = jobId ? '/files?job_id=' + encodeURIComponent(jobId) : '/files';
+  fetch(url).then(r=>r.json()).then(files=>{
     _allFiles = files;
     applyFilesFilter();
   });
@@ -2426,7 +2518,18 @@ function applyHistoryFilter() {
 }
 function loadHistory() {
   document.getElementById('historyTable').innerHTML='<div class="empty" style="padding:40px;"><p>Chargement…</p></div>';
-  fetch('/history').then(r=>r.json()).then(sessions=>{
+  const projectId = (document.getElementById('histFilterProject')||{}).value || '';
+  const url = projectId ? `/history?project_id=${encodeURIComponent(projectId)}` : '/history';
+  // Populate project dropdown once
+  const projSel = document.getElementById('histFilterProject');
+  if (projSel && projSel.options.length <= 1) {
+    fetch('/projects/api').then(r=>r.json()).then(projects=>{
+      const current = projSel.value;
+      projSel.innerHTML = '<option value="">Tous les projets</option>' +
+        projects.map(p=>`<option value="${escHtml(p.id)}"${p.id===current?' selected':''}>${escHtml(p.name)}</option>`).join('');
+    }).catch(()=>{});
+  }
+  fetch(url).then(r=>r.json()).then(sessions=>{
     _allHistory = sessions;
     applyHistoryFilter();
   });
@@ -2490,10 +2593,10 @@ function loadHome() {
     const totalPatches = sessions.reduce((a,s) => a + (s.patches_validated||0), 0);
     const avgRate      = n ? (sessions.reduce((a,s) => a + (s.success_rate||0), 0) / n).toFixed(1) : '—';
 
-    document.getElementById('home-sessions').textContent = n || '~10';
-    document.getElementById('home-vulns').textContent    = totalVulns || '~25';
-    document.getElementById('home-patches').textContent  = totalPatches || '~15';
-    document.getElementById('home-rate').textContent     = n ? avgRate + '%' : '~80%';
+    document.getElementById('home-sessions').textContent = n;
+    document.getElementById('home-vulns').textContent    = totalVulns;
+    document.getElementById('home-patches').textContent  = totalPatches;
+    document.getElementById('home-rate').textContent     = n ? avgRate + '%' : '0%';
 
     const last5 = [...sessions].reverse().slice(0, 5);
     const el = document.getElementById('homeRecentSessions');

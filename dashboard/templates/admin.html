@@ -122,6 +122,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 </style>
 </head>
 <body>
+<div id="admin-toast" style="
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  padding:12px 20px;border-radius:8px;font-size:13px;
+  font-family:var(--mono);font-weight:600;pointer-events:none;
+  opacity:0;transition:opacity .25s;max-width:360px;
+"></div>
 
 <aside class="sidebar">
   <div class="sidebar-logo">
@@ -146,6 +152,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">{{ icon('bar-chart', 15) }} <span>Tableau de bord</span></div>
   <div class="nav-item" id="nav-users" onclick="showPage('users')">{{ icon('users', 15) }} <span>Utilisateurs</span></div>
   <div class="nav-item" id="nav-requests" onclick="showPage('requests')">{{ icon('mail', 15) }} <span>Demandes <span id="requestsBadge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-family:var(--mono);"></span></span></div>
+  <div class="nav-item" id="nav-invitations" onclick="showPage('invitations');loadInvitations()">{{ icon('user-plus', 15) }} <span>Invitations <span id="invBadge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-family:var(--mono);"></span></span></div>
   <div class="nav-item" id="nav-activity" onclick="showPage('activity')">{{ icon('clock', 15) }} <span>Activité</span></div>
   <a href="/admin/audit" class="nav-item">{{ icon('terminal', 15) }} <span>Audit Log</span></a>
   <a href="/admin/monitoring" class="nav-item">{{ icon('bar-chart', 15) }} <span>Monitoring</span></a>
@@ -192,6 +199,45 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
           <button class="btn btn-outline btn-sm" onclick="loadRequests()">Actualiser</button>
         </div>
         <div id="requestsList"><div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: INVITATIONS -->
+    <div class="page" id="page-invitations">
+      <!-- Rejection reason modal -->
+      <div class="modal-overlay" id="rejectModal">
+        <div class="modal" style="width:460px;">
+          <h3>Rejeter l'invitation</h3>
+          <div class="field">
+            <label>Raison du rejet (optionnel)</label>
+            <textarea id="rejectReason" rows="3" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;resize:vertical;" placeholder="Expliquer pourquoi cette invitation est refusée…"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-outline btn-sm" onclick="closeRejectModal()">Annuler</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmReject()">Confirmer le rejet</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div class="card-title" style="margin-bottom:0;">Invitations de projet</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <select id="invStatusFilter" onchange="loadInvitations()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;">
+              <option value="pending">En attente</option>
+              <option value="pending,approved">Actives</option>
+              <option value="">Toutes</option>
+              <option value="approved">Approuvées</option>
+              <option value="rejected">Rejetées</option>
+              <option value="cancelled">Annulées</option>
+              <option value="expired">Expirées</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="loadInvitations()">Actualiser</button>
+          </div>
+        </div>
+        <div id="invitationsList">
+          <div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Chargement…</div>
+        </div>
       </div>
     </div>
 
@@ -289,12 +335,12 @@ function loadRequests() {
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
               <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Email : <span style="color:var(--accent2);">${r.email}</span></div>
-              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Société : ${r.company}</div>
+              <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Société : ${r.company || '—'}</div>
               <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">Date : ${(r.created_at||'').substring(0,16)}</div>
             </div>
             <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);background:var(--panel);padding:10px 12px;border-radius:6px;border:1px solid var(--border);line-height:1.6;">
               <strong style="color:var(--text);display:block;margin-bottom:4px;">Cas d'usage :</strong>
-              ${r.use_case}
+              ${r.use_case || r.reason || '—'}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
@@ -310,25 +356,39 @@ function loadRequests() {
 function approveRequest(id, btn) {
   btn.disabled = true; btn.textContent = '…';
   fetch(`/admin/requests/${id}/approve`, {method:'POST'})
-    .then(r=>r.json()).then(d=>{
+    .then(r => {
+      if (!r.ok && r.headers.get('content-type') && !r.headers.get('content-type').includes('json')) {
+        throw new Error(`Erreur serveur ${r.status}`);
+      }
+      return r.json();
+    })
+    .then(d=>{
       if (d.ok) {
         const emailStatus = d.email_sent
           ? 'Les identifiants ont été envoyés automatiquement par email à l\'utilisateur.'
-          : 'Email non configuré.\n\nIdentifiant : ' + d.username + '\nMot de passe : ' + d.password + '\n\nTransmettez ces informations manuellement.';
+          : 'Email non configuré.\n\nIdentifiant : ' + d.username + '\nMot de passe : ' + (d.message||'').split('mot de passe : ')[1] + '\n\nTransmettez ces informations manuellement.';
         alert('Compte créé !\n\n' + emailStatus);
         loadRequests(); loadStats();
       } else { alert('Erreur : '+(d.error||'Inconnue')); btn.disabled=false; btn.textContent='Approuver'; }
-    });
+    })
+    .catch(err => { alert('Erreur : ' + err.message); btn.disabled=false; btn.textContent='Approuver'; });
 }
 
 function rejectRequest(id, btn) {
   if (!confirm('Rejeter cette demande ?')) return;
   btn.disabled = true; btn.textContent = '…';
   fetch(`/admin/requests/${id}/reject`, {method:'POST'})
-    .then(r=>r.json()).then(d=>{
+    .then(r => {
+      if (!r.ok && r.headers.get('content-type') && !r.headers.get('content-type').includes('json')) {
+        throw new Error(`Erreur serveur ${r.status}`);
+      }
+      return r.json();
+    })
+    .then(d=>{
       if (d.ok) loadRequests();
-      else { alert('Erreur'); btn.disabled=false; btn.textContent='Rejeter'; }
-    });
+      else { alert('Erreur : '+(d.error||'Inconnue')); btn.disabled=false; btn.textContent='Rejeter'; }
+    })
+    .catch(err => { alert('Erreur : ' + err.message); btn.disabled=false; btn.textContent='Rejeter'; });
 }
 
 // ── LOAD STATS ──
@@ -422,13 +482,30 @@ function renderUsers(filterCompany) {
     </table>`;
 }
 
+let _toastTimer = null;
+function showToast(msg, ok = true) {
+  const el = document.getElementById('admin-toast');
+  el.textContent = msg;
+  el.style.background = ok ? 'rgba(22,163,74,0.92)' : 'rgba(220,38,38,0.92)';
+  el.style.color = '#fff';
+  el.style.opacity = '1';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
 function deleteUser(username) {
-  if (!confirm(`Supprimer l'utilisateur @${username} ? Cette action est irréversible.`)) return;
+  if (!confirm(`Désactiver le compte @${username} ?`)) return;
   fetch(`/admin/users/${username}`, {method:'DELETE'})
-    .then(r=>r.json()).then(d=>{
-      if (d.ok) loadUsers();
-      else alert('Erreur : '+d.error);
-    });
+    .then(r => r.json())
+    .then(d => {
+      if (d.ok) {
+        showToast(d.message || 'Utilisateur supprimé.');
+        loadUsers();
+      } else {
+        showToast(d.error || 'Erreur inconnue.', false);
+      }
+    })
+    .catch(() => showToast('Erreur réseau.', false));
 }
 
 // ── ALL ACTIVITY ──
@@ -513,6 +590,138 @@ function changeRole(username) {
   }).then(r=>r.json()).then(d=>{ if(d.ok) loadUsers(); else alert(d.error||'Erreur'); });
 }
 
+// ── INVITATIONS ──
+let _pendingRejectId = null;
+
+const _invStatusMeta = {
+  pending:   {label:'En attente', color:'#D97706', bg:'rgba(217,119,6,0.12)'},
+  approved:  {label:'Approuvée',  color:'#16A34A', bg:'rgba(22,163,74,0.12)'},
+  rejected:  {label:'Rejetée',    color:'#DC2626', bg:'rgba(220,38,38,0.12)'},
+  cancelled: {label:'Annulée',    color:'#94A3B8', bg:'rgba(148,163,184,0.12)'},
+  accepted:  {label:'Acceptée',   color:'#0EA5E9', bg:'rgba(14,165,233,0.12)'},
+  expired:   {label:'Expirée',    color:'#64748B', bg:'rgba(100,116,139,0.12)'},
+};
+
+function _invBadge(status) {
+  const m = _invStatusMeta[status] || {label:status, color:'#94A3B8', bg:'rgba(148,163,184,0.12)'};
+  return `<span style="font-family:var(--mono);font-size:11px;padding:2px 9px;border-radius:4px;background:${m.bg};color:${m.color};font-weight:700;">${m.label}</span>`;
+}
+
+function loadInvitations() {
+  const status = document.getElementById('invStatusFilter')?.value || 'pending';
+  const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+  fetch('/admin/api/invitations' + qs)
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(d => {
+      // Update pending badge in sidebar
+      if (d.pending_count > 0) {
+        const b = document.getElementById('invBadge');
+        if (b) { b.textContent = d.pending_count; b.style.display = 'inline'; }
+      } else {
+        const b = document.getElementById('invBadge');
+        if (b) b.style.display = 'none';
+      }
+      const list = document.getElementById('invitationsList');
+      if (!d.invitations || !d.invitations.length) {
+        list.innerHTML = '<div style="text-align:center;padding:32px;font-family:var(--mono);font-size:12px;color:var(--text-dim);">Aucune invitation dans cette catégorie.</div>';
+        return;
+      }
+      list.innerHTML = `
+        <table class="users-table" style="font-size:12px;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Projet</th>
+              <th>Email invité</th>
+              <th>Rôle</th>
+              <th>Invité par</th>
+              <th>Créé le</th>
+              <th>Statut</th>
+              <th>Approuvé par</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${d.invitations.map(inv => `
+              <tr>
+                <td style="font-family:var(--mono);color:var(--text-dim);">#${inv.id}</td>
+                <td style="font-weight:600;">${escHtml(inv.project_name||inv.project_id)}</td>
+                <td style="font-family:var(--mono);">${escHtml(inv.email)}</td>
+                <td><span style="font-family:var(--mono);font-size:11px;padding:2px 8px;background:rgba(14,165,233,0.1);color:var(--accent2);border-radius:4px;">${escHtml(inv.role)}</span></td>
+                <td style="font-family:var(--mono);color:var(--text-dim);">@${escHtml(inv.invited_by)}</td>
+                <td style="font-family:var(--mono);color:var(--text-dim);">${(inv.created_at||'').substring(0,16)}</td>
+                <td>${_invBadge(inv.status)}</td>
+                <td style="font-family:var(--mono);font-size:11px;color:var(--text-dim);">${inv.approved_by ? '@'+escHtml(inv.approved_by) : '—'}</td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                  ${inv.status === 'pending' ? `
+                    <button class="btn btn-primary btn-sm" onclick="approveInvitation(${inv.id})">Approuver</button>
+                    <button class="btn btn-danger btn-sm" onclick="openRejectModal(${inv.id})">Rejeter</button>
+                  ` : '—'}
+                  ${inv.rejection_reason ? `<span title="${escHtml(inv.rejection_reason)}" style="cursor:help;font-family:var(--mono);font-size:11px;color:var(--text-dim);">💬</span>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    })
+    .catch(() => showToast('Erreur lors du chargement des invitations.', false));
+}
+
+function approveInvitation(id) {
+  if (!confirm('Approuver cette invitation ? Un compte sera créé si nécessaire et les credentials envoyés.')) return;
+  fetch(`/admin/api/invitations/${id}/approve`, {method:'POST'})
+    .then(r => { if (!r.ok && r.status !== 409) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(d => {
+      if (d.ok) {
+        const msg = d.existing_user
+          ? `Utilisateur existant ajouté au projet${d.email_sent ? ' (notification envoyée)' : ''}.`
+          : `Nouveau compte créé (@${d.provisioned_user})${d.email_sent ? ' — credentials envoyés.' : ' — email non envoyé.'}`;
+        showToast(msg, true);
+        loadInvitations();
+        loadStats();
+      } else {
+        showToast(d.error || 'Erreur lors de l\'approbation.', false);
+      }
+    })
+    .catch(() => showToast('Erreur réseau.', false));
+}
+
+function openRejectModal(id) {
+  _pendingRejectId = id;
+  document.getElementById('rejectReason').value = '';
+  document.getElementById('rejectModal').classList.add('open');
+}
+
+function closeRejectModal() {
+  _pendingRejectId = null;
+  document.getElementById('rejectModal').classList.remove('open');
+}
+
+function confirmReject() {
+  if (!_pendingRejectId) return;
+  const reason = document.getElementById('rejectReason').value.trim();
+  fetch(`/admin/api/invitations/${_pendingRejectId}/reject`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({reason}),
+  })
+    .then(r => { if (!r.ok && r.status !== 409) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(d => {
+      closeRejectModal();
+      if (d.ok) {
+        showToast('Invitation rejetée.', true);
+        loadInvitations();
+      } else {
+        showToast(d.error || 'Erreur.', false);
+      }
+    })
+    .catch(() => showToast('Erreur réseau.', false));
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ── INIT ──
 fetch('/me').then(r=>r.json()).then(d=>{
   document.getElementById('adminName').textContent = d.full_name||d.username;
@@ -522,6 +731,16 @@ fetch('/me').then(r=>r.json()).then(d=>{
   else{const ini=(d.full_name||d.username||'A').split(' ').map(x=>x[0]).join('').toUpperCase().substring(0,2);av.textContent=ini;}
 });
 loadStats();
+// Pre-load pending invitation badge count
+fetch('/admin/api/invitations?status=pending')
+  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+  .then(d => {
+    if (d.pending_count > 0) {
+      const b = document.getElementById('invBadge');
+      if (b) { b.textContent = d.pending_count; b.style.display = 'inline'; }
+    }
+  })
+  .catch(() => {});
 </script>
 </body>
 </html>

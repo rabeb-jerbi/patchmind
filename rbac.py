@@ -6,19 +6,20 @@ from functools import wraps
 from flask import session, jsonify, request, redirect
 
 # ── Permission matrix ─────────────────────────────────────────────────────────
-ROLES = ["viewer", "analyst", "dev", "admin"]
+ROLES = ["viewer", "user", "analyst", "dev", "admin"]
 
 PERMISSIONS = {
-    "view_dashboard":   {"viewer", "analyst", "dev", "admin"},
-    "run_scan":         {"analyst", "dev", "admin"},
-    "download_patch":   {"analyst", "dev", "admin"},
-    "manage_projects":  {"dev", "admin"},
+    # "user" is the default role assigned on account approval — same capabilities as analyst
+    "view_dashboard":   {"viewer", "user", "analyst", "dev", "admin"},
+    "run_scan":         {"user", "analyst", "dev", "admin"},
+    "download_patch":   {"user", "analyst", "dev", "admin"},
+    "manage_projects":  {"user", "dev", "admin"},
     "manage_users":     {"admin"},
     "view_audit":       {"admin"},
-    "export_report":    {"analyst", "dev", "admin"},
-    "false_positive":   {"analyst", "dev", "admin"},
+    "export_report":    {"user", "analyst", "dev", "admin"},
+    "false_positive":   {"user", "analyst", "dev", "admin"},
     "assign_vuln":      {"dev", "admin"},
-    "comment_vuln":     {"viewer", "analyst", "dev", "admin"},
+    "comment_vuln":     {"viewer", "user", "analyst", "dev", "admin"},
     "view_ciso":        {"admin"},
     "manage_settings":  {"admin"},
 }

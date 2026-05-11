@@ -12,6 +12,7 @@ class PipAuditTool(BaseTool):
     supported_languages  = ["python"]
     supported_file_types = [".txt", ".toml", ".cfg"]
     default_timeout      = 120
+    install_hint         = "pip install pip-audit"
 
     def is_available(self) -> bool:
         r = self._safe_run([sys.executable, "-m", "pip_audit", "--version"], timeout=10)

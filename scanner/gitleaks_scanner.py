@@ -90,7 +90,7 @@ def _regex_scan(path):
                 stripped = line.strip()
                 if stripped.startswith(('#','//','*','<!--')):
                     continue
-                if 'test' in fpath.lower() or 'example' in fpath.lower():
+                if 'test' in fname.lower() or 'example' in fname.lower():
                     continue
 
                 for rule, pattern in SECRET_PATTERNS.items():

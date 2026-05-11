@@ -12,6 +12,7 @@ class CheckovTool(BaseTool):
     supported_languages  = ["terraform", "yaml"]
     supported_file_types = [".tf", ".hcl", ".yaml", ".yml", ".json"]
     default_timeout      = 120
+    install_hint         = "pip install checkov"
 
     def is_available(self) -> bool:
         r = self._safe_run([sys.executable, "-m", "checkov", "--version"], timeout=10)

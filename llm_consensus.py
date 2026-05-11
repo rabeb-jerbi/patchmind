@@ -1,6 +1,6 @@
 """
 Module 1 — Multi-LLM Consensus
-Calls Groq + Gemini + DeepSeek in parallel, picks a majority patch via
+Calls Groq + Gemini + Ollama in parallel, picks a majority patch via
 difflib.SequenceMatcher (threshold 0.80). Falls back to Groq alone.
 """
 import os
@@ -9,6 +9,7 @@ import json
 import time
 import difflib
 import sys
+import requests
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
@@ -35,25 +36,17 @@ except Exception:
 # ── Gemini ────────────────────────────────────────────────────────────────────
 try:
     import google.generativeai as genai
-    _gemini_key = os.getenv("GEMINI_API_KEY", "")
+    _gemini_key = os.getenv("GEMINI_API_KEY")
     if _gemini_key:
         genai.configure(api_key=_gemini_key)
     GEMINI_OK = bool(_gemini_key)
 except ImportError:
     GEMINI_OK = False
 
-# ── DeepSeek (OpenAI-compat) ──────────────────────────────────────────────────
-try:
-    from openai import OpenAI as _OpenAIClient
-    _deepseek_key = os.getenv("DEEPSEEK_API_KEY", "")
-    _deepseek = _OpenAIClient(
-        api_key=_deepseek_key or "no-key",
-        base_url="https://api.deepseek.com/v1"
-    ) if _deepseek_key else None
-    DEEPSEEK_OK = bool(_deepseek_key)
-except ImportError:
-    DEEPSEEK_OK = False
-    _deepseek = None
+# ── Ollama (local) ────────────────────────────────────────────────────────────
+OLLAMA_URL   = os.getenv("OLLAMA_URL",   "http://localhost:11434/api/generate")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "codellama")
+OLLAMA_OK    = True  # optimistically true; checked at call time
 
 
 def _strip_markdown(text: str) -> str:
@@ -62,8 +55,51 @@ def _strip_markdown(text: str) -> str:
     return text
 
 
+def normalize_patch_output(text: str) -> str:
+    """Normalize LLM output before similarity comparison.
+
+    Strips markdown fences, inline explanations/comments, and normalises
+    whitespace so that semantically identical patches from different models
+    are not penalised for cosmetic differences.
+    """
+    if not text:
+        return ""
+    # Remove markdown code fences
+    text = re.sub(r"^```[a-zA-Z0-9+#]*\n?", "", text.strip())
+    text = re.sub(r"\n?```$", "", text).strip()
+    # Remove leading explanation lines (lines that contain no code-like tokens)
+    lines = text.splitlines()
+    code_start = 0
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        # Skip blank lines and lines that look like natural-language prose
+        if not stripped:
+            continue
+        if re.match(r'^(here|this|the|i |sure|of course|below|fixed|output|result)', stripped, re.IGNORECASE):
+            code_start = i + 1
+        else:
+            break
+    lines = lines[code_start:]
+    # Normalise indentation: replace tabs with 4 spaces, collapse trailing spaces
+    normalised = []
+    for line in lines:
+        line = line.replace("\t", "    ").rstrip()
+        normalised.append(line)
+    # Remove consecutive blank lines (keep at most one)
+    result_lines = []
+    prev_blank = False
+    for line in normalised:
+        is_blank = line.strip() == ""
+        if is_blank and prev_blank:
+            continue
+        result_lines.append(line)
+        prev_blank = is_blank
+    return "\n".join(result_lines).strip()
+
+
 def _similarity(a: str, b: str) -> float:
-    return difflib.SequenceMatcher(None, a.strip(), b.strip()).ratio()
+    na, nb = normalize_patch_output(a), normalize_patch_output(b)
+    return difflib.SequenceMatcher(None, na, nb).ratio()
 
 
 def _append_json_log(path: str, entry: dict):
@@ -98,9 +134,9 @@ class LLMConsensus:
 
         with ThreadPoolExecutor(max_workers=3) as ex:
             futures = {}
-            futures[ex.submit(self._call_groq, prompt)]    = "groq"
-            futures[ex.submit(self._call_gemini, prompt)]  = "gemini"
-            futures[ex.submit(self._call_deepseek, prompt)]= "deepseek"
+            futures[ex.submit(self._call_groq, prompt)]   = "groq"
+            futures[ex.submit(self._call_gemini, prompt)] = "gemini"
+            futures[ex.submit(self._call_ollama, prompt)] = "ollama"
 
             for fut in as_completed(futures):
                 model = futures[fut]
@@ -220,28 +256,26 @@ class LLMConsensus:
         if not GEMINI_OK:
             return ""
         try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.0-flash")
             resp  = model.generate_content(prompt)
             return _strip_markdown(resp.text)
         except Exception:
             try:
-                model = genai.GenerativeModel("gemini-1.5-pro")
+                model = genai.GenerativeModel("gemini-2.0-flash")
                 resp  = model.generate_content(prompt)
                 return _strip_markdown(resp.text)
             except Exception:
                 return ""
 
-    def _call_deepseek(self, prompt: str) -> str:
-        if not DEEPSEEK_OK or _deepseek is None:
-            return ""
+    def _call_ollama(self, prompt: str) -> str:
         try:
-            resp = _deepseek.chat.completions.create(
-                model="deepseek-coder",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=2048,
+            resp = requests.post(
+                OLLAMA_URL,
+                json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
+                timeout=90,
             )
-            return _strip_markdown(resp.choices[0].message.content)
+            resp.raise_for_status()
+            return _strip_markdown(resp.json().get("response", ""))
         except Exception:
             return ""
 

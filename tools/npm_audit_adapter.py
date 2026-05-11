@@ -17,6 +17,7 @@ class NpmAuditTool(BaseTool):
     supported_languages  = ["javascript", "typescript"]
     supported_file_types = ["package.json"]
     default_timeout      = 120
+    install_hint         = "https://nodejs.org/en/download/ (npm est inclus avec Node.js)"
 
     def is_available(self) -> bool:
         return shutil.which("npm") is not None

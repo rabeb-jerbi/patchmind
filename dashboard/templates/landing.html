@@ -777,7 +777,7 @@
     <div class="access-inner">
       <div style="text-align:center;" class="reveal">
         <span class="section-tag">Accès</span>
-        <h2 class="section-title">Rejoindre la beta</h2>
+        <h2 class="section-title">Découvrir PatchMind</h2>
         <p class="section-sub" style="margin: 0 auto;">Accédez à PatchMind et sécurisez votre code dès aujourd'hui. Réponse sous 24h.</p>
       </div>
 
@@ -792,14 +792,15 @@
             <input type="email" id="a-email" placeholder="jean@entreprise.com" />
           </div>
           <div class="form-group">
-            <label for="a-company">Entreprise</label>
-            <input type="text" id="a-company" placeholder="Acme Corp" />
+            <label for="a-company">Organisation / Entreprise</label>
+            <input type="text" id="a-company" placeholder="Acme Security" />
           </div>
           <div class="form-group">
-            <label for="a-usecase">Cas d'usage</label>
-            <textarea id="a-usecase" placeholder="Décrivez votre besoin en sécurité applicative…"></textarea>
+            <label for="a-usecase">Besoin ou cas d’utilisation</label>
+            <textarea id="a-usecase" placeholder="Décrivez brièvement votre besoin en sécurité applicative, audit ou remédiation…"></textarea>
           </div>
           <button class="btn-submit" id="access-submit" onclick="submitAccess()">Envoyer la demande →</button>
+          <div id="access-error" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.35);color:#f87171;font-size:13px;font-family:var(--mono);line-height:1.5;"></div>
         </div>
 
         <div class="form-success" id="access-success">
@@ -808,7 +809,7 @@
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <h3>Demande envoyée !</h3>
+          <h3>Découvrir PatchMind →</h3>
           <p>Nous vous contacterons dans les 24h pour finaliser votre accès à PatchMind.</p>
         </div>
       </div>
@@ -854,25 +855,56 @@
   }
 
   // ── Access form ───────────────────────────────────────────────────
+  function _accessError(msg) {
+    const el = document.getElementById('access-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
   async function submitAccess() {
     const btn     = document.getElementById('access-submit');
+    const errEl   = document.getElementById('access-error');
     const nom     = document.getElementById('a-nom').value.trim();
     const email   = document.getElementById('a-email').value.trim();
     const company = document.getElementById('a-company').value.trim();
     const usecase = document.getElementById('a-usecase').value.trim();
-    if (!nom || !email) { alert('Veuillez renseigner au minimum votre nom et votre email.'); return; }
+
+    // Client-side validation
+    errEl.style.display = 'none';
+    if (!nom)   { _accessError('Le nom complet est requis.'); return; }
+    if (!email) { _accessError("L'adresse email est requise."); return; }
+
     btn.disabled = true; btn.textContent = 'Envoi en cours…';
+
+    let data;
     try {
-      await fetch('/request-access', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
+      const resp = await fetch('/request-access', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ full_name: nom, email, company, use_case: usecase })
       });
-      document.getElementById('access-form-wrap').style.display = 'none';
-      document.getElementById('access-success').style.display   = 'block';
+
+      // Safely parse JSON — server may return HTML on unexpected 500
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await resp.json();
+      } else {
+        data = { ok: false, error: `Erreur serveur (${resp.status})` };
+      }
+
+      if (!resp.ok || !data.ok) {
+        _accessError(data.error || `Erreur ${resp.status}`);
+        btn.disabled = false; btn.textContent = 'Envoyer la demande →';
+        return;
+      }
     } catch (e) {
+      _accessError('Erreur réseau. Veuillez vérifier votre connexion et réessayer.');
       btn.disabled = false; btn.textContent = 'Envoyer la demande →';
-      alert('Erreur réseau. Veuillez réessayer.');
+      return;
     }
+
+    document.getElementById('access-form-wrap').style.display = 'none';
+    document.getElementById('access-success').style.display   = 'block';
   }
 
   // ── Init ─────────────────────────────────────────────────────────

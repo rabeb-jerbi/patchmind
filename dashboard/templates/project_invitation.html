@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchMind — Invitation projet</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/patchmind.css">
+<style>
+:root {
+  --bg:          #F4F6F9;
+  --surface:     #FFFFFF;
+  --border:      #E2E6ED;
+  --green:       #4F46E5;
+  --green-mid:   #4338CA;
+  --green-light: #EEF2FF;
+  --danger:      #DC2626;
+  --danger-bg:   #FEF2F2;
+  --warn:        #D97706;
+  --warn-bg:     #FFFBEB;
+  --success:     #16A34A;
+  --success-bg:  #F0FDF4;
+  --text:        #0F172A;
+  --text-2:      #475569;
+  --text-3:      #94A3B8;
+  --sans:        'Inter', sans-serif;
+  --mono:        'JetBrains Mono', monospace;
+  --radius:      10px;
+  --radius-sm:   6px;
+  --shadow-md:   0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+}
+body.dark {
+  --bg:          #0C0F14;
+  --surface:     #141920;
+  --border:      #252E3D;
+  --green:       #818CF8;
+  --green-light: #1E1B4B;
+  --text:        #E2E8F0;
+  --text-2:      #94A3B8;
+  --text-3:      #475569;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  max-width: 480px;
+  width: 100%;
+  padding: 40px;
+}
+.logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.logo h1 { font-size: 24px; font-weight: 800; color: var(--text); }
+.logo h1 span { color: var(--green); }
+.logo p { color: var(--text-3); font-size: 12px; margin-top: 4px; font-family: var(--mono); }
+.inv-status {
+  text-align: center;
+  padding: 20px;
+  border-radius: var(--radius);
+  margin-bottom: 24px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.inv-status.expired  { background: var(--warn-bg);    color: var(--warn);    border: 1px solid #FDE68A; }
+.inv-status.accepted { background: var(--success-bg); color: var(--success); border: 1px solid #BBF7D0; }
+.inv-status.rejected { background: var(--danger-bg);  color: var(--danger);  border: 1px solid #FECACA; }
+.inv-status.not-yours { background: var(--danger-bg); color: var(--danger);  border: 1px solid #FECACA; }
+.project-block {
+  background: var(--green-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.project-block .proj-label {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 6px;
+}
+.project-block .proj-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.project-block .proj-desc {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.meta-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.meta-item {
+  flex: 1;
+  min-width: 120px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.meta-item .meta-label {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  margin-bottom: 4px;
+}
+.meta-item .meta-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--mono);
+}
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+}
+.role-badge.member  { background: var(--green-light); color: var(--green-mid); }
+.role-badge.viewer  { background: #F0F9FF; color: #0284C7; }
+.actions {
+  display: flex;
+  gap: 12px;
+}
+.btn {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-accept { background: var(--green); color: #fff; }
+.btn-reject { background: var(--bg); color: var(--danger); border: 1px solid var(--danger); }
+.toast {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+  display: none;
+}
+.toast.success { background: var(--success-bg); color: var(--success); border: 1px solid #BBF7D0; }
+.toast.error   { background: var(--danger-bg);  color: var(--danger);  border: 1px solid #FECACA; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>Patch<span>Mind</span></h1>
+    <p>Automated Security Platform</p>
+  </div>
+
+  {% if error %}
+    <div class="inv-status not-yours">{{ error }}</div>
+    <p style="text-align:center;margin-top:16px;">
+      <a href="/projects" style="color:var(--green);font-size:13px;">← Retour aux projets</a>
+    </p>
+
+  {% elif inv is none %}
+    <div class="inv-status not-yours">Invitation introuvable</div>
+
+  {% else %}
+    {% if inv.status == 'expired' %}
+      <div class="inv-status expired">⏰ Cette invitation a expiré</div>
+    {% elif inv.status == 'accepted' %}
+      <div class="inv-status accepted">Invitation déjà acceptée</div>
+    {% elif inv.status == 'rejected' %}
+      <div class="inv-status rejected">Invitation déclinée</div>
+    {% elif inv.status == 'cancelled' %}
+      <div class="inv-status expired">Invitation annulée</div>
+    {% elif inv.status == 'pending' %}
+      <div class="inv-status" style="background:var(--warn-bg);color:var(--warn);border:1px solid #FDE68A;">
+        En attente d'approbation — Un administrateur doit valider cette invitation avant que vous puissiez rejoindre le projet.
+      </div>
+    {% elif not email_match %}
+      <div class="inv-status not-yours">Cette invitation est destinée à {{ inv.email }} — vous êtes connecté(e) en tant que {{ current_user }}</div>
+    {% endif %}
+
+    <div class="project-block">
+      <div class="proj-label">Projet</div>
+      <div class="proj-name">{{ project.get('name', inv.project_id) if project else inv.project_id }}</div>
+      {% if project and project.get('description') %}
+        <div class="proj-desc">{{ project.get('description') }}</div>
+      {% endif %}
+    </div>
+
+    <div class="meta-row">
+      <div class="meta-item">
+        <div class="meta-label">Invité par</div>
+        <div class="meta-val">{{ inv.invited_by }}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Rôle proposé</div>
+        <div class="meta-val">
+          <span class="role-badge {{ inv.role }}">
+            {% if inv.role == 'member' %}Membre{% else %}Lecteur{% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Expire le</div>
+        <div class="meta-val">{{ inv.expires_at.strftime('%d/%m/%Y') if inv.expires_at else '—' }}</div>
+      </div>
+    </div>
+
+    {% if inv.status == 'approved' and email_match %}
+    <div class="actions">
+      <button class="btn btn-reject" id="rejectBtn" onclick="respond('reject')">Décliner</button>
+      <button class="btn btn-accept" id="acceptBtn" onclick="respond('accept')">Rejoindre le projet</button>
+    </div>
+    {% endif %}
+
+    <div id="toast" class="toast"></div>
+
+    <p style="text-align:center;margin-top:20px;">
+      <a href="/projects" style="color:var(--text-3);font-size:12px;text-decoration:none;">← Retour aux projets</a>
+    </p>
+  {% endif %}
+</div>
+
+<script>
+if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+
+function respond(action) {
+  const acceptBtn = document.getElementById('acceptBtn');
+  const rejectBtn = document.getElementById('rejectBtn');
+  const toast     = document.getElementById('toast');
+  if (acceptBtn) acceptBtn.disabled = true;
+  if (rejectBtn) rejectBtn.disabled = true;
+
+  fetch(`/project-invitations/{{ token }}/${action}`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body:    JSON.stringify({}),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.ok) {
+      if (action === 'accept') {
+        toast.className = 'toast success';
+        toast.textContent = '✅ Invitation acceptée ! Redirection…';
+        toast.style.display = '';
+        setTimeout(() => { window.location.href = `/project/${d.project_id}`; }, 1200);
+      } else {
+        toast.className = 'toast error';
+        toast.textContent = '❌ Invitation déclinée.';
+        toast.style.display = '';
+        setTimeout(() => location.reload(), 1500);
+      }
+    } else {
+      toast.className = 'toast error';
+      toast.textContent = d.error || 'Une erreur est survenue.';
+      toast.style.display = '';
+      if (acceptBtn) acceptBtn.disabled = false;
+      if (rejectBtn) rejectBtn.disabled = false;
+    }
+  })
+  .catch(() => {
+    toast.className = 'toast error';
+    toast.textContent = 'Erreur réseau — réessayez.';
+    toast.style.display = '';
+    if (acceptBtn) acceptBtn.disabled = false;
+    if (rejectBtn) rejectBtn.disabled = false;
+  });
+}
+</script>
+</body>
+</html>

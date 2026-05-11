@@ -412,7 +412,10 @@ body {
       <a href="/dashboard" class="btn btn-primary btn-sm" id="newAnalysisBtn">
         {{ icon('zap', 13) }} Nouvelle analyse
       </a>
-      <button class="btn btn-danger-soft btn-sm" onclick="deleteProject()">
+      <button class="btn btn-outline btn-sm" id="editProjBtn" onclick="openEditModal()" style="display:none;">
+        {{ icon('edit-2', 13) }} Modifier
+      </button>
+      <button class="btn btn-danger-soft btn-sm" id="deleteProjBtn" onclick="deleteProject()" style="display:none;">
         {{ icon('trash-2', 13) }} Supprimer
       </button>
     </div>
@@ -501,8 +504,15 @@ body {
             <span class="card-title-accent"></span>
             Membres
           </div>
+          <button class="btn btn-outline btn-sm" id="inviteBtn" onclick="openInviteModal()" style="display:none;">
+            {{ icon('user-plus', 13) }} Inviter
+          </button>
         </div>
         <div class="card-body" id="membersSection"></div>
+        <div id="invitationsSection" style="display:none;padding:0 20px 16px;">
+          <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Invitations en attente</div>
+          <div id="invitationsList"></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-header">
@@ -517,6 +527,72 @@ body {
 
   </div><!-- /content -->
 </div><!-- /main -->
+
+<!-- Modal: edit project -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">{{ icon('edit-2', 15) }} Modifier le projet</div>
+      <button class="modal-close" onclick="closeEditModal()">{{ icon('x', 14) }}</button>
+    </div>
+    <div class="field">
+      <label>Nom *</label>
+      <input type="text" id="editName" placeholder="Nom du projet">
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="editDesc" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;min-height:70px;resize:vertical;" placeholder="Description…"></textarea>
+    </div>
+    <div class="field">
+      <label>Département</label>
+      <input type="text" id="editDept" placeholder="Engineering, Security…">
+    </div>
+    <div class="field">
+      <label>Tags</label>
+      <input type="text" id="editTags" placeholder="python, api, prod">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:5px;">Séparés par des virgules</div>
+    </div>
+    <div id="editErr" style="font-family:var(--mono);font-size:12px;color:var(--danger);margin-top:8px;display:none;padding:8px 12px;background:var(--danger-bg);border-radius:var(--radius-sm);"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveEdit()">{{ icon('check', 14) }} Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: invite member -->
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">{{ icon('user-plus', 15) }} Inviter un collaborateur</div>
+      <button class="modal-close" onclick="closeInviteModal()">{{ icon('x', 14) }}</button>
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="inviteEmail" placeholder="collaborateur@exemple.com">
+    </div>
+    <div class="field">
+      <label>Rôle</label>
+      <select id="inviteRole" style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;">
+        <option value="member">Membre (peut lancer des analyses)</option>
+        <option value="viewer">Lecteur (consultation uniquement)</option>
+      </select>
+    </div>
+    <div id="inviteErr" style="font-family:var(--mono);font-size:12px;color:var(--danger);margin-top:8px;display:none;padding:8px 12px;background:var(--danger-bg);border-radius:var(--radius-sm);"></div>
+    <div id="inviteSuccess" style="display:none;margin-top:12px;">
+      <div id="inviteEmailStatus" style="font-family:var(--mono);font-size:12px;margin-bottom:10px;padding:8px 12px;border-radius:var(--radius-sm);display:none;"></div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:6px;">Lien d'invitation (valable 7 jours) :</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="inviteLink" readonly style="flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;">
+        <button class="btn btn-outline btn-sm" onclick="copyInviteLink()">{{ icon('copy', 13) }}</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeInviteModal()">Fermer</button>
+      <button class="btn btn-primary" id="inviteSubmitBtn" onclick="sendInvite()">{{ icon('send', 14) }} Envoyer l'invitation</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal: link analysis -->
 <div class="modal-overlay" id="linkModal">
@@ -541,9 +617,12 @@ body {
 
 <script>
 const PROJECT_ID = location.pathname.split('/').pop();
-let _project  = {};
-let _analyses = [];
-let _page     = 0;
+let _project   = {};
+let _analyses  = [];
+let _members   = [];
+let _invitations = [];
+let _page      = 0;
+let _currentUser = '';
 const PAGE_SIZE = 10;
 let _trendChart = null;
 
@@ -567,6 +646,7 @@ if (localStorage.getItem('theme') === 'dark') {
 
 /* ══ USER ══ */
 fetch('/me').then(r => r.json()).then(d => {
+  _currentUser = d.username;
   const first = (d.full_name || d.username).split(' ').slice(0, 2).join(' ');
   document.getElementById('sidebarUsername').textContent = first;
   document.getElementById('sidebarRole').textContent     = d.role;
@@ -588,12 +668,20 @@ function loadProject() {
     _project  = data.project;
     _analyses = data.analyses || [];
 
+    const isOwner = _project.owner === _currentUser;
+
     document.getElementById('breadcrumbName').textContent     = _project.name;
     document.getElementById('projTitle').textContent          = _project.name;
     document.getElementById('projDesc').textContent           = _project.description || 'Aucune description';
     document.getElementById('projTags').innerHTML             = (_project.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('');
     document.getElementById('newAnalysisBtn').href            = `/dashboard?project=${PROJECT_ID}`;
     document.title = `PatchMind — ${_project.name}`;
+
+    if (isOwner) {
+      document.getElementById('editProjBtn').style.display   = '';
+      document.getElementById('deleteProjBtn').style.display = '';
+      document.getElementById('inviteBtn').style.display     = '';
+    }
 
     const totalVulns   = _analyses.reduce((s, a) => s + (a.total_vulns || 0), 0);
     const totalPatches = _analyses.reduce((s, a) => s + (a.patches_validated || 0), 0);
@@ -606,11 +694,6 @@ function loadProject() {
     document.getElementById('s-patches').textContent  = totalPatches || '0';
     document.getElementById('s-rate').textContent     = avgRate + '%';
 
-    const members = _project.members || [];
-    document.getElementById('membersSection').innerHTML = members.length
-      ? `<div style="display:flex;flex-wrap:wrap;gap:4px;">${members.map(m => `<span class="member-chip">@${esc(m)}</span>`).join('')}</div>`
-      : '<div class="empty-state" style="padding:24px 0;"><div class="empty-sub">Aucun membre ajouté à ce projet.</div></div>';
-
     document.getElementById('projInfo').innerHTML = `
       <div class="kv-row"><span class="kv-key">Département</span><span class="kv-val">${esc(_project.department || '—')}</span></div>
       <div class="kv-row"><span class="kv-key">Propriétaire</span><span class="kv-val">@${esc(_project.owner || '—')}</span></div>
@@ -622,6 +705,179 @@ function loadProject() {
     renderAnalyses();
     renderFiles();
     buildTrendChart();
+    loadMembers();
+  });
+}
+
+/* ══ MEMBERS & INVITATIONS ══ */
+function loadMembers() {
+  fetch(`/projects/api/${PROJECT_ID}/members`)
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(data => {
+      if (data.error) return;
+      _members     = data.members     || [];
+      _invitations = data.invitations || [];
+      renderMembers();
+    })
+    .catch(err => console.error('loadMembers failed:', err));
+}
+
+const _invStatusColors = {
+  pending:   {label:'En attente',   color:'#D97706', bg:'rgba(217,119,6,0.1)'},
+  approved:  {label:'Approuvée',    color:'#16A34A', bg:'rgba(22,163,74,0.1)'},
+  rejected:  {label:'Rejetée',      color:'#DC2626', bg:'rgba(220,38,38,0.1)'},
+  cancelled: {label:'Annulée',      color:'#94A3B8', bg:'rgba(148,163,184,0.1)'},
+  accepted:  {label:'Acceptée',     color:'#0EA5E9', bg:'rgba(14,165,233,0.1)'},
+  expired:   {label:'Expirée',      color:'#64748B', bg:'rgba(100,116,139,0.1)'},
+};
+function _statusBadge(status) {
+  const m = _invStatusColors[status] || {label:status,color:'#94A3B8',bg:'rgba(148,163,184,0.1)'};
+  return `<span style="font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;background:${m.bg};color:${m.color};font-weight:700;">${m.label}</span>`;
+}
+
+function renderMembers() {
+  const isOwner = _project.owner === _currentUser;
+  const sec = document.getElementById('membersSection');
+
+  // Owner chip always first
+  let html = `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+    <span class="member-chip" style="background:var(--green-light);color:var(--green);border-color:rgba(99,102,241,.3);">
+      {{ icon('star', 11) }} @${esc(_project.owner || '')} <span style="font-size:9px;opacity:.7;">propriétaire</span>
+    </span>`;
+
+  _members.forEach(m => {
+    if (m.username === _project.owner) return;
+    html += `<span class="member-chip" style="display:inline-flex;align-items:center;gap:4px;">
+      @${esc(m.username)}
+      <span style="font-size:9px;opacity:.6;">${esc(m.role)}</span>
+      ${isOwner ? `<button onclick="removeMember('${esc(m.username)}')" style="background:none;border:none;cursor:pointer;color:var(--text-3);padding:0;margin-left:2px;line-height:1;" title="Retirer du projet">×</button>` : ''}
+    </span>`;
+  });
+  html += '</div>';
+  sec.innerHTML = html;
+
+  // Invitations (all non-accepted statuses shown to owner)
+  const invSec = document.getElementById('invitationsSection');
+  const invList = document.getElementById('invitationsList');
+  const visibleInvs = _invitations.filter(i => i.status !== 'accepted');
+  if (visibleInvs.length && isOwner) {
+    invSec.style.display = '';
+    invList.innerHTML = visibleInvs.map(i => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap;">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-2);flex:1;">${esc(i.email)}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text-3);">${esc(i.role)}</span>
+        ${_statusBadge(i.status)}
+        ${(i.status === 'pending' || i.status === 'approved')
+          ? `<button onclick="cancelInvitation(${i.id})" style="background:none;border:1px solid rgba(220,38,38,0.3);border-radius:4px;cursor:pointer;color:var(--danger);font-size:10px;padding:2px 7px;font-family:var(--mono);" title="Annuler cette invitation">Annuler</button>`
+          : ''}
+        ${i.rejection_reason ? `<span title="Motif: ${esc(i.rejection_reason)}" style="cursor:help;font-size:11px;color:var(--text-3);">💬</span>` : ''}
+      </div>`).join('');
+  } else {
+    invSec.style.display = 'none';
+  }
+}
+
+function removeMember(username) {
+  if (!confirm(`Retirer @${username} du projet ?\nCette action est immédiate et irréversible.`)) return;
+  fetch(`/projects/api/${PROJECT_ID}/members/${encodeURIComponent(username)}`, { method: 'DELETE' })
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(d => {
+      if (d.ok) loadMembers();
+      else alert(d.error || 'Erreur');
+    })
+    .catch(err => alert('Erreur réseau: ' + err.message));
+}
+
+function cancelInvitation(invId) {
+  if (!confirm('Annuler cette invitation ?')) return;
+  fetch(`/projects/api/${PROJECT_ID}/invitations/${invId}/cancel`, { method: 'POST' })
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(d => {
+      if (d.ok) loadMembers();
+      else alert(d.error || 'Erreur');
+    })
+    .catch(err => alert('Erreur réseau: ' + err.message));
+}
+
+/* ══ EDIT MODAL ══ */
+function openEditModal() {
+  document.getElementById('editName').value = _project.name || '';
+  document.getElementById('editDesc').value = _project.description || '';
+  document.getElementById('editDept').value = _project.department || '';
+  document.getElementById('editTags').value = (_project.tags || []).join(', ');
+  document.getElementById('editErr').style.display = 'none';
+  document.getElementById('editModal').classList.add('open');
+  document.getElementById('editName').focus();
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+function saveEdit() {
+  const name = document.getElementById('editName').value.trim();
+  const errEl = document.getElementById('editErr');
+  if (!name) { errEl.textContent = 'Le nom est requis'; errEl.style.display = ''; return; }
+  errEl.style.display = 'none';
+  const tags = document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  fetch(`/projects/api/${PROJECT_ID}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      description: document.getElementById('editDesc').value.trim(),
+      department:  document.getElementById('editDept').value.trim(),
+      tags,
+    })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) { closeEditModal(); _project = d.project; loadProject(); }
+    else { errEl.textContent = d.error || 'Erreur'; errEl.style.display = ''; }
+  });
+}
+
+/* ══ INVITE MODAL ══ */
+function openInviteModal() {
+  document.getElementById('inviteEmail').value = '';
+  document.getElementById('inviteRole').value = 'member';
+  document.getElementById('inviteErr').style.display = 'none';
+  document.getElementById('inviteSuccess').style.display = 'none';
+  document.getElementById('inviteSubmitBtn').style.display = '';
+  document.getElementById('inviteModal').classList.add('open');
+  document.getElementById('inviteEmail').focus();
+}
+function closeInviteModal() { document.getElementById('inviteModal').classList.remove('open'); }
+function copyInviteLink() {
+  const el = document.getElementById('inviteLink');
+  el.select(); document.execCommand('copy');
+}
+
+function sendInvite() {
+  const email = document.getElementById('inviteEmail').value.trim();
+  const errEl = document.getElementById('inviteErr');
+  if (!email || !email.includes('@')) { errEl.textContent = 'Email invalide'; errEl.style.display = ''; return; }
+  errEl.style.display = 'none';
+  fetch(`/projects/api/${PROJECT_ID}/invite`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, role: document.getElementById('inviteRole').value })
+  })
+  .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+  .then(d => {
+    if (d.ok) {
+      // New workflow: invitation is pending admin approval, no link generated
+      const emailStatusEl = document.getElementById('inviteEmailStatus');
+      emailStatusEl.style.cssText = 'display:block;background:var(--warn-bg);color:var(--warn);border:1px solid #FDE68A;border-radius:6px;padding:10px 14px;font-size:12px;';
+      emailStatusEl.textContent = 'Demande d\'invitation soumise. Un administrateur doit l\'approuver avant activation.';
+      document.getElementById('inviteSuccess').style.display = '';
+      document.getElementById('inviteLink').value = '';
+      document.getElementById('inviteLink').closest('div')?.style.setProperty('display','none');
+      document.getElementById('inviteSubmitBtn').style.display = 'none';
+      loadMembers();
+    } else {
+      errEl.textContent = d.error || 'Erreur';
+      errEl.style.display = '';
+    }
+  })
+  .catch(err => {
+    errEl.textContent = 'Erreur réseau: ' + err.message;
+    errEl.style.display = '';
   });
 }
 
