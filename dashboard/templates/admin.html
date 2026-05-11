@@ -152,8 +152,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">{{ icon('bar-chart', 15) }} <span>Tableau de bord</span></div>
   <div class="nav-item" id="nav-users" onclick="showPage('users')">{{ icon('users', 15) }} <span>Utilisateurs</span></div>
   <div class="nav-item" id="nav-requests" onclick="showPage('requests')">{{ icon('mail', 15) }} <span>Demandes <span id="requestsBadge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-family:var(--mono);"></span></span></div>
-  <div class="nav-item" id="nav-invitations" onclick="showPage('invitations');loadInvitations()">{{ icon('user-plus', 15) }} <span>Invitations <span id="invBadge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-family:var(--mono);"></span></span></div>
-  <div class="nav-item" id="nav-activity" onclick="showPage('activity')">{{ icon('clock', 15) }} <span>Activité</span></div>
+<div class="nav-item" id="nav-invitations" onclick="showPage('invitations');loadInvitations()">
+  <span style="width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+         stroke="#9CA3AF" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="8.5" cy="7" r="4"/>
+      <line x1="20" y1="8" x2="20" y2="14"/>
+      <line x1="17" y1="11" x2="23" y2="11"/>
+    </svg>
+  </span>
+
+  <span>
+    Invitations
+    <span id="invBadge" style="display:none;background:#EF4444;color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:4px;font-family:var(--mono);"></span>
+  </span>
+</div>  <div class="nav-item" id="nav-activity" onclick="showPage('activity')">{{ icon('clock', 15) }} <span>Activité</span></div>
   <a href="/admin/audit" class="nav-item">{{ icon('terminal', 15) }} <span>Audit Log</span></a>
   <a href="/admin/monitoring" class="nav-item">{{ icon('bar-chart', 15) }} <span>Monitoring</span></a>
   <div class="nav-group-label">Navigation</div>

@@ -313,3 +313,156 @@ body:not(.light) .nav-item.active { color: var(--pm-accent); background: rgba(34
   .metrics-row { grid-template-columns: repeat(2, 1fr); }
   .sidebar { display: none; }
 }
+/* ─────────────────────────────────────────────
+   Responsive / Horizontal Overflow Fix
+   ───────────────────────────────────────────── */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.main-content,
+.dashboard-content,
+.page-content,
+.content,
+.project-content,
+.content-wrapper,
+.app-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.card,
+.card-body,
+.panel,
+.section,
+.chart-container,
+.table-container {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.chart-container {
+  overflow-x: hidden;
+}
+
+canvas {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.pm-table {
+  width: 100%;
+  max-width: 100%;
+}
+
+.table-container,
+.pm-table-wrap,
+.history-table,
+.files-table {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.grid,
+.row,
+.flex,
+.metrics-row {
+  min-width: 0;
+}
+
+.sidebar {
+  flex-shrink: 0;
+}
+
+@media (min-width: 769px) {
+  .main-content,
+  .dashboard-content,
+  .page-content,
+  .project-content {
+    margin-left: var(--sidebar-width, 260px);
+    width: calc(100% - var(--sidebar-width, 260px));
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content,
+  .dashboard-content,
+  .page-content,
+  .project-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .metrics-row {
+    grid-template-columns: 1fr;
+  }
+}
+/* ─────────────────────────────────────────────
+   Fix affichage texte vulnérabilités
+   ───────────────────────────────────────────── */
+
+.result-item,
+.vuln-card,
+.result-card,
+.result-content {
+    overflow: visible !important;
+    max-width: 100% !important;
+}
+
+.result-item p,
+.result-item span,
+.result-item div,
+.vuln-message,
+.vuln-description,
+.result-description {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    text-overflow: unset !important;
+    overflow: visible !important;
+    max-width: 100% !important;
+    line-height: 1.7;
+}
+
+/* Empêche les lignes coupées */
+.result-item .meta-line,
+.result-item .status-line {
+    flex-wrap: wrap !important;
+    row-gap: 6px;
+}
+
+/* Texte principal vulnérabilité */
+.result-item strong,
+.result-item .title,
+.result-item .vuln-title {
+    display: inline !important;
+    white-space: normal !important;
+}
+.nav-item .nav-svg {
+  flex-shrink: 0;
+  color: currentColor;
+  opacity: .8;
+}
+
+.nav-item:hover .nav-svg,
+.nav-item.active .nav-svg {
+  opacity: 1;
+}

@@ -2,227 +2,364 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<title>Rapport PatchMind</title>
 <style>
-  @page {
-    size: A4;
-    margin: 2cm 2cm 2.5cm 2cm;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #1e293b; font-size: 10pt; line-height: 1.5; }
+@page { size: A4; margin: 18mm; }
 
-  /* ── COVER PAGE ── */
-  .cover { page-break-after: always; text-align: center; padding: 80px 40px; background: #060910; color: #cdd9e5; min-height: 27cm; }
-  .cover-logo { font-size: 42pt; font-weight: 900; color: #cdd9e5; margin-bottom: 8px; letter-spacing: -1px; }
-  .cover-logo span { color: #00ff88; }
-  .cover-tagline { font-size: 11pt; color: #5c7a96; font-family: 'Courier New', monospace; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 60px; }
-  .cover-divider { width: 80px; height: 3px; background: #00ff88; margin: 0 auto 60px; }
-  .cover-title { font-size: 22pt; font-weight: 700; color: #ffffff; margin-bottom: 12px; }
-  .cover-subtitle { font-size: 12pt; color: #5c7a96; margin-bottom: 60px; }
-  .cover-meta { display: table; margin: 0 auto; text-align: left; background: #0c1118; border: 1px solid #1a2535; border-radius: 8px; padding: 24px 32px; }
-  .cover-meta-row { display: table-row; }
-  .cover-meta-label { display: table-cell; font-family: 'Courier New', monospace; font-size: 9pt; color: #5c7a96; text-transform: uppercase; letter-spacing: 1px; padding: 6px 24px 6px 0; }
-  .cover-meta-value { display: table-cell; font-size: 10pt; color: #cdd9e5; font-weight: 600; padding: 6px 0; }
-  .score-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 10pt; font-weight: 700; }
-  .score-good { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid rgba(0,255,136,0.3); }
-  .score-med  { background: rgba(255,170,0,0.15); color: #ffaa00; border: 1px solid rgba(255,170,0,0.3); }
-  .score-bad  { background: rgba(255,71,87,0.15);  color: #ff4757; border: 1px solid rgba(255,71,87,0.3); }
+* { box-sizing: border-box; }
 
-  /* ── HEADINGS ── */
-  h1 { font-size: 18pt; color: #060910; border-bottom: 2px solid #00ff88; padding-bottom: 6px; margin-bottom: 16px; margin-top: 24px; }
-  h2 { font-size: 13pt; color: #060910; margin-bottom: 10px; margin-top: 20px; padding-left: 8px; border-left: 3px solid #00c4ff; }
-  h3 { font-size: 11pt; color: #1e293b; margin-bottom: 8px; margin-top: 16px; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111827;
+  background: #ffffff;
+  font-size: 10pt;
+  line-height: 1.55;
+}
 
-  /* ── TABLES ── */
-  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 9pt; }
-  thead th { background: #060910; color: #00ff88; padding: 8px 10px; text-align: left; font-family: 'Courier New', monospace; font-size: 8pt; letter-spacing: 1px; text-transform: uppercase; }
-  tbody tr:nth-child(even) { background: #f8fafc; }
-  tbody tr:nth-child(odd)  { background: #ffffff; }
-  tbody td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+.cover {
+  page-break-after: always;
+  min-height: 260mm;
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #111827, #1e1b4b);
+  color: white;
+  border-radius: 18px;
+}
 
-  /* ── SEVERITY BADGES ── */
-  .sev-critical { background:#7c1d2e; color:#fca5a5; padding:2px 8px; border-radius:3px; font-size:8pt; font-weight:700; font-family:'Courier New',monospace; }
-  .sev-high     { background:#7c2d12; color:#fdba74; padding:2px 8px; border-radius:3px; font-size:8pt; font-weight:700; font-family:'Courier New',monospace; }
-  .sev-medium   { background:#713f12; color:#fde68a; padding:2px 8px; border-radius:3px; font-size:8pt; font-weight:700; font-family:'Courier New',monospace; }
-  .sev-low      { background:#1e3a5f; color:#93c5fd; padding:2px 8px; border-radius:3px; font-size:8pt; font-weight:700; font-family:'Courier New',monospace; }
-  .sev-info     { background:#1e293b; color:#94a3b8; padding:2px 8px; border-radius:3px; font-size:8pt; font-weight:700; font-family:'Courier New',monospace; }
-  .status-ok    { color:#16a34a; font-weight:700; }
-  .status-fail  { color:#dc2626; font-weight:700; }
+.logo {
+  font-size: 34pt;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
 
-  /* ── SUMMARY CARDS ── */
-  .summary-grid { width: 100%; margin-bottom: 20px; }
-  .summary-grid td { width: 25%; padding: 4px; }
-  .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 16px; text-align: center; }
-  .summary-card .val { font-size: 20pt; font-weight: 800; color: #060910; }
-  .summary-card .lbl { font-size: 8pt; color: #64748b; text-transform: uppercase; font-family: 'Courier New', monospace; letter-spacing: 1px; margin-top: 2px; }
-  .summary-card.green .val { color: #16a34a; }
-  .summary-card.red   .val { color: #dc2626; }
-  .summary-card.blue  .val { color: #0077cc; }
-  .summary-card.warn  .val { color: #d97706; }
+.logo span { color: #818cf8; }
 
-  /* ── DIFF BLOCK ── */
-  .diff-block { background: #0d1117; border: 1px solid #1a2535; border-radius: 4px; padding: 12px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 8pt; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
-  .diff-add    { color: #4ade80; background: rgba(74,222,128,0.06); display: block; }
-  .diff-remove { color: #f87171; background: rgba(248,113,113,0.06); display: block; text-decoration: line-through; }
-  .diff-ctx    { color: #94a3b8; display: block; }
-  .diff-hdr    { color: #60a5fa; display: block; }
+.tagline {
+  margin-top: 8px;
+  font-size: 10pt;
+  letter-spacing: 3px;
+  color: #c7d2fe;
+  text-transform: uppercase;
+}
 
-  /* ── CWE INFO BOX ── */
-  .info-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 4px; padding: 10px 14px; margin: 10px 0; font-size: 9pt; }
-  .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #d97706; border-radius: 4px; padding: 10px 14px; margin: 10px 0; font-size: 9pt; }
-  .err-box  { background: #fff1f2; border: 1px solid #fecdd3; border-left: 4px solid #dc2626; border-radius: 4px; padding: 10px 14px; margin: 10px 0; font-size: 9pt; }
+.cover-title {
+  margin-top: 80px;
+  font-size: 26pt;
+  font-weight: 800;
+  line-height: 1.2;
+}
 
-  /* ── CONFIDENCE ── */
-  .conf-bar-wrap { background: #e2e8f0; border-radius: 4px; height: 8px; width: 100%; margin: 4px 0; }
-  .conf-bar { height: 8px; border-radius: 4px; }
+.cover-subtitle {
+  margin-top: 14px;
+  color: #dbeafe;
+  font-size: 12pt;
+}
 
-  /* ── SECTION BREAK ── */
-  .section-break { page-break-before: always; }
-  .vuln-section  { page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+.cover-box {
+  margin-top: 70px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px;
+  padding: 22px;
+}
 
-  /* ── SCANNER LIST ── */
-  .scanner-pill { display: inline-block; background: #060910; color: #00ff88; border: 1px solid #1a2535; border-radius: 4px; padding: 2px 10px; font-family: 'Courier New', monospace; font-size: 8pt; margin-right: 6px; }
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+  padding: 9px 0;
+}
 
-  /* ── SVG CHART ── */
-  .chart-section { margin: 20px 0; }
+.meta-row:last-child { border-bottom: none; }
 
-  /* ── FOOTER FINAL PAGE ── */
-  .final-note { margin-top: 40px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 8pt; color: #64748b; text-align: center; }
+.meta-label {
+  color: #c7d2fe;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 8pt;
+}
 
-  /* ── PRINT TOOLBAR (hidden when printing) ── */
-  .print-toolbar { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: #0f172a; border-bottom: 1px solid #1e293b; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
-  .print-toolbar-title { font-family: 'Courier New', monospace; font-size: 12px; color: #94a3b8; letter-spacing: 1px; }
-  .print-toolbar-title span { color: #00ff88; font-weight: 700; }
-  .print-toolbar-actions { display: flex; gap: 10px; align-items: center; }
-  .print-btn { padding: 7px 18px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: opacity .15s; }
-  .print-btn-pdf { background: #4f46e5; color: #fff; }
-  .print-btn-close { background: transparent; color: #94a3b8; border: 1px solid #334155 !important; border-radius: 5px; padding: 7px 14px; font-size: 12px; cursor: pointer; }
-  .print-btn:hover { opacity: .85; }
-  @media print {
-    .print-toolbar { display: none !important; }
-    body { padding-top: 0 !important; }
-  }
+.meta-value {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+h1 {
+  font-size: 19pt;
+  margin: 0 0 18px;
+  color: #111827;
+  border-left: 5px solid #4f46e5;
+  padding-left: 12px;
+}
+
+h2 {
+  font-size: 13pt;
+  margin: 20px 0 10px;
+  color: #111827;
+}
+
+.vuln-card {
+  page-break-inside: avoid;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+  background: #f9fafb;
+}
+
+.vuln-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.cwe {
+  font-size: 15pt;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 8pt;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.badge-ok { background: #dcfce7; color: #15803d; }
+.badge-bad { background: #fee2e2; color: #dc2626; }
+
+.sev-critical { background:#ede9fe; color:#7c3aed; }
+.sev-high { background:#fee2e2; color:#dc2626; }
+.sev-medium { background:#fef3c7; color:#d97706; }
+.sev-low { background:#d1fae5; color:#059669; }
+.sev-info { background:#e5e7eb; color:#374151; }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.info-box {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.info-label {
+  font-size: 7.5pt;
+  color: #6b7280;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.info-value {
+  margin-top: 4px;
+  font-weight: 700;
+  color: #111827;
+  word-break: break-word;
+}
+
+.explain {
+  background: #eff6ff;
+  border-left: 4px solid #2563eb;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.reco {
+  background: #f0fdf4;
+  border-left: 4px solid #16a34a;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.diff {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-radius: 10px;
+  padding: 12px;
+  font-family: "Courier New", monospace;
+  font-size: 8pt;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-add { color: #86efac; display:block; }
+.diff-remove { color: #fca5a5; display:block; }
+.diff-hdr { color: #93c5fd; display:block; }
+.diff-ctx { color: #cbd5e1; display:block; }
+
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.metrics-table th {
+  background: #111827;
+  color: white;
+  text-align: left;
+  padding: 10px;
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.metrics-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.final-note {
+  margin-top: 28px;
+  text-align: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  color: #6b7280;
+  font-size: 8pt;
+}
+
+.toolbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: #111827;
+  color: white;
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 9999;
+}
+
+.toolbar button {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@media print {
+  body { padding-top: 0 !important; }
+  .toolbar { display: none !important; }
+}
 </style>
 </head>
-<body style="padding-top: 52px;">
 
-<!-- ── Print Toolbar ── -->
-<div class="print-toolbar">
-  <div class="print-toolbar-title">Patch<span>Mind</span> — Rapport d'analyse de sécurité</div>
-  <div class="print-toolbar-actions">
-    <button class="print-btn print-btn-pdf" onclick="window.print()">⬇ Enregistrer en PDF</button>
-    <button class="print-btn-close" onclick="window.close()">✕ Fermer</button>
-  </div>
+<body style="padding-top:55px;">
+
+<div class="toolbar">
+  <strong>PatchMind — Rapport d’analyse</strong>
+  <button onclick="window.print()">Télécharger PDF</button>
 </div>
 
-<!-- ═══════════════════════════════════════════
-     ANALYSE DÉTAILLÉE DES VULNÉRABILITÉS
-═══════════════════════════════════════════ -->
-<h1>1. Analyse Détaillée des Vulnérabilités</h1>
+<section class="cover">
+  <div class="logo">Patch<span>Mind</span></div>
+  <div class="tagline">Automated Security Report</div>
+
+  <div class="cover-title">Rapport d’analyse<br>des vulnérabilités</div>
+  <div class="cover-subtitle">Détection, correction IA, validation et métriques de sécurité.</div>
+
+  <div class="cover-box">
+    <div class="meta-row"><span class="meta-label">Utilisateur</span><span class="meta-value">{{ username }}</span></div>
+    <div class="meta-row"><span class="meta-label">Date</span><span class="meta-value">{{ gen_date }}</span></div>
+    <div class="meta-row"><span class="meta-label">Vulnérabilités</span><span class="meta-value">{{ total_vulns }}</span></div>
+    <div class="meta-row"><span class="meta-label">Patches validés</span><span class="meta-value">{{ validated }}</span></div>
+    <div class="meta-row"><span class="meta-label">Taux de succès</span><span class="meta-value">{{ success_rate }}%</span></div>
+  </div>
+</section>
+
+<h1>1. Analyse détaillée des vulnérabilités</h1>
 
 {% for r in results %}
-<div class="vuln-section">
-  <h3 style="display:table;width:100%;margin-bottom:12px;">
-    <span style="display:table-cell;color:#0077cc;">[{{ loop.index }}] {{ r.cwe }}</span>
-    <span style="display:table-cell;text-align:right;">
-      <span class="sev-{{ r.severity_class }}">{{ r.severity_label }}</span>
-      &nbsp;
-      {% if r.success %}<span class="status-ok">✓ PATCHÉ</span>{% else %}<span class="status-fail">✗ REJETÉ</span>{% endif %}
-    </span>
-  </h3>
+<div class="vuln-card">
+  <div class="vuln-head">
+    <div class="cwe">[{{ loop.index }}] {{ r.cwe }}</div>
+    <div class="badges">
+      <span class="badge sev-{{ r.severity_class }}">{{ r.severity_label }}</span>
+      {% if r.success %}
+      <span class="badge badge-ok">Patché</span>
+      {% else %}
+      <span class="badge badge-bad">Rejeté</span>
+      {% endif %}
+    </div>
+  </div>
 
-  <table style="margin-bottom:10px;">
-    <tr>
-      <td style="width:20%;color:#64748b;font-family:'Courier New',monospace;font-size:8pt;text-transform:uppercase;padding:4px;">Fichier</td>
-      <td style="font-family:'Courier New',monospace;font-size:9pt;padding:4px;">{{ r.file }}</td>
-      <td style="width:15%;color:#64748b;font-family:'Courier New',monospace;font-size:8pt;text-transform:uppercase;padding:4px;">Ligne</td>
-      <td style="font-family:'Courier New',monospace;font-size:9pt;padding:4px;">{{ r.line }}</td>
-    </tr>
-    <tr>
-      <td style="color:#64748b;font-family:'Courier New',monospace;font-size:8pt;text-transform:uppercase;padding:4px;">Confiance</td>
-      <td style="padding:4px;">{{ r.confidence }}% — {{ r.conf_label }}</td>
-      <td style="color:#64748b;font-family:'Courier New',monospace;font-size:8pt;text-transform:uppercase;padding:4px;">Cache</td>
-      <td style="padding:4px;">{% if r.from_cache %}⚡ Depuis le cache{% else %}Généré par LLM{% endif %}</td>
-    </tr>
-  </table>
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-label">Fichier</div>
+      <div class="info-value">{{ r.file }}</div>
+    </div>
+    <div class="info-box">
+      <div class="info-label">Ligne</div>
+      <div class="info-value">{{ r.line }}</div>
+    </div>
+    <div class="info-box">
+      <div class="info-label">Confiance</div>
+      <div class="info-value">{{ r.confidence }}% — {{ r.conf_label }}</div>
+    </div>
+  </div>
 
   {% if r.explanation %}
-  <div class="info-box" style="background:#eff6ff;border-left:3px solid #3b82f6;">
-    <strong style="color:#1d4ed8;">Explication :</strong> {{ r.explanation }}
-  </div>
+  <div class="explain"><strong>Explication :</strong> {{ r.explanation }}</div>
   {% elif r.cwe_desc %}
-  <div class="info-box">
-    <strong>{{ r.cwe }}</strong> — {{ r.cwe_desc }}
-  </div>
+  <div class="explain"><strong>{{ r.cwe }} :</strong> {{ r.cwe_desc }}</div>
   {% endif %}
 
-  <p style="font-size:9pt;color:#374151;margin-bottom:8px;"><strong>Détail :</strong> {{ r.message }}</p>
+  <p><strong>Détail technique :</strong> {{ r.message }}</p>
 
   {% if r.fix_recommendation %}
-  <div class="info-box" style="background:#f0fdf4;border-left:3px solid #16a34a;margin-bottom:8px;">
-    <strong style="color:#15803d;">Correction recommandée :</strong> {{ r.fix_recommendation }}
-  </div>
+  <div class="reco"><strong>Correction recommandée :</strong> {{ r.fix_recommendation }}</div>
   {% endif %}
 
   {% if r.diff %}
-  <h3 style="margin-top:12px;">Diff — Avant / Après correction</h3>
-  <div class="diff-block">{% for line in r.diff_lines %}<span class="{% if line.startswith('+') %}diff-add{% elif line.startswith('-') %}diff-remove{% elif line.startswith('@@') %}diff-hdr{% else %}diff-ctx{% endif %}">{{ line }}</span>{% endfor %}</div>
+  <h2>Diff — Avant / Après correction</h2>
+  <div class="diff">{% for line in r.diff_lines %}<span class="{% if line.startswith('+') %}diff-add{% elif line.startswith('-') %}diff-remove{% elif line.startswith('@@') %}diff-hdr{% else %}diff-ctx{% endif %}">{{ line }}</span>{% endfor %}</div>
   {% elif r.get('solution') %}
-  <div class="info-box" style="background:#fefce8;border-left:3px solid #d97706;">
-    <strong style="color:#92400e;">Solution :</strong> {{ r.get('solution','') }}
-  </div>
-  {% else %}
-  <div class="warn-box">Aucun diff disponible — appliquez la correction recommandée ci-dessus.</div>
-  {% endif %}
-
-  <div class="conf-bar-wrap" style="margin-top:8px;">
-    <div class="conf-bar" style="width:{{ r.confidence }}%;background:{% if r.confidence >= 80 %}#16a34a{% elif r.confidence >= 60 %}#d97706{% else %}#dc2626{% endif %};"></div>
-  </div>
-  {% if r.confidence_details %}
-  <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:7.5pt;">
-    <tr>
-      {% for key, val in r.confidence_details.items() %}
-      <td style="padding:2px 6px;color:#64748b;font-family:'Courier New',monospace;text-transform:uppercase;">{{ key }}</td>
-      <td style="padding:2px 6px;font-family:'Courier New',monospace;color:{% if val|string|lower|truncate(6,'','') == 'passed' %}#16a34a{% elif val|string|lower|truncate(7,'','') == 'warning' %}#d97706{% elif val|string|lower|truncate(6,'','') == 'failed' %}#dc2626{% else %}#64748b{% endif %};">{{ val }}</td>
-      {% endfor %}
-    </tr>
-  </table>
-  {% endif %}
-  {% if r.validation_warnings %}
-  <div style="margin-top:6px;font-size:8pt;color:#92400e;background:#fefce8;padding:4px 8px;border-radius:4px;">
-    {% for w in r.validation_warnings %}<div>⚠ {{ w }}</div>{% endfor %}
-  </div>
+  <div class="reco"><strong>Solution :</strong> {{ r.get('solution','') }}</div>
   {% endif %}
 </div>
-
-{% if loop.index % 3 == 0 and not loop.last %}
-<div class="section-break"></div>
-{% endif %}
-
 {% endfor %}
 
-<!-- ═══════════════════════════════════════════
-     MÉTRIQUES GLOBALES
-═══════════════════════════════════════════ -->
-<div class="section-break"></div>
-<h1>2. Métriques Globales de Session</h1>
+<div style="page-break-before: always;"></div>
+<h1>2. Métriques globales de session</h1>
 
-<table>
-  <thead><tr><th>Métrique</th><th>Valeur</th><th>Détail</th></tr></thead>
+<table class="metrics-table">
+  <thead>
+    <tr><th>Métrique</th><th>Valeur</th><th>Détail</th></tr>
+  </thead>
   <tbody>
-    <tr><td>Vulnérabilités détectées</td><td><strong>{{ total_vulns }}</strong></td><td>Code source (Semgrep SAST)</td></tr>
-    <tr><td>Patches validés</td><td style="color:#16a34a;font-weight:700;">{{ validated }}</td><td>Re-scan Semgrep validé</td></tr>
-    <tr><td>Patches rejetés</td><td style="color:#dc2626;font-weight:700;">{{ rejected }}</td><td>Vulnérabilité encore présente</td></tr>
-    <tr><td>Taux de succès</td><td><strong>{{ success_rate }}%</strong></td><td>Patches validés / total</td></tr>
-    <tr><td>MTTR moyen</td><td>{{ mttr }}s</td><td>Mean Time To Remediate</td></tr>
-    <tr><td>Durée totale</td><td>{{ duration }}s</td><td>Temps d'exécution du pipeline</td></tr>
+    <tr><td>Vulnérabilités détectées</td><td><strong>{{ total_vulns }}</strong></td><td>Résultats détectés par les scanners</td></tr>
+    <tr><td>Patches validés</td><td><strong style="color:#16a34a;">{{ validated }}</strong></td><td>Correctifs validés automatiquement</td></tr>
+    <tr><td>Patches rejetés</td><td><strong style="color:#dc2626;">{{ rejected }}</strong></td><td>Correctifs non validés</td></tr>
+    <tr><td>Taux de succès</td><td><strong>{{ success_rate }}%</strong></td><td>Patches validés / vulnérabilités patchables</td></tr>
+    <tr><td>MTTR moyen</td><td>{{ mttr }}s</td><td>Temps moyen de remédiation</td></tr>
+    <tr><td>Durée totale</td><td>{{ duration }}s</td><td>Durée totale du pipeline</td></tr>
     <tr><td>Patches depuis cache</td><td>{{ cache_hits }}</td><td>Économie LLM : ~{{ cache_savings }}s</td></tr>
-    <tr><td>Confiance moyenne</td><td>{{ avg_confidence }}%</td><td>Score de confiance des patches</td></tr>
+    <tr><td>Confiance moyenne</td><td>{{ avg_confidence }}%</td><td>Score moyen de confiance</td></tr>
   </tbody>
 </table>
 
 <div class="final-note">
-  Rapport généré automatiquement par <strong>PatchMind Automated Security Platform</strong><br>
-  {{ gen_date }} · Utilisateur : {{ username }} · Confidentiel — Ne pas distribuer
+  Rapport généré automatiquement par <strong>PatchMind</strong><br>
+  {{ gen_date }} · Utilisateur : {{ username }} · Confidentiel
 </div>
 
 <script>
@@ -230,5 +367,6 @@ window.addEventListener('load', function() {
   setTimeout(function() { window.print(); }, 400);
 });
 </script>
+
 </body>
 </html>

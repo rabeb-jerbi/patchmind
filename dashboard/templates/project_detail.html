@@ -883,18 +883,12 @@ function sendInvite() {
 
 /* ══ ANALYSES TABLE ══ */
 function renderAnalyses() {
-  const start = _page * PAGE_SIZE;
-  const slice = _analyses.slice(start, start + PAGE_SIZE);
-  document.getElementById('analysisPager').textContent = `${_analyses.length} analyse(s)`;
+  const slice = _analyses.slice(0, 5);
+  document.getElementById('analysisPager').textContent = '5 dernières analyses';
 
   if (!_analyses.length) {
     document.getElementById('analysesTable').innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-          </svg>
-        </div>
         <div class="empty-title">Aucune analyse associée</div>
         <div class="empty-sub">Lancez une analyse depuis le dashboard<br>et associez-la à ce projet.</div>
       </div>`;
@@ -902,63 +896,106 @@ function renderAnalyses() {
     return;
   }
 
+  function pv(a, keys, fallback='—') {
+    for (const k of keys) {
+      if (a[k] !== undefined && a[k] !== null && a[k] !== '') return a[k];
+    }
+    return fallback;
+  }
+
+  function fileOf(a) {
+    if (a.files_analyzed && a.files_analyzed[0] && a.files_analyzed[0].name) return a.files_analyzed[0].name;
+    if (a.results && a.results[0] && a.results[0].file) return String(a.results[0].file).replace(/\\/g, '/').split('/').pop();
+    return a.file || a.filename || '—';
+  }
+
+  function sec(v) {
+    if (v === undefined || v === null || v === '' || v === '-' || v === '—') return '—';
+    return String(v).endsWith('s') ? String(v) : String(v) + 's';
+  }
+
   document.getElementById('analysesTable').innerHTML = `
     <table class="analyses-table">
       <thead>
         <tr>
           <th>Date</th>
-          <th>Vulnérabilités</th>
-          <th>Patches</th>
-          <th>Taux succès</th>
+          <th>Fichier</th>
+          <th>Vulns</th>
+          <th>Validés</th>
+          <th>KO</th>
+          <th>Taux</th>
           <th>MTTR</th>
           <th>Durée</th>
         </tr>
       </thead>
       <tbody>
         ${slice.map(a => {
-          const rate    = a.success_rate ?? null;
-          const rateOk  = rate !== null && rate >= 80;
+          const total = pv(a, ['total_detected', 'total_vulns', 'total'], 0);
+          const ok = pv(a, ['patches_validated', 'validated', 'patches_applied'], 0);
+          const ko = pv(a, ['patches_rejected', 'rejected'], 0);
+          const rate = pv(a, ['success_rate'], 0);
+          const rateOk = Number(rate) >= 80;
           return `
           <tr>
-            <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${(a.timestamp || '').substring(0, 16)}</td>
-            <td>
-              <span style="font-family:var(--mono);font-weight:700;color:var(--danger);">${a.total_vulns ?? '—'}</span>
-            </td>
-            <td>
-              <span style="font-family:var(--mono);font-weight:700;color:var(--success);">${a.patches_validated ?? '—'}</span>
-            </td>
-            <td>
-              <span class="rate-pill ${rate === null ? '' : rateOk ? 'rate-good' : 'rate-bad'}">${rate !== null ? rate + '%' : '—'}</span>
-            </td>
-            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${a.mttr_seconds != null ? a.mttr_seconds + 's' : '—'}</td>
-            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${a.total_duration != null ? a.total_duration + 's' : '—'}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${esc((a.timestamp || '').substring(0, 16))}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-2);">${esc(fileOf(a))}</td>
+            <td><span style="font-family:var(--mono);font-weight:700;color:var(--danger);">${total}</span></td>
+            <td><span style="font-family:var(--mono);font-weight:700;color:var(--success);">${ok}</span></td>
+            <td><span style="font-family:var(--mono);font-weight:700;color:var(--danger);">${ko}</span></td>
+            <td><span class="rate-pill ${rateOk ? 'rate-good' : 'rate-bad'}">${rate}%</span></td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${sec(pv(a, ['mttr_seconds', 'mttr'], null))}</td>
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${sec(pv(a, ['total_duration', 'duration'], null))}</td>
           </tr>`;
         }).join('')}
       </tbody>
     </table>`;
 
-  const pages = Math.ceil(_analyses.length / PAGE_SIZE);
-  if (pages > 1) {
-    document.getElementById('pagerBtns').innerHTML =
-      `<div class="pager">${Array.from({length: pages}, (_, i) =>
-        `<button onclick="_page=${i};renderAnalyses();" class="pager-btn${i === _page ? ' active' : ''}">${i + 1}</button>`
-      ).join('')}</div>`;
-  } else {
-    document.getElementById('pagerBtns').innerHTML = '';
-  }
+  document.getElementById('pagerBtns').innerHTML = '';
 }
+
 
 /* ══ FILES LISTING ══ */
 function renderFiles() {
-  // Aggregate unique files across all analyses
   const fileMap = {};
+
   _analyses.forEach(a => {
-    const ts = (a.timestamp || '').substring(0, 16);
+    const ts = a.timestamp || '';
+
     (a.files_analyzed || []).forEach(f => {
-      if (!fileMap[f.name]) fileMap[f.name] = { name: f.name, totalVulns: 0, sessions: 0, lastSeen: '' };
-      fileMap[f.name].totalVulns += f.vulns || 0;
-      fileMap[f.name].sessions   += 1;
-      if (ts > fileMap[f.name].lastSeen) fileMap[f.name].lastSeen = ts;
+      if (!f || !f.name) return;
+
+      if (!fileMap[f.name]) {
+        fileMap[f.name] = {
+          name: f.name,
+          totalVulns: 0,
+          sessions: 0,
+          lastSeen: '',
+          path: f.path || f.original_path || '',
+          patched_path: f.patched_path || '',
+          patched_name: f.patched_name || '',
+          report_ts: ts
+        };
+      }
+
+      fileMap[f.name].totalVulns += f.vulns || f.totalVulns || 0;
+      fileMap[f.name].sessions += 1;
+
+      if (!fileMap[f.name].path && (f.path || f.original_path)) {
+        fileMap[f.name].path = f.path || f.original_path;
+      }
+
+      if (!fileMap[f.name].patched_path && f.patched_path) {
+        fileMap[f.name].patched_path = f.patched_path;
+      }
+
+      if (!fileMap[f.name].patched_name && f.patched_name) {
+        fileMap[f.name].patched_name = f.patched_name;
+      }
+
+      if (ts > fileMap[f.name].lastSeen) {
+        fileMap[f.name].lastSeen = ts;
+        fileMap[f.name].report_ts = ts;
+      }
     });
   });
 
@@ -967,7 +1004,11 @@ function renderFiles() {
   const list  = document.getElementById('filesList');
   const sub   = document.getElementById('filesSubtitle');
 
-  if (!files.length) { card.style.display = 'none'; return; }
+  if (!files.length) {
+    card.style.display = 'none';
+    return;
+  }
+
   card.style.display = '';
   sub.textContent = `${files.length} fichier(s)`;
 
@@ -979,19 +1020,64 @@ function renderFiles() {
           <th>Vulnérabilités</th>
           <th>Analyses</th>
           <th>Dernière analyse</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        ${files.sort((a, b) => b.totalVulns - a.totalVulns).map(f => `
+        ${files.sort((a, b) => b.lastSeen.localeCompare(a.lastSeen)).map(f => `
           <tr>
             <td style="font-family:var(--mono);font-size:12px;">${esc(f.name)}</td>
-            <td><span style="font-family:var(--mono);font-weight:700;color:${f.totalVulns > 0 ? 'var(--danger)' : 'var(--success)'};">${f.totalVulns}</span></td>
-            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${f.sessions}</td>
-            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">${f.lastSeen || '—'}</td>
-          </tr>`).join('')}
+
+            <td>
+              <span style="font-family:var(--mono);font-weight:700;color:${f.totalVulns > 0 ? 'var(--danger)' : 'var(--success)'};">
+                ${f.totalVulns}
+              </span>
+            </td>
+
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">
+              ${f.sessions}
+            </td>
+
+            <td style="font-family:var(--mono);font-size:12px;color:var(--text-3);">
+              ${f.lastSeen || '—'}
+            </td>
+
+            <td style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${
+                f.path
+                ? `<a class="btn btn-outline btn-sm" style="padding:5px 9px;font-size:11px;"
+                     href="/projects/api/${PROJECT_ID}/files/download?file=${encodeURIComponent(f.path)}">
+                     Original
+                   </a>`
+                : ''
+              }
+
+              ${
+                f.patched_path
+                ? `<a class="btn btn-primary btn-sm" style="padding:5px 9px;font-size:11px;"
+                     href="/projects/api/${PROJECT_ID}/files/download?file=${encodeURIComponent(f.patched_path)}">
+                     Patch
+                   </a>`
+                : ''
+              }
+
+              ${
+                f.report_ts
+                ? `<a class="btn btn-outline btn-sm" style="padding:5px 9px;font-size:11px;"
+                     href="/projects/api/${PROJECT_ID}/analysis-report?timestamp=${encodeURIComponent(f.report_ts)}">
+                     Rapport
+                   </a>`
+                : ''
+              }
+
+              ${(!f.path && !f.patched_path && !f.report_ts) ? '<span style="color:var(--text-3);font-size:11px;">—</span>' : ''}
+            </td>
+          </tr>
+        `).join('')}
       </tbody>
     </table>`;
 }
+
 
 /* ══ TREND CHART ══ */
 function buildTrendChart() {

@@ -16,8 +16,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import (Flask, render_template, request, jsonify,
-                   send_file, redirect, url_for, session)
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, Response
 from markupsafe import Markup
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -843,7 +842,12 @@ def run_pipeline(username, file_paths, scanners=None):
     if scanners is None:
         scanners = {"semgrep": True, "gitleaks": True, "snyk": True, "zap": False, "zap_url": ""}
     ps = get_pipeline(username)
-    ps.update({"running":True,"progress":0,"status":"running","results":[],"logs":[],"metrics":{},"gitleaks":[],"snyk":[],"zap":[]})
+    ps.update({
+        "running": True, "progress": 0, "status": "running",
+        "results": [], "logs": [], "metrics": {},
+        "gitleaks": [], "snyk": [], "zap": [],
+        "custom_tools": [], "optional_tools_results": []
+    })
     metrics = PatchMindMetrics(); all_vulns = []
     _optional_scanner_failed = [False]
 
@@ -855,7 +859,8 @@ def run_pipeline(username, file_paths, scanners=None):
         if scanners.get("gitleaks", True):
             logp(username,"🔑 Scan secrets (GitLeaks)...")
             try:
-                gl = run_gitleaks(root_dir)
+                gitleaks_target = file_paths[0] if len(file_paths) == 1 else root_dir
+                gl = run_gitleaks(gitleaks_target)
                 ps["gitleaks"] = gl
                 logp(username, f"🔑 {len(gl)} secret(s) détecté(s)" if gl else "✅ Aucun secret détecté")
             except Exception as e:
@@ -1036,6 +1041,92 @@ def run_pipeline(username, file_paths, scanners=None):
         lock = threading.Lock()
         completed = [0]
 
+
+        def make_manual_result(vuln, source="manual"):
+            """Create visible result for non-patchable findings like GitLeaks secrets."""
+            msg = (
+                vuln.get("message")
+                or vuln.get("Message")
+                or vuln.get("Description")
+                or vuln.get("description")
+                or vuln.get("RuleID")
+                or "Finding detected"
+            )
+            raw_cwe = vuln.get("cwe") or vuln.get("CWE") or resolve_cwe(vuln)
+            cwe = norm_cwe(str(raw_cwe or "CWE-UNKNOWN"))
+
+            file_value = (
+                vuln.get("file")
+                or vuln.get("File")
+                or vuln.get("path")
+                or vuln.get("Path")
+                or vuln.get("filename")
+                or ""
+            )
+            line_value = (
+                vuln.get("line")
+                or vuln.get("Line")
+                or vuln.get("StartLine")
+                or vuln.get("start_line")
+                or 0
+            )
+            try:
+                line_value = int(line_value)
+            except Exception:
+                line_value = 0
+
+            source_key = (source or vuln.get("source") or vuln.get("tool") or "manual").lower()
+
+            if source_key == "gitleaks":
+                vuln_type = "SECRET"
+                recommendation = (
+                    "Supprimez le secret exposé, révoquez ou renouvelez la clé concernée, "
+                    "puis stockez-la dans une variable d'environnement ou un gestionnaire de secrets."
+                )
+            elif source_key in ("snyk", "osv", "pip_audit", "npm_audit"):
+                vuln_type = "DEPENDENCY"
+                recommendation = "Mettez à jour la dépendance vulnérable vers une version corrigée."
+            elif source_key == "zap":
+                vuln_type = "DAST"
+                recommendation = "Analysez le point d'entrée web concerné et appliquez une correction côté application."
+            else:
+                vuln_type = vuln.get("type", "CUSTOM")
+                recommendation = vuln.get("recommendation") or vuln.get("solution") or "Correction manuelle requise."
+
+            enriched = dict(vuln)
+            enriched.setdefault("type", vuln_type)
+            enriched.setdefault("cwe", cwe)
+            enriched.setdefault("message", str(msg))
+
+            return {
+                "cwe": cwe,
+                "cwe_display": display_cwe(cwe, str(msg)),
+                "file": os.path.basename(str(file_value)) if file_value else "",
+                "line": line_value,
+                "severity": str(vuln.get("severity", vuln.get("Severity", "MEDIUM"))).upper(),
+                "success": False,
+                "manual_review": True,
+                "patchable": False,
+                "message": str(msg)[:200],
+                "explanation": vuln.get("explanation") or get_vuln_explanation(enriched),
+                "recommendation": recommendation,
+                "patched": "",
+                "patched_name": "",
+                "analyzed_at": datetime.now().strftime("%H:%M:%S"),
+                "from_cache": False,
+                "confidence": 0,
+                "confidence_details": {
+                    "status": "manual_review_required",
+                    "scanner": source_key,
+                },
+                "validation_warnings": [],
+                "diff": "",
+                "tools": [],
+                "test_code": "",
+                "consensus": {},
+                "source": source_key,
+            }
+
         def process_vuln(args):
             i, vuln = args
             try:
@@ -1167,11 +1258,44 @@ def run_pipeline(username, file_paths, scanners=None):
 
         # Trier par ordre original
         results_raw.sort(key=lambda x: x[0])
-        ps["results"] = [r for _, r in results_raw]
 
-        metrics.finalize()
-        total = len(ps["results"]); succ = sum(1 for r in ps["results"] if r["success"])
-        cache_hits = sum(1 for r in ps["results"] if r.get("from_cache"))
+        patch_results = [r for _, r in results_raw]
+        manual_results = []
+
+        for secret in ps.get("gitleaks", []):
+            secret = dict(secret)
+            secret["type"] = "SECRET"
+            secret.setdefault("cwe", resolve_cwe(secret))
+            manual_results.append(make_manual_result(secret, source="gitleaks"))
+
+        for dep in ps.get("snyk", []):
+            dep = dict(dep)
+            dep["type"] = "DEPENDENCY"
+            dep.setdefault("cwe", resolve_cwe(dep))
+            manual_results.append(make_manual_result(dep, source="snyk"))
+
+        for z in ps.get("zap", []):
+            z = dict(z)
+            z["type"] = "DAST"
+            z.setdefault("cwe", resolve_cwe(z))
+            manual_results.append(make_manual_result(z, source="zap"))
+
+        for custom in ps.get("custom_tools", []):
+            custom = dict(custom)
+            custom.setdefault("cwe", resolve_cwe(custom))
+            manual_results.append(make_manual_result(custom, source=custom.get("tool", "custom")))
+
+        ps["results"] = patch_results + manual_results
+        manual_review_required = len(manual_results)
+
+        metrics.finalize(
+            total_detected=_detected_total,
+            manual_review_required=manual_review_required
+        )
+
+        total = len(patch_results)
+        succ = sum(1 for r in patch_results if r.get("success"))
+        cache_hits = sum(1 for r in patch_results if r.get("from_cache"))
         if cache_hits > 0:
             logp(username, f"⚡ {cache_hits} patch(es) depuis cache — {cache_hits * 20}s économisés !")
 
@@ -1191,13 +1315,40 @@ def run_pipeline(username, file_paths, scanners=None):
                 except OSError:
                     patches.append({"name": os.path.basename(p), "path": p, "size": 0, "patched_at": ""})
 
-        # Unique file basenames with per-file vuln counts
+        # Unique file basenames with per-file vuln counts + downloadable paths
+        original_path_map = {
+            os.path.basename(fp): fp
+            for fp in file_paths
+        }
+
         file_vuln_map = {}
         for r in ps["results"]:
             fn = r.get("file", "")
             if fn:
                 file_vuln_map[fn] = file_vuln_map.get(fn, 0) + 1
-        files_analyzed = [{"name": k, "vulns": v} for k, v in file_vuln_map.items()]
+
+        files_analyzed = []
+        for name, vulns_count in file_vuln_map.items():
+            original_path = original_path_map.get(name, "")
+            patched_path = ""
+            patched_name = ""
+
+            base_name, ext = os.path.splitext(name)
+            for pf in patches:
+                pf_name = pf.get("name", "")
+                if pf_name.startswith(base_name):
+                    patched_path = pf.get("path", "")
+                    patched_name = pf_name
+                    break
+
+            files_analyzed.append({
+                "name": name,
+                "vulns": vulns_count,
+                "path": original_path,
+                "original_path": original_path,
+                "patched_path": patched_path,
+                "patched_name": patched_name,
+            })
 
         ps["metrics"]={
             # real totals — all scanners combined
@@ -1211,6 +1362,8 @@ def run_pipeline(username, file_paths, scanners=None):
             "patchable":        _detected_code,
             "validated":        succ,
             "rejected":         total - succ,
+            "manual_review_required": manual_review_required,
+            "non_patchable":    manual_review_required,
             "success_rate":     round(succ / _detected_code * 100, 1) if _detected_code else 0,
             "mttr":             round(metrics.session.get("mttr_seconds",  0), 2),
             "duration":         round(metrics.session.get("total_duration", 0), 2),
@@ -1754,6 +1907,115 @@ def _save_projects(data: dict) -> None:
             db.add(DBProject.from_dict(pid, pdata))
     db.commit()
 
+
+def _project_member_usernames(project_id: str) -> list:
+    """Return active DB members for a project."""
+    db = get_db_session()
+    rows = db.query(DBProjectMember).filter_by(project_id=project_id).all()
+    return [r.username for r in rows]
+
+
+def _is_project_member(project_id: str, username: str) -> bool:
+    """Strict membership check from SQL table."""
+    db = get_db_session()
+    return db.query(DBProjectMember).filter_by(
+        project_id=project_id,
+        username=username
+    ).first() is not None
+
+
+def _user_email(username: str) -> str:
+    users = load_users()
+    return (users.get(username) or {}).get("email", "").strip().lower()
+
+
+
+
+@app.route('/projects/api/<project_id>/analysis-report')
+@login_required
+def project_analysis_report(project_id):
+    projects = _load_projects()
+    u = current_user()
+    p = projects.get(project_id)
+
+    if not p or (p.get('owner') != u and u not in p.get('members', []) and session.get('role') != 'admin'):
+        return jsonify({"error": "Projet introuvable"}), 404
+
+    ts = request.args.get("timestamp", "").strip()
+    analyses = _get_project_analyses(project_id)
+
+    analysis = None
+    for a in analyses:
+        if a.get("timestamp") == ts:
+            analysis = a
+            break
+
+    if not analysis:
+        return jsonify({"error": "Rapport introuvable"}), 404
+
+    results = analysis.get("results") or analysis.get("vulns") or analysis.get("findings") or []
+
+    prepared = []
+    for r in results:
+        sev = (r.get("severity") or "LOW").upper()
+        if "CRITICAL" in sev:
+            sev_class = "critical"
+        elif "HIGH" in sev:
+            sev_class = "high"
+        elif "MEDIUM" in sev:
+            sev_class = "medium"
+        elif "LOW" in sev:
+            sev_class = "low"
+        else:
+            sev_class = "info"
+
+        conf = int(float(r.get("confidence", 0) or 0))
+        if conf >= 90:
+            conf_label = "✓ Prêt à appliquer"
+        elif conf >= 70:
+            conf_label = "~ Vérifier le diff"
+        else:
+            conf_label = "⚠ Correction manuelle"
+
+        diff = r.get("diff") or ""
+
+        prepared.append({
+            **r,
+            "severity_class": sev_class,
+            "severity_label": sev,
+            "confidence": conf,
+            "conf_label": conf_label,
+            "diff_lines": diff.splitlines() if diff else [],
+            "from_cache": r.get("from_cache", False),
+            "explanation": r.get("explanation") or r.get("message") or "",
+            "fix_recommendation": r.get("fix_recommendation") or r.get("recommendation") or "",
+        })
+
+    html = render_template(
+        "report_template.html",
+        results=prepared,
+        total_vulns=analysis.get("total_vulns", analysis.get("total", len(prepared))),
+        validated=analysis.get("patches_validated", analysis.get("validated", 0)),
+        rejected=analysis.get("patches_rejected", analysis.get("rejected", 0)),
+        success_rate=analysis.get("success_rate", 0),
+        mttr=analysis.get("mttr_seconds", analysis.get("mttr", 0)),
+        duration=analysis.get("total_duration", analysis.get("duration", 0)),
+        cache_hits=analysis.get("cache_hits", 0),
+        cache_savings=analysis.get("cache_savings", 0),
+        avg_confidence=analysis.get("avg_confidence", 0),
+        gen_date=analysis.get("timestamp", ""),
+        username=analysis.get("username", u),
+    )
+
+    filename = f"rapport_patchmind_{project_id}_{ts.replace(':','-')}.html"
+
+    return Response(
+        html,
+        mimetype="text/html",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 def _get_project_analyses(project_id):
     """Load all saved analyses for a project from disk."""
     d = os.path.join(ANALYSES_DIR, project_id)
@@ -1791,6 +2053,63 @@ def _project_stats(project_id):
         'last_analysis':  last,
     }
 
+
+
+def _project_members_sql(project_id: str) -> list:
+    db = get_db_session()
+    rows = db.query(DBProjectMember).filter_by(project_id=project_id).all()
+    return [r.username for r in rows]
+
+def _is_project_member(project_id: str, username: str) -> bool:
+    db = get_db_session()
+    return db.query(DBProjectMember).filter_by(
+        project_id=project_id,
+        username=username
+    ).first() is not None
+
+def _project_can_access(project_id: str, username: str = None) -> bool:
+    username = username or current_user()
+    role = session.get("role", "user")
+    projects = _load_projects()
+    p = projects.get(project_id)
+    if not p:
+        return False
+    return role == "admin" or p.get("owner") == username or _is_project_member(project_id, username)
+
+
+def _project_has_access(project_id: str, username: str = None) -> bool:
+    return _project_can_access(project_id, username)
+
+
+
+def _safe_project_download_path(project_id: str, requested_path: str):
+    if not requested_path:
+        return None
+
+    requested_real = os.path.realpath(requested_path)
+    allowed_paths = set()
+
+    for analysis in _get_project_analyses(project_id):
+        for f in analysis.get("files_analyzed", []) or []:
+            for key in ("path", "original_path", "patched_path"):
+                val = f.get(key) if isinstance(f, dict) else None
+                if val:
+                    allowed_paths.add(os.path.realpath(val))
+
+        for pf in analysis.get("patched_files", []) or []:
+            val = pf.get("path") if isinstance(pf, dict) else None
+            if val:
+                allowed_paths.add(os.path.realpath(val))
+
+    if requested_real not in allowed_paths:
+        return None
+
+    if not os.path.isfile(requested_real):
+        return None
+
+    return requested_real
+
+
 @app.route('/projects')
 @login_required
 def projects_page():
@@ -1802,7 +2121,7 @@ def project_detail_page(project_id):
     projects = _load_projects()
     u = current_user()
     p = projects.get(project_id)
-    if not p or (p['owner'] != u and u not in p.get('members', [])):
+    if not p or (p.get('owner') != u and not _is_project_member(project_id, u) and session.get('role') != 'admin'):
         return redirect('/projects')
     return render_template('project_detail.html')
 
@@ -1813,7 +2132,7 @@ def projects_list():
     u = current_user()
     result = []
     for pid, p in projects.items():
-        if p['owner'] != u and u not in p.get('members', []):
+        if p.get('owner') != u and not _is_project_member(pid, u) and session.get('role') != 'admin':
             continue
         stats = _project_stats(pid)
         result.append({**p, **stats})
@@ -1850,28 +2169,54 @@ def project_get(project_id):
     projects = _load_projects()
     u = current_user()
     p = projects.get(project_id)
-    if not p or (p['owner'] != u and u not in p.get('members', [])):
+    if not p or (p.get('owner') != u and not _is_project_member(project_id, u) and session.get('role') != 'admin'):
         return jsonify({"error": "Projet introuvable"}), 404
+    # Sync members from SQL before returning project
+    p['members'] = _project_member_usernames(project_id)
+    p['members'] = _project_members_sql(project_id)
     analyses = _get_project_analyses(project_id)
     return jsonify({"project": p, "analyses": analyses})
 
 @app.route('/projects/api/<project_id>', methods=['DELETE'])
 @login_required
 def project_delete(project_id):
+    """Delete a project completely from SQLite and remove related data."""
     projects = _load_projects()
     u = current_user()
-    p = projects.get(project_id)
-    if not p:
+    role = session.get("role", "user")
+    proj = projects.get(project_id)
+
+    if not proj:
         return jsonify({"error": "Projet introuvable"}), 404
-    if p['owner'] != u:
-        return jsonify({"error": "Seul le propriétaire peut supprimer ce projet"}), 403
-    del projects[project_id]
-    _save_projects(projects)
+
+    if proj.get("owner") != u and role != "admin":
+        return jsonify({"error": "Seul le propriétaire ou un administrateur peut supprimer ce projet"}), 403
+
+    db = get_db_session()
+
+    # Delete related rows first
+    db.query(DBProjectMember).filter_by(project_id=project_id).delete(synchronize_session=False)
+    db.query(DBProjectInvitation).filter_by(project_id=project_id).delete(synchronize_session=False)
+
+    # Delete project itself
+    row = db.query(DBProject).filter_by(id=project_id).first()
+    if row:
+        db.delete(row)
+
+    db.commit()
+
     # Clean analyses dir
     d = os.path.join(ANALYSES_DIR, project_id)
     if os.path.isdir(d):
-        shutil.rmtree(d)
+        shutil.rmtree(d, ignore_errors=True)
+
+    audit_log("project_deleted", details={
+        "project_id": project_id,
+        "deleted_by": u
+    })
+
     return jsonify({"ok": True})
+
 
 @app.route('/projects/api/<project_id>/save-analysis', methods=['POST'])
 @login_required
@@ -1880,13 +2225,13 @@ def project_save_analysis(project_id):
     projects = _load_projects()
     u = current_user()
     p = projects.get(project_id)
-    if not p or (p['owner'] != u and u not in p.get('members', [])):
+    if not _project_can_access(project_id, u):
         return jsonify({"error": "Projet introuvable"}), 404
     ps = get_pipeline(u)
     m  = ps.get('metrics', {})
     if not m:
         return jsonify({"error": "Aucune métrique disponible"}), 400
-    aid = _save_analysis(project_id, {**m, 'username': u})
+    aid = _save_analysis(project_id, {**m, 'username': u, 'project_id': project_id, 'project_name': p.get('name', project_id)})
     return jsonify({"ok": True, "analysis_id": aid})
 
 @app.route('/projects/api/<project_id>/link', methods=['POST'])
@@ -1896,7 +2241,7 @@ def project_link_analysis(project_id):
     projects = _load_projects()
     u = current_user()
     p = projects.get(project_id)
-    if not p or (p['owner'] != u and u not in p.get('members', [])):
+    if not _project_can_access(project_id, u):
         return jsonify({"error": "Projet introuvable"}), 404
     d   = request.get_json() or {}
     aid = d.get('analysis_id','').strip()
@@ -1942,7 +2287,7 @@ def project_members_list(project_id):
     u    = current_user()
     role = session.get('role', 'user')
     p    = projects.get(project_id)
-    if not p or (p['owner'] != u and u not in p.get('members', []) and role != 'admin'):
+    if not _project_can_access(project_id, u):
         return jsonify({"error": "Projet introuvable"}), 404
     db  = get_db_session()
     now = datetime.now()
@@ -1970,7 +2315,7 @@ def project_invite(project_id):
     u    = current_user()
     role = session.get('role', 'user')
     p    = projects.get(project_id)
-    if not p or (p['owner'] != u and u not in p.get('members', []) and role != 'admin'):
+    if not _project_can_access(project_id, u):
         return jsonify({"error": "Projet introuvable"}), 404
     d     = request.get_json() or {}
     email = (d.get('email') or '').strip().lower()
@@ -1987,10 +2332,10 @@ def project_invite(project_id):
     dup = (db.query(DBProjectInvitation)
              .filter(DBProjectInvitation.project_id == project_id,
                      DBProjectInvitation.email == email,
-                     DBProjectInvitation.status.in_(['pending', 'approved']))
+                     DBProjectInvitation.status.in_(['pending']))
              .first())
     if dup:
-        return jsonify({"error": "Une invitation est déjà en attente ou approuvée pour cet email"}), 409
+        return jsonify({"error": "Une invitation est déjà en attente pour cet email"}), 409
 
     # Check email is not already a member
     users = load_users()
@@ -2162,36 +2507,66 @@ def project_invitation_cancel(project_id, inv_id):
 @app.route('/projects/api/<project_id>/members/<member_username>', methods=['DELETE'])
 @login_required
 def project_member_remove(project_id, member_username):
-    """Remove a member from a project (owner or admin only, cannot remove project owner)."""
+    """Remove a member from a project and revoke his access completely."""
     projects = _load_projects()
-    u    = current_user()
+    u = current_user()
     role = session.get('role', 'user')
-    p    = projects.get(project_id)
+    p = projects.get(project_id)
+
     if not p:
         return jsonify({"error": "Projet introuvable"}), 404
-    is_admin = role == 'admin'
-    is_owner = p.get('owner') == u
-    if not is_owner and not is_admin:
+
+    if role != "admin" and p.get("owner") != u:
         return jsonify({"error": "Seul le propriétaire ou un administrateur peut retirer un membre"}), 403
-    if member_username == p.get('owner'):
+
+    if member_username == p.get("owner"):
         return jsonify({"error": "Impossible de retirer le propriétaire du projet"}), 400
 
     db = get_db_session()
-    member = (db.query(DBProjectMember)
-                .filter_by(project_id=project_id, username=member_username)
-                .first())
-    if member:
-        db.delete(member)
-    # Sync JSON column
-    members = [m for m in p.get('members', []) if m != member_username]
-    p['members'] = members
+
+    # 1) Delete SQL membership
+    rows = db.query(DBProjectMember).filter_by(
+        project_id=project_id,
+        username=member_username
+    ).all()
+
+    for row in rows:
+        db.delete(row)
+
+    # 2) Remove from Project.members JSON column
+    p["members"] = [m for m in p.get("members", []) if m != member_username]
     projects[project_id] = p
     _save_projects(projects)
+
+    # 3) Find user email
+    users = load_users()
+    email = (users.get(member_username) or {}).get("email", "").strip().lower()
+
+    # 4) Cancel old invitations for this user/email
+    if email:
+        invs = db.query(DBProjectInvitation).filter(
+            DBProjectInvitation.project_id == project_id,
+            DBProjectInvitation.email == email,
+            DBProjectInvitation.status.in_(["pending", "approved", "accepted"])
+        ).all()
+
+        for inv in invs:
+            inv.status = "cancelled"
+            inv.cancelled_at = datetime.now()
+            inv.cancelled_by = u
+
     db.commit()
+
     audit_log("member_removed", details={
-        "project_id": project_id, "removed_user": member_username, "by": u
+        "project_id": project_id,
+        "removed_user": member_username,
+        "email": email,
+        "by": u
     })
-    return jsonify({"ok": True})
+
+    return jsonify({"ok": True, "removed_user": member_username})
+
+
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -2904,22 +3279,122 @@ def delete_comment(vuln_id, comment_id):
 @app.route('/history')
 @login_required
 def history():
-    u          = current_user()
-    project_id = request.args.get('project_id', '').strip()
-    if project_id:
-        projects = _load_projects()
-        p = projects.get(project_id)
-        if not p or (p['owner'] != u and u not in p.get('members', [])):
-            return jsonify([])
-    db      = get_db_session()
-    metrics = db.query(DBMetric).filter_by(username=u).order_by(DBMetric.timestamp.asc()).all()
-    sessions = []
-    for m in metrics:
-        sd = m.to_dict()
-        if project_id and sd.get('project_id') != project_id:
-            continue
-        sessions.append(sd)
-    return jsonify(sessions)
+    """Return user history. If project_id is provided, return saved analyses of that project."""
+    u = current_user()
+    project_id = request.args.get("project_id", "").strip()
+
+    try:
+        if project_id:
+            projects = _load_projects()
+            p = projects.get(project_id)
+
+            if not p:
+                return jsonify([])
+
+            allowed = (
+                session.get("role") == "admin"
+                or p.get("owner") == u
+                or u in p.get("members", [])
+            )
+
+            try:
+                allowed = allowed or _is_project_member(project_id, u)
+            except Exception:
+                pass
+
+            if not allowed:
+                return jsonify([])
+
+            analyses = _get_project_analyses(project_id)
+            normalized = []
+
+            for a in analyses:
+                s = dict(a)
+                s["project_id"] = project_id
+                s["project_name"] = p.get("name", project_id)
+
+                results = s.get("results") or s.get("vulns") or []
+
+                s["total_vulns"] = (
+                    s.get("total_vulns")
+                    or s.get("total_detected")
+                    or s.get("total")
+                    or len(results)
+                    or 0
+                )
+
+                s["patches_validated"] = (
+                    s.get("patches_validated")
+                    or s.get("validated")
+                    or s.get("patches_applied")
+                    or 0
+                )
+
+                s["patches_rejected"] = (
+                    s.get("patches_rejected")
+                    or s.get("rejected")
+                    or 0
+                )
+
+                s["success_rate"] = s.get("success_rate", 0)
+                s["mttr_seconds"] = s.get("mttr_seconds", s.get("mttr", "—"))
+                s["total_duration"] = s.get("total_duration", s.get("duration", "—"))
+
+                if not s.get("files_analyzed"):
+                    files = {}
+                    for r in results:
+                        f = r.get("file") or r.get("file_path") or r.get("filename")
+                        if f:
+                            name = os.path.basename(str(f).replace("\\\\", "/"))
+                            files[name] = files.get(name, 0) + 1
+                    s["files_analyzed"] = [{"name": name, "vulns": count} for name, count in files.items()]
+
+                normalized.append(s)
+
+            normalized.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+            return jsonify(normalized)
+
+        db = get_db_session()
+        rows = (
+            db.query(DBMetric)
+              .filter_by(username=u)
+              .order_by(DBMetric.timestamp.desc())
+              .all()
+        )
+
+        sessions = []
+        for m in rows:
+            try:
+                sessions.append(m.to_dict())
+            except Exception:
+                continue
+
+        return jsonify(sessions)
+
+    except Exception as e:
+        print(f"[HISTORY ERROR] {e}")
+        return jsonify([])
+
+
+
+@app.route('/projects/api/<project_id>/files/download')
+@login_required
+def project_file_download(project_id):
+    if not _project_has_access(project_id):
+        return jsonify({"error": "Accès refusé"}), 403
+
+    requested = request.args.get("file", "").strip()
+    safe_path = _safe_project_download_path(project_id, requested)
+
+    if not safe_path:
+        return jsonify({"error": "Fichier introuvable ou non autorisé"}), 404
+
+    return send_file(
+        safe_path,
+        as_attachment=True,
+        download_name=os.path.basename(safe_path)
+    )
+
 
 @app.route('/download')
 @login_required

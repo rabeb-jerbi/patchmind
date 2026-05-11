@@ -808,7 +808,8 @@ input[type="file"] { display: none; }
   margin-bottom: 10px; overflow: hidden;
 }
 .history-main {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  display: grid; grid-template-columns: 1.3fr 1fr 1.4fr .8fr .8fr .8fr .8fr .8fr .8fr;
+  align-items: center;
   align-items: center;
 }
 .history-cell { padding: 12px 16px; font-family: var(--mono); font-size: 12px; color: var(--text-3); }
@@ -1016,6 +1017,119 @@ input[type="file"] { display: none; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
+
+
+/* ── Recommended tools readable UI ── */
+.tool-explain-card {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.tool-explain-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.tool-explain-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.tool-explain-tag {
+  display: inline-flex;
+  margin-top: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--green-light);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tool-explain-status {
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tool-explain-title {
+  font-weight: 700;
+  margin: 10px 0 4px;
+  color: var(--text);
+}
+
+.tool-explain-text {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.tool-explain-impact {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-bg);
+  border: 1px solid rgba(217,119,6,.25);
+  border-left: 4px solid var(--warn);
+  color: var(--warn);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.tool-explain-output {
+  display: none;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tool-explain-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+
+/* ── Clean vulnerability cards ── */
+.clean-vuln-desc {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 10px 0;
+}
+
+.clean-vuln-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.confidence-row,
+.tech-detail,
+.accordion-wrap,
+.vuln-note {
+  display: none !important;
+}
 
 </style>
 </head>
@@ -1828,12 +1942,86 @@ function getCweDesc(cwe) {
   return CWE_DESC[n] || 'Vulnérabilité de sécurité';
 }
 function buildVulnDesc(r, sevClass) {
-  const n = (r.cwe||'').toUpperCase().replace(/^CWE-0*(\d+)$/,'CWE-$1');
-  const type = CWE_SHORT[n] || getCweDesc(r.cwe);
-  const fname = r.file ? r.file.replace(/\\/g,'/').split('/').pop() : '';
-  const loc = fname ? ` dans <strong>${escHtml(fname)}</strong> (ligne ${r.line}, ${sevClass})` : '';
-  const expl = r.explanation || getCweDesc(r.cwe);
-  return `<strong>${escHtml(type)}</strong> détecté${loc}. ${escHtml(expl)}`;
+  const cwe = (r.cwe || '').toUpperCase().replace(/^CWE-0*(\d+)$/, 'CWE-$1');
+
+const explanations = {
+  "CWE-89": "Cette faille permet à un attaquant de manipuler les requêtes SQL. Il pourrait accéder à la base de données, modifier des informations ou supprimer des données.",
+
+  "CWE-79": "Cette faille permet d’injecter du JavaScript malveillant dans une page web. Elle peut voler des sessions ou piéger les utilisateurs.",
+
+  "CWE-798": "Des identifiants sensibles sont écrits directement dans le code. Si quelqu’un voit le code, il peut utiliser ces accès.",
+
+  "CWE-327": "Le code utilise un algorithme de chiffrement faible. Les données protégées peuvent être plus faciles à casser.",
+
+  "CWE-326": "Le chiffrement utilisé n’est pas assez fort pour protéger correctement les données sensibles.",
+
+  "CWE-502": "L’application traite des données non fiables d’une manière dangereuse. Cela peut permettre l’exécution d’actions non prévues.",
+
+  "CWE-22": "Cette faille peut permettre d’accéder à des fichiers sensibles du serveur.",
+
+  "CWE-78": "Cette faille peut permettre à un attaquant d’exécuter des commandes système sur le serveur.",
+
+  "CWE-200": "Des informations sensibles peuvent être visibles par des personnes non autorisées.",
+
+  "CWE-352": "Un attaquant peut forcer un utilisateur connecté à effectuer une action sans son accord.",
+
+  "CWE-287": "Le système ne vérifie pas correctement l’identité des utilisateurs. Un attaquant pourrait accéder à des comptes sans autorisation.",
+
+  "CWE-434": "L’application accepte des fichiers dangereux pouvant contenir du code malveillant.",
+
+  "CWE-601": "Cette faille peut rediriger les utilisateurs vers un site malveillant sans qu’ils le remarquent.",
+
+  "CWE-611": "Un fichier XML malveillant peut permettre l’accès à des données internes du serveur.",
+
+  "CWE-918": "Le serveur peut être forcé à envoyer des requêtes vers des services internes ou sensibles.",
+
+  "CWE-269": "Les permissions sont mal configurées. Un utilisateur pourrait obtenir plus de privilèges que prévu.",
+
+  "CWE-416": "L’application continue d’utiliser une ressource déjà libérée, ce qui peut provoquer des comportements dangereux.",
+
+  "CWE-125": "Le programme peut lire des données en dehors des limites prévues de la mémoire.",
+
+  "CWE-476": "L’application tente d’utiliser une valeur vide ou inexistante, ce qui peut provoquer un crash.",
+
+  "CWE-862": "Certaines fonctionnalités sensibles ne vérifient pas correctement les autorisations utilisateur.",
+
+  "CWE-94": "Un attaquant peut injecter du code malveillant qui sera exécuté par l’application.",
+
+  "CWE-20": "Les données fournies par l’utilisateur ne sont pas correctement vérifiées avant traitement.",
+
+  "CWE-119": "Le programme manipule la mémoire de manière dangereuse, pouvant entraîner des failles critiques.",
+
+  "CWE-306": "Une fonctionnalité critique est accessible sans authentification.",
+
+  "CWE-522": "Des mots de passe ou secrets sont stockés de manière non sécurisée.",
+
+  "CWE-732": "Les permissions sur des fichiers ou ressources sont trop ouvertes.",
+
+  "CWE-400": "L’application peut être surchargée jusqu’à provoquer un ralentissement ou une interruption du service.",
+
+  "CWE-295": "Le certificat SSL/TLS du serveur n’est pas correctement vérifié.",
+
+  "CWE-776": "Un traitement XML dangereux peut consommer énormément de ressources et bloquer le serveur.",
+
+  "CWE-770": "Le système ne limite pas correctement l’utilisation des ressources.",
+
+  "CWE-915": "Un utilisateur peut modifier des propriétés sensibles qui ne devraient pas être accessibles.",
+
+  "CWE-943": "Des données non sécurisées peuvent modifier la logique des requêtes envoyées au système.",
+
+  "CWE-117": "Des données malveillantes peuvent être injectées dans les journaux de logs.",
+
+  "CWE-319": "Des informations sensibles sont transmises sans protection suffisante sur le réseau."
+};
+
+  const fallback =
+    r.message ||
+    r.title ||
+    r.description ||
+    getCweDesc(r.cwe) ||
+    "Cette vulnérabilité peut compromettre la sécurité de l’application.";
+
+  return explanations[cwe] || fallback;
 }
 
 // ══ FILE HANDLING ══
@@ -1936,11 +2124,13 @@ function loadRegistryTools() {
 function runRegistryTool(toolName, outputDivId) {
   const out = document.getElementById(outputDivId);
   if (!out) return;
-  out.style.display = '';
-  out.style.background = 'var(--surface-2)';
-  out.style.color = 'var(--text-3)';
-  out.style.border = '1px solid var(--border)';
-  out.textContent = 'Exécution de ' + toolName + '…';
+
+  out.style.display = "block";
+  out.style.background = "var(--surface-2)";
+  out.style.color = "var(--text-3)";
+  out.style.border = "1px solid var(--border)";
+  out.textContent = "Analyse en cours…";
+
   fetch('/api/tools/run', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -1948,34 +2138,32 @@ function runRegistryTool(toolName, outputDivId) {
   })
   .then(r => r.json())
   .then(d => {
-    if (d.ok) {
-      const findings = d.findings || [];
-      const summary = findings.length
-        ? findings.slice(0, 3).map(f => `[${f.severity||''}] ${(f.message||'').slice(0,80)}`).join('\n')
-        : (d.from_cache ? '(cache) ' : '') + 'Aucune anomalie détectée';
-      out.style.color = findings.length ? 'var(--warn)' : 'var(--success)';
-      out.style.border = findings.length ? '1px solid rgba(217,119,6,.3)' : '1px solid rgba(22,163,74,.3)';
-      out.style.background = findings.length ? 'var(--warn-bg,rgba(217,119,6,.06))' : 'var(--success-bg,rgba(22,163,74,.06))';
-      out.textContent = toolName + ' — ' + findings.length + ' résultat(s)\n' + summary;
-    } else {
-      out.style.color = 'var(--danger)';
-      out.style.border = '1px solid rgba(220,38,38,.3)';
-      out.style.background = 'var(--danger-bg,rgba(220,38,38,.06))';
-      out.textContent = (d.error || 'Erreur').slice(0, 200);
+    if (!d.ok) {
+      out.style.color = "var(--danger)";
+      out.style.border = "1px solid rgba(220,38,38,.3)";
+      out.style.background = "var(--danger-bg)";
+      out.textContent = d.error || "Erreur pendant l’analyse.";
+      return;
     }
+
+    const findings = d.findings || [];
+    styleToolOutput(out, findings.length > 0);
+    out.textContent = readableToolSummary(toolName, findings);
   })
   .catch(() => {
-    out.style.color = 'var(--danger)';
-    out.style.border = '1px solid rgba(220,38,38,.3)';
-    out.style.background = 'var(--danger-bg,rgba(220,38,38,.06))';
-    out.textContent = 'Erreur réseau';
+    out.style.color = "var(--danger)";
+    out.style.border = "1px solid rgba(220,38,38,.3)";
+    out.style.background = "var(--danger-bg)";
+    out.textContent = "Erreur réseau pendant l’exécution de l’outil.";
   });
 }
+
 
 function showRecommendedTools(targetPath) {
   const card = document.getElementById('recommendedToolsCard');
   const grid = document.getElementById('recommendedToolsGrid');
   if (!card || !grid) return;
+
   fetch('/api/tools/recommend', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -1984,36 +2172,53 @@ function showRecommendedTools(targetPath) {
   .then(r => r.json())
   .then(d => {
     if (!d.ok || !d.recommendations || !d.recommendations.length) return;
+
+    const installed = d.recommendations.filter(t => t.available);
+    if (!installed.length) return;
+
     card.style.display = 'block';
-    grid.innerHTML = d.recommendations.map((t, i) => {
-      const avail = t.available;
-      const outId = 'rec-tool-out-' + i;
-      const catColors = {
-        'SAST':'rgba(99,102,241,.12)', 'Dependency':'rgba(16,185,129,.12)',
-        'IaC':'rgba(245,158,11,.12)', 'Container':'rgba(14,165,233,.12)', 'Lint':'rgba(168,85,247,.12)'
+
+    grid.innerHTML = installed.map((t, i) => {
+      const key = String(t.name || '').toLowerCase();
+      const info = TOOL_READABLE_INFO[key] || {
+        title: "Analyse complémentaire",
+        role: "Cet outil ajoute une vérification supplémentaire adaptée au projet analysé.",
+        impact: "Il aide à détecter des problèmes qui ne sont pas toujours visibles dans le scan principal."
       };
-      const catColor = catColors[t.category] || 'var(--surface-2)';
+
+      const outId = 'rec-tool-out-' + i;
+
       return `
-      <div style="padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:${catColor};">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:13px;font-weight:600;">${escHtml(t.name)}</span>
-            <span style="font-size:10px;padding:1px 7px;border-radius:9px;background:var(--surface-1);color:var(--text-3);border:1px solid var(--border);">${escHtml(t.category||'')}</span>
-            <svg width="8" height="8" fill="${avail?'var(--success)':'var(--danger)'}" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
-            <span style="font-size:10px;color:${avail?'var(--success)':'var(--danger)'};">${avail?'Installé':'Non installé'}</span>
+      <div class="tool-explain-card">
+        <div class="tool-explain-header">
+          <div>
+            <div class="tool-explain-name">${escHtml(t.name)}</div>
+            <span class="tool-explain-tag">${escHtml(t.category || 'Security')}</span>
           </div>
-          ${avail ? `<button class="act-btn" style="padding:3px 10px;font-size:11px;" onclick="runRegistryTool('${escHtml(t.name)}','${outId}')">
-            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Exécuter
-          </button>` : ''}
+          <div class="tool-explain-status">● Installé</div>
         </div>
-        <div style="font-size:11px;color:var(--text-3);font-family:var(--mono);">${escHtml(t.reason||t.description||'')}</div>
-        <div id="${outId}" style="display:none;margin-top:6px;padding:6px 10px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:11px;line-height:1.5;word-break:break-word;"></div>
+
+        <div class="tool-explain-title">${escHtml(info.title)}</div>
+        <div class="tool-explain-text">${escHtml(info.role)}</div>
+
+        <div class="tool-explain-impact">
+          <strong>Impact possible :</strong><br>
+          ${escHtml(info.impact)}
+        </div>
+
+        <div id="${outId}" class="tool-explain-output"></div>
+
+        <div class="tool-explain-actions">
+          <button class="act-btn" onclick="runRegistryTool('${escHtml(t.name)}','${outId}')">
+            ▷ Exécuter l’analyse
+          </button>
+        </div>
       </div>`;
     }).join('');
   })
   .catch(() => {});
 }
+
 
 function runVulnTool(name, outputDivId) {
   // Try registry first; if tool is not in registry, the endpoint returns 404 and we show an error
@@ -2021,6 +2226,60 @@ function runVulnTool(name, outputDivId) {
 }
 
 function getCustomTools() { return []; }
+
+
+const TOOL_READABLE_INFO = {
+  bandit: {
+    title: "Analyse sécurité Python",
+    role: "Bandit analyse le code Python pour détecter des pratiques dangereuses comme les mots de passe codés en dur, les commandes système risquées ou les fonctions non sécurisées.",
+    impact: "Ces faiblesses peuvent permettre à un attaquant de récupérer des informations sensibles ou d’exécuter des actions dangereuses."
+  },
+  pylint: {
+    title: "Qualité et maintenabilité du code",
+    role: "Pylint détecte les erreurs de qualité, les variables inutilisées, les imports inutiles et les mauvaises pratiques de développement.",
+    impact: "Ce ne sont pas toujours des failles critiques, mais un code mal maintenu augmente les risques de bugs et de vulnérabilités futures."
+  },
+  pip_audit: {
+    title: "Audit des dépendances Python",
+    role: "pip-audit vérifie si les bibliothèques Python utilisées par le projet contiennent des vulnérabilités connues publiquement.",
+    impact: "Même si votre code est sécurisé, une dépendance vulnérable peut compromettre toute l’application."
+  },
+  npm_audit: {
+    title: "Audit des dépendances NodeJS",
+    role: "npm audit analyse les packages NodeJS pour détecter des vulnérabilités connues dans les dépendances.",
+    impact: "Une dépendance vulnérable peut être exploitée à distance ou exposer des données sensibles."
+  }
+};
+
+function readableToolSummary(toolName, findings) {
+  if (!findings || !findings.length) {
+    return "Aucune anomalie détectée par cet outil.";
+  }
+
+  const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, INFO: 0 };
+  findings.forEach(f => {
+    const sev = String(f.severity || "INFO").toUpperCase();
+    if (counts[sev] !== undefined) counts[sev]++;
+    else counts.INFO++;
+  });
+
+  const parts = Object.entries(counts)
+    .filter(([k, v]) => v > 0)
+    .map(([k, v]) => `${k} : ${v}`);
+
+  const examples = findings.slice(0, 3).map(f => {
+    return "• " + String(f.message || f.description || "Problème détecté").slice(0, 160);
+  }).join("\n");
+
+  return `Résumé : ${parts.join(" · ")}\n\nPrincipaux éléments détectés :\n${examples}`;
+}
+
+function styleToolOutput(out, hasFindings) {
+  out.style.display = "block";
+  out.style.color = hasFindings ? "var(--warn)" : "var(--success)";
+  out.style.border = hasFindings ? "1px solid rgba(217,119,6,.3)" : "1px solid rgba(22,163,74,.3)";
+  out.style.background = hasFindings ? "var(--warn-bg)" : "var(--success-bg)";
+}
 
 // ══ ANALYSIS ══
 function startAnalysis() {
@@ -2232,88 +2491,47 @@ const _TOOL_SOURCE_LABELS = {
 
 function renderResults(results, filtered) {
   const list = filtered !== undefined ? filtered : results;
-  // Build a set of known tool names from the registry (available tools only)
-  const _knownToolNames = new Set(_registryTools.map(t => t.name));
+
   document.getElementById('resultsCard').style.display = 'block';
   document.getElementById('resultsGrid').innerHTML = list.map((r, i) => {
-    const ann  = vulnAnnotations[i] || {};
-    const conf = r.confidence || 0;
-    const confColor = conf >= 80 ? 'var(--success)' : conf >= 50 ? 'var(--warn)' : 'var(--danger)';
-    const confLabel = r.from_cache ? 'Déjà validé' : conf>=90?'Hautement fiable':conf>=80?'Prêt à appliquer':conf>=70?'Vérifier le diff':'Correction manuelle';
     const realIdx = results.indexOf(r);
     const sevClass = severityClass(r.severity);
-    // Source label for optional tools
-    const srcKey = (r.source || 'semgrep').toLowerCase();
-    const srcInfo = _TOOL_SOURCE_LABELS[srcKey];
-    const srcBadge = srcInfo
-      ? `<span style="font-size:10px;padding:1px 7px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);color:${srcInfo.color};font-family:var(--mono);">${srcInfo.label}</span>`
-      : '';
-    const srcDesc = (srcInfo && srcKey !== 'semgrep')
-      ? `<div style="font-size:10px;color:var(--text-3);font-family:var(--mono);margin-top:3px;font-style:italic;">${escHtml(srcInfo.desc)}</div>`
-      : '';
-    // Filter LLM-suggested tools to only those installed in the registry
-    const filteredTools = (r.tools || []).filter(t => t && t.name && _knownToolNames.has(t.name));
+
     return `
     <div class="result-item ${r.success?'ok':'bad'}" id="result-${realIdx}">
       <div class="result-status-icon ${r.success?'status-ok':'status-bad'}">
-        ${r.success ? `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>` : `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`}
+        ${r.success
+          ? `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`
+          : `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+        }
       </div>
+
       <div class="result-body">
         <div class="result-cwe-row">
           <span class="cwe-label">${r.cwe}</span>
-          <span class="badge ${r.success?'badge-ok':'badge-bad'}">${r.success?'VALIDÉ':'REJETÉ'}</span>
-          ${r.from_cache ? '<span class="badge badge-cache">cache</span>' : ''}
-          ${r.consensus && r.consensus.badge ? `<span class="badge badge-info">${escHtml(r.consensus.badge)}</span>` : ''}
-          ${srcBadge}
-          ${ann.assignee ? `<span class="assignee-tag">@${ann.assignee}</span>` : ''}
+          <span class="badge ${r.success?'badge-ok':'badge-bad'}">
+            ${r.success?'VALIDÉ':'REJETÉ'}
+          </span>
         </div>
-        ${srcDesc}
-        <div class="result-desc">${buildVulnDesc(r, sevClass)}</div>
-        <div class="result-meta tech-detail">
-          <span>${r.file}</span><span class="result-meta-sep">·</span>
-          <span>ligne ${r.line}</span><span class="result-meta-sep">·</span>
+
+        <div class="result-desc clean-vuln-desc">
+          ${buildVulnDesc(r, sevClass)}
+        </div>
+
+        <div class="clean-vuln-meta">
+          <span>${r.file}</span>
+          <span>Ligne ${r.line}</span>
           <span class="sev-badge sev-${sevClass}">${sevClass}</span>
         </div>
-        <div class="confidence-row">
-          <div class="conf-bar-wrap"><div class="conf-bar" style="width:${conf}%;background:${confColor};"></div></div>
-          <span class="conf-label" style="color:${confColor};">${confLabel}</span>
-        </div>
-        ${(r.confidence_details && Object.keys(r.confidence_details).length > 0) ? `
-        <div class="tech-detail" style="display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:4px;">
-          ${Object.entries(r.confidence_details).map(([k,v])=>{
-            const ok2 = String(v).startsWith('passed');
-            const warn = String(v).startsWith('warning') || String(v).startsWith('cache') || String(v).startsWith('single');
-            const col  = ok2 ? 'var(--success)' : warn ? 'var(--warn)' : String(v)==='—' ? 'var(--text-3)' : 'var(--danger)';
-            return `<span style="font-size:10px;color:${col};">${escHtml(k)}: ${escHtml(String(v).slice(0,60))}</span>`;
-          }).join('<span style="color:var(--border);">·</span>')}
-        </div>` : ''}
-        ${ann.note ? `<div class="vuln-note">${ann.note}</div>` : ''}
+
         <div class="result-actions">
           ${r.diff ? `<button class="act-btn" onclick="showDiff(${realIdx},'${r.cwe}')">Voir diff</button>` : ''}
         </div>
-        ${(filteredTools.length > 0) ? `
-        <div class="accordion-wrap tech-detail">
-          <div class="accordion-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';">
-            <span>OUTILS RECOMMANDÉS (${filteredTools.length})</span>
-            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="accordion-body">
-            ${filteredTools.map((t,j)=>`
-              <div style="margin-bottom:8px;padding:10px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
-                  <span style="font-size:13px;font-weight:600;">${escHtml(t.name||'')}</span>
-                  <button class="act-btn" style="padding:3px 10px;font-size:11px;display:flex;align-items:center;gap:4px;" data-tname="${escHtml(t.name||'')}" data-tout="vtool-${realIdx}-${j}" onclick="runVulnTool(this.dataset.tname,this.dataset.tout)"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Exécuter</button>
-                </div>
-                <div style="font-family:var(--mono);font-size:11px;color:var(--text-3);">${escHtml(t.description||'')}</div>
-                <div id="vtool-${realIdx}-${j}" style="display:none;margin-top:6px;padding:7px 10px;border-radius:var(--radius-sm);font-family:var(--mono);font-size:11px;line-height:1.5;word-break:break-word;"></div>
-              </div>
-            `).join('')}
-          </div>
-        </div>` : ''}
       </div>
     </div>`;
   }).join('');
 }
+
 
 // ══ FILTERS ══
 function updateFilters(results) {
@@ -2489,51 +2707,221 @@ function reAnalyze(encodedPath,encodedName) {
 }
 
 // ══ HISTORY ══
+
 let _allHistory = [];
+
+let _historyProjects = [];
+
+function histEsc(v) {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function fmtSec(v) {
+  if (v === undefined || v === null || v === '' || v === '-' || v === '—') return '—';
+  return String(v).endsWith('s') ? String(v) : String(v) + 's';
+}
+
+function histPick(s, keys, fallback = '—') {
+  for (const k of keys) {
+    if (s && s[k] !== undefined && s[k] !== null && s[k] !== '') return s[k];
+  }
+  return fallback;
+}
+
+function histProjectName(s) {
+  const pid = histPick(s, ['project_id', 'project'], '');
+  const pname = histPick(s, ['project_name', 'project_title', 'projectName'], '');
+
+  if (pname) return pname;
+
+  const p = _historyProjects.find(x =>
+    String(x.id || '') === String(pid) ||
+    String(x.name || '') === String(pid)
+  );
+
+  return p ? (p.name || p.id) : (pid || '—');
+}
+
+function histFileName(s) {
+  if (s.files_analyzed && s.files_analyzed[0] && s.files_analyzed[0].name) {
+    return s.files_analyzed[0].name;
+  }
+
+  if (s.results && s.results[0] && s.results[0].file) {
+    return String(s.results[0].file).replace(/\\/g, '/').split('/').pop();
+  }
+
+  if (s.patched_files && s.patched_files[0] && s.patched_files[0].name) {
+    return s.patched_files[0].name;
+  }
+
+  return s.file || s.filename || '—';
+}
+
+function histProjectMatches(s, selected) {
+  if (!selected) return true;
+
+  const q = String(selected).toLowerCase();
+
+  const values = [
+    s.project_id,
+    s.project,
+    s.project_name,
+    s.project_title,
+    s.projectName,
+    histProjectName(s)
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+
+  return values.includes(q);
+}
+
 function renderHistoryTable(sessions) {
   const el = document.getElementById('historyTable');
-  if(!sessions.length){el.innerHTML='<div class="empty" style="padding:40px;"><p>Aucune session correspond aux filtres.</p></div>';return;}
-  el.innerHTML = sessions.map(s=>`
-  <div class="history-row">
-    <div class="history-main">
-      <div class="history-cell" style="color:var(--text);">${s.timestamp?.substring(0,16)||'—'}</div>
-      <div class="history-cell">${s.total_vulns??'—'} vulns</div>
-      <div class="history-cell" style="color:var(--success);">${s.patches_validated??'—'} OK</div>
-      <div class="history-cell" style="color:var(--danger);">${s.patches_rejected??'—'} KO</div>
-      <div class="history-cell"><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></div>
-      <div class="history-cell">${s.mttr_seconds??'—'}s</div>
-      <div class="history-cell">${s.total_duration??'—'}s</div>
-    </div>
-    ${(s.patched_files||[]).length>0?`<div style="padding:10px 16px;background:var(--success-bg);border-top:1px solid rgba(22,163,74,.1);display:flex;flex-wrap:wrap;gap:7px;">${s.patched_files.map(p=>`<a href="/download?file=${encodeURIComponent(p.path)}" style="font-family:var(--mono);font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid rgba(22,163,74,.2);border-radius:4px;color:var(--success);text-decoration:none;">${p.name}</a>`).join('')}</div>`:''}
-  </div>`).join('');
+  if (!el) return;
+
+  if (!sessions || !sessions.length) {
+    el.innerHTML = '<div class="empty" style="padding:40px;"><p>Aucune session correspond aux filtres.</p></div>';
+    return;
+  }
+
+  el.innerHTML = sessions.map(s => {
+    const total = histPick(s, ['total_detected', 'total_vulns', 'total'], 0);
+    const ok = histPick(s, ['patches_validated', 'validated', 'patches_applied'], 0);
+    const ko = histPick(s, ['patches_rejected', 'rejected'], 0);
+    const rate = histPick(s, ['success_rate'], 0);
+    const mttr = histPick(s, ['mttr_seconds', 'mttr'], null);
+    const duration = histPick(s, ['total_duration', 'duration'], null);
+
+    return `
+      <div class="history-row">
+        <div class="history-main">
+          <div class="history-cell">${histEsc(String(s.timestamp || '').substring(0, 16))}</div>
+          <div class="history-cell">${histEsc(histProjectName(s))}</div>
+          <div class="history-cell" style="color:var(--success);">${histEsc(histFileName(s))}</div>
+          <div class="history-cell">${total} vulns</div>
+          <div class="history-cell" style="color:var(--success);">${ok} OK</div>
+          <div class="history-cell" style="color:var(--danger);">${ko} KO</div>
+          <div class="history-cell">
+            <span class="rate-pill ${Number(rate) >= 80 ? 'rate-good' : 'rate-bad'}">${rate}%</span>
+          </div>
+          <div class="history-cell">${fmtSec(mttr)}</div>
+          <div class="history-cell">${fmtSec(duration)}</div>
+        </div>
+
+        ${(s.patched_files || []).length > 0 ? `
+          <div style="padding:10px 16px;background:var(--success-bg);border-top:1px solid rgba(22,163,74,.1);display:flex;flex-wrap:wrap;gap:7px;">
+            ${(s.patched_files || []).map(p => `
+              <a href="/download?file=${encodeURIComponent(p.path)}"
+                 style="font-family:var(--mono);font-size:11px;padding:3px 10px;background:var(--surface);border:1px solid rgba(22,163,74,.2);border-radius:4px;color:var(--success);text-decoration:none;">
+                ${histEsc(p.name || 'patch')}
+              </a>
+            `).join('')}
+          </div>` : ''}
+      </div>`;
+  }).join('');
 }
+
+
+function _histProjectMatches(session, projectQ) {
+  if (!projectQ) return true;
+
+  const q = String(projectQ).toLowerCase();
+
+  const values = [
+    session.project_id,
+    session.project,
+    session.project_name,
+    session.project_title,
+    session.projectName
+  ].filter(Boolean).map(v => String(v).toLowerCase());
+
+  if (values.includes(q)) return true;
+
+  const proj = _historyProjects.find(p =>
+    String(p.id || '').toLowerCase() === q ||
+    String(p.name || '').toLowerCase() === q
+  );
+
+  if (!proj) return false;
+
+  return values.includes(String(proj.id || '').toLowerCase()) ||
+         values.includes(String(proj.name || '').toLowerCase());
+}
+
 function applyHistoryFilter() {
   const dateQ = document.getElementById('histFilterDate')?.value || '';
   const rateQ = document.getElementById('histFilterRate')?.value || '';
-  let filtered = [..._allHistory].reverse();
-  if (dateQ) filtered = filtered.filter(s => (s.timestamp||'').startsWith(dateQ));
-  if (rateQ === 'good') filtered = filtered.filter(s => (s.success_rate||0) >= 80);
-  if (rateQ === 'bad')  filtered = filtered.filter(s => (s.success_rate||0) < 80);
+
+  let filtered = Array.isArray(_allHistory) ? [..._allHistory] : [];
+
+  filtered.sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+
+  if (dateQ) {
+    filtered = filtered.filter(s => String(s.timestamp || '').startsWith(dateQ));
+  }
+
+  if (rateQ === 'good') {
+    filtered = filtered.filter(s => Number(s.success_rate || 0) >= 80);
+  }
+
+  if (rateQ === 'bad') {
+    filtered = filtered.filter(s => Number(s.success_rate || 0) < 80);
+  }
+
   renderHistoryTable(filtered);
 }
+
+
 function loadHistory() {
-  document.getElementById('historyTable').innerHTML='<div class="empty" style="padding:40px;"><p>Chargement…</p></div>';
-  const projectId = (document.getElementById('histFilterProject')||{}).value || '';
-  const url = projectId ? `/history?project_id=${encodeURIComponent(projectId)}` : '/history';
-  // Populate project dropdown once
-  const projSel = document.getElementById('histFilterProject');
-  if (projSel && projSel.options.length <= 1) {
-    fetch('/projects/api').then(r=>r.json()).then(projects=>{
-      const current = projSel.value;
-      projSel.innerHTML = '<option value="">Tous les projets</option>' +
-        projects.map(p=>`<option value="${escHtml(p.id)}"${p.id===current?' selected':''}>${escHtml(p.name)}</option>`).join('');
-    }).catch(()=>{});
+  const el = document.getElementById('historyTable');
+  if (el) {
+    el.innerHTML = '<div class="empty" style="padding:40px;"><p>Chargement…</p></div>';
   }
-  fetch(url).then(r=>r.json()).then(sessions=>{
-    _allHistory = sessions;
-    applyHistoryFilter();
+
+  const projSel = document.getElementById('histFilterProject');
+  const selectedProject = projSel ? projSel.value : '';
+
+  const populateProjects = fetch('/projects/api')
+    .then(r => r.json())
+    .then(projects => {
+      if (!projSel) return;
+
+      const list = Array.isArray(projects) ? projects : (projects.projects || []);
+
+      projSel.innerHTML = '<option value="">Tous les projets</option>' +
+        list.map(p =>
+          `<option value="${escHtml(p.id)}">${escHtml(p.name || p.id)}</option>`
+        ).join('');
+
+      if ([...projSel.options].some(o => o.value === selectedProject)) {
+        projSel.value = selectedProject;
+      }
+    })
+    .catch(() => {});
+
+  populateProjects.finally(() => {
+    const projectId = projSel ? projSel.value : '';
+    const url = projectId ? `/history?project_id=${encodeURIComponent(projectId)}` : '/history';
+
+    fetch(url)
+      .then(r => r.json())
+      .then(sessions => {
+        _allHistory = Array.isArray(sessions) ? sessions : [];
+        applyHistoryFilter();
+      })
+      .catch(err => {
+        console.error('history load error:', err);
+        if (el) {
+          el.innerHTML = '<div class="empty" style="padding:40px;"><p>Erreur chargement historique.</p></div>';
+        }
+      });
   });
 }
+
+
 
 // ══ METRICS ══
 function loadMetriques() {
@@ -2617,7 +3005,7 @@ function loadHome() {
         <td style="padding:10px 8px;font-family:var(--mono);font-size:12px;color:var(--text-3);">${s.total_vulns??'—'}</td>
         <td style="padding:10px 8px;font-family:var(--mono);font-size:12px;color:var(--success);">${s.patches_validated??'—'}</td>
         <td style="padding:10px 8px;"><span class="rate-pill ${(s.success_rate||0)>=80?'rate-good':'rate-bad'}">${s.success_rate??'—'}%</span></td>
-        <td style="padding:10px 16px;font-family:var(--mono);font-size:12px;color:var(--text-3);">${s.mttr_seconds??'—'}s</td>
+        <td style="padding:10px 16px;font-family:var(--mono);font-size:12px;color:var(--text-3);">${fmtSec(s.mttr_seconds)}</td>
       </tr>`).join('')}</tbody>
     </table>`;
   }).catch(() => {
