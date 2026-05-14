@@ -466,3 +466,8 @@ canvas {
 .nav-item.active .nav-svg {
   opacity: 1;
 }
+.security-card{
+  margin-top:22px;
+  width:100%;
+  max-width:720px;
+}
