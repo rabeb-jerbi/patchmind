@@ -62,6 +62,20 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\nfrom markupsafe import Markup, escape\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \""
+    },
+    {
+      "cwe": "CWE-79",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\nfrom markupsafe import Markup, escape\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\""
+    },
+    {
+      "cwe": "CWE-79",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-259": [
@@ -134,6 +148,27 @@
       "description": "Auto-saved validated fix — 2026-05-11",
       "vulnerable": "import sqlite3\nimport os\nimport hashlib\nimport pickle\nfrom flask import Flask, request\n\napp = Flask(__name__)\n\n# 1. SQL Injection (CWE-89)\ndef get_user(user_id):\n    conn = sqlite3.connect(\"db.sqlite3\")\n    cursor = conn.cursor()\n    query = \"SELECT * FROM users WHERE id = \" + user_id\n    cursor.execute(query)\n    return cursor.fetchone()\n\n# 2. XSS (CWE-79)\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"\n\n# 3. Path Traversal (CWE-",
       "fixed": "import sqlite3\nimport os\nimport hashlib\nimport json\nfrom flask import Flask, request\nimport secrets\n\napp = Flask(__name__)\n\n# 1. SQL Injection (CWE-89)\ndef get_user(user_id):\n    conn = sqlite3.connect(\"db.sqlite3\")\n    cursor = conn.cursor()\n    query = \"SELECT * FROM users WHERE id = \" + user_id\n    cursor.execute(query)\n    return cursor.fetchone()\n\n# 2. XSS (CWE-79)\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"\n\n# 3. Path Tr"
+    },
+    {
+      "cwe": "CWE-259",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')  # Secret key from environment variable\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"p"
+    },
+    {
+      "cwe": "CWE-259",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = os.environ.get('DB_PASSWORD')\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqli"
+    },
+    {
+      "cwe": "CWE-259",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "DEBUG = True\nSECRET_KEY = \"super-secret-key\"\nDATABASE_URL = \"mysql://root:root123@localhost/app\"\nJWT_SECRET = \"jwtsecret123\"",
+      "fixed": "DEBUG = True\nSECRET_KEY = os.environ.get('SECRET_KEY')\nDATABASE_URL = \"mysql://root:root123@localhost/app\"\nJWT_SECRET = \"jwtsecret123\""
     }
   ],
   "CWE-89": [
@@ -381,6 +416,20 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "import sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ──────────────────────────────────────────────\n\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.js"
+    },
+    {
+      "cwe": "CWE-89",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
+    },
+    {
+      "cwe": "CWE-89",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-502": [
@@ -637,6 +686,20 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "import sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\nimport secrets\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ──────────────────────────────────────────────\n\n@app.route('/login', methods=['POST'])\ndef login():\n    userna"
+    },
+    {
+      "cwe": "CWE-327",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
+    },
+    {
+      "cwe": "CWE-327",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-UNKNOWN": [
@@ -739,6 +802,13 @@
       "description": "Auto-saved validated fix — 2026-05-11",
       "vulnerable": "<?php\n\n// CWE-89: SQL Injection\nfunction getUser($username) {\n    $conn = mysqli_connect(\"localhost\", \"root\", \"\", \"mydb\");\n    $query = \"SELECT * FROM users WHERE username = '$username'\";\n    return mysqli_query($conn, $query);\n}\n\n// CWE-79: XSS\nfunction showSearch() {\n    $search = $_GET['q'];\n    echo \"<h1>Résultats pour: \" . $search . \"</h1>\";\n}\n\n// CWE-22: Path Traversal\nfunction readFile($filename) {\n    $path = \"/var/www/uploads/\" . $filename;\n    return file_get_contents($path);\n}\n\n// CWE",
       "fixed": "<?php\n\n// CWE-89: SQL Injection\nfunction getUser($username) {\n    $conn = mysqli_connect(\"localhost\", \"root\", \"\", \"mydb\");\n    $query = \"SELECT * FROM users WHERE username = '$username'\";\n    return mysqli_query($conn, $query);\n}\n\n// CWE-79: XSS\nfunction showSearch() {\n    $search = $_GET['q'];\n    echo \"<h1>Résultats pour: \" . $search . \"</h1>\";\n}\n\n// CWE-22: Path Traversal\nfunction readFile($filename) {\n    $path = \"/var/www/uploads/\" . $filename;\n    return file_get_contents($path);\n}\n\n// CWE"
+    },
+    {
+      "cwe": "CWE-94",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-328": [
@@ -866,6 +936,13 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "import sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ──────────────────────────────────────────────\n\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.js"
+    },
+    {
+      "cwe": "CWE-704",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-915": [
@@ -917,6 +994,13 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "import sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ──────────────────────────────────────────────\n\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.js"
+    },
+    {
+      "cwe": "CWE-915",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-78": [
@@ -982,6 +1066,27 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "import sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ──────────────────────────────────────────────\n\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.js"
+    },
+    {
+      "cwe": "CWE-78",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
+    },
+    {
+      "cwe": "CWE-78",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
+    },
+    {
+      "cwe": "CWE-78",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-22": [
@@ -1109,6 +1214,13 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "import sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ──────────────────────────────────────────────\n\n@app.route('/login', methods=['POST'])\ndef login():\n    username = request.js"
+    },
+    {
+      "cwe": "CWE-489",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-601": [
@@ -1173,6 +1285,13 @@
       "description": "Auto-saved validated fix — 2026-05-12",
       "vulnerable": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \"emailpass456\"\n\n# ── Authentification ─",
       "fixed": "\"\"\"\nPatchMind Demo App — Boutique en ligne vulnérable\nContient intentionnellement des vulnérabilités pour démonstration\n\"\"\"\nimport sqlite3\nimport hashlib\nimport os\nimport subprocess\nfrom flask import Flask, request, jsonify, session, render_template_string\nfrom markupsafe import Markup, escape\n\napp = Flask(__name__)\napp.secret_key = \"super_secret_key_123\"  # CWE-798: Hardcoded secret\n\n# CWE-798: Credentials hardcodés\nDB_PASSWORD  = \"admin123\"\nADMIN_TOKEN  = \"tok_admin_2024_xyz\"\nSMTP_PASSWORD = \""
+    },
+    {
+      "cwe": "CWE-96",
+      "source": "validated",
+      "description": "Auto-saved validated fix — 2026-05-14",
+      "vulnerable": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d",
+      "fixed": "import os\nimport sqlite3\nimport hashlib\nimport subprocess\nfrom flask import Flask, request, render_template_string\n\napp = Flask(__name__)\napp.secret_key = \"admin123\"  # Secret codé en dur\n\nDB_PASSWORD = \"root123\"\nAPI_KEY = \"sk_test_1234567890abcdef\"\n\n@app.route(\"/\")\ndef index():\n    return \"PatchMind vulnerable demo app\"\n\n@app.route(\"/login\", methods=[\"POST\"])\ndef login():\n    username = request.form.get(\"username\")\n    password = request.form.get(\"password\")\n\n    conn = sqlite3.connect(\"users.d"
     }
   ],
   "CWE-668": [
